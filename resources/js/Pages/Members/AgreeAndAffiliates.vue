@@ -1,9 +1,9 @@
 <template>
   <GuestLayout>
-    <Head :title="t('register.title')" />
+    <Head :title="t('registers.title')" />
 
     <div class="max-w-4xl mx-auto bg-white p-8 rounded shadow">
-      <h2 class="text-2xl font-bold mb-6">{{ t('register.title') }}</h2>
+      <h2 class="text-2xl font-bold mb-6">{{ t('registers.title') }}</h2>
 
       <form @submit.prevent="submitForm" class="space-y-6">
 
@@ -24,7 +24,7 @@
         </div>
 
         <PrimaryButton class="mt-4">
-          次へ進む
+          {{ t('members.next') }}
         </PrimaryButton>
 
       </form>

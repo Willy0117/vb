@@ -43,7 +43,7 @@
               {{ t('assign') }}
             </button>
             <button
-              @click="router.get(route('permissions.index', filters), { preserveState: true })"
+              @click="router.get(route('admin.permissions.index', filters), { preserveState: true })"
               type="button"
               class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
             >
@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/Admin/AppLayout.vue'
 import { router } from '@inertiajs/vue3'
 import { reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -82,10 +82,10 @@ const errors = reactive({
 
 // 割り当て処理
 const submitForm = () => {
-  router.post(route('permissions.assign.store', props.permission.id), form, {
+  router.post(route('admin.permissions.assign.store', props.permission.id), form, {
     preserveState: true,
     onError: (err) => Object.assign(errors, err),
-    onSuccess: () => router.get(route('permissions.index', props.filters))
+    onSuccess: () => router.get(route('admin.permissions.index', props.filters))
   })
 }
 </script>

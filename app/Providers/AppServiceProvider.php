@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Inertia\Inertia;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,5 +24,8 @@ class AppServiceProvider extends ServiceProvider
        if (env('APP_ENV') !== 'local') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
        }
+       Inertia::share([
+            'csrf_token' => fn () => csrf_token(),
+       ]);
     }
 }

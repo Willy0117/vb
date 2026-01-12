@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Permission;
@@ -40,7 +41,7 @@ class PermissionController extends Controller
                              ->withQueryString();
         $tenants = $user->hasRole('Super Admin') ? Tenant::all() : [];                     
 
-        return Inertia::render('Permissions/Index', [
+        return Inertia::render('Admin/Permissions/Index', [
             'permissions' => $permissions,
             'filters' => $request->all(),
             'tenants' => $tenants,
@@ -56,7 +57,7 @@ class PermissionController extends Controller
 
         $tenants = $user->hasRole('Super Admin') ? Tenant::all() : [];
 
-        return Inertia::render('Permissions/Edit', [
+        return Inertia::render('Admin/Permissions/Edit', [
             'permission' => $permission,
             'tenants' => $tenants,
             'user' => $user,
@@ -72,7 +73,7 @@ class PermissionController extends Controller
 
         $tenants = $user->hasRole('Super Admin') ? Tenant::all() : [];
 
-        return Inertia::render('Permissions/Edit', [
+        return Inertia::render('Admin/Permissions/Edit', [
             'permission' => null,
             'tenants' => $tenants,
             'user' => $user,
@@ -103,7 +104,7 @@ class PermissionController extends Controller
             ]
         );
 
-        return redirect()->route('permissions.index', $request->filters ?? []);
+        return redirect()->route('admin.permissions.index', $request->filters ?? []);
     }
 
     /**
@@ -137,7 +138,7 @@ class PermissionController extends Controller
             'guard_name' => 'web',
         ]);
 
-        return redirect()->route('permissions.index', $request->filters ?? []);
+        return redirect()->route('admin.permissions.index', $request->filters ?? []);
     }
 
     public function assign(Request $request, Permission $permission)
@@ -148,7 +149,7 @@ class PermissionController extends Controller
             ->where('tenant_id', $user->tenant_id)
             ->get(['id', 'name', 'email']);
 
-        return Inertia::render('Permissions/Assign', [
+        return Inertia::render('Admin/Permissions/Assign', [
             'permission' => $permission,
             'users' => $users,
             'filters' => $request->all(), // 前提条件保持
@@ -167,7 +168,7 @@ class PermissionController extends Controller
         // 権限付与（Permission model インスタンスを渡してOK）
         $targetUser->givePermissionTo($permission);
 
-        return redirect()->route('permissions.index', $request->all())
+        return redirect()->route('admin.permissions.index', $request->all())
             ->with('success', __('Permission assigned.'));
     }
 
@@ -179,7 +180,7 @@ class PermissionController extends Controller
         $permission->delete();
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        return redirect()->route('permissions.index');
+        return redirect()->route('admin.permissions.index');
     }
 
     /**
@@ -191,7 +192,7 @@ class PermissionController extends Controller
         Permission::whereIn('id', $ids)->delete();
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        return redirect()->route('permissions.index');
+        return redirect()->route('admin.permissions.index');
     }
 }
 

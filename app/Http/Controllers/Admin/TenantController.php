@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -37,7 +38,7 @@ class TenantController extends Controller
 
         $tenants = $query->paginate($perPage)->withQueryString();
 
-        return Inertia::render('Tenants/Index', [
+        return Inertia::render('Admin/Tenants/Index', [
             'tenants' => $tenants,
             'filters' => $request->only(['name','contact_email','contact_phone','per_page','sort_by','sort_dir'])
         ]);
@@ -46,7 +47,7 @@ class TenantController extends Controller
     // Create画面
     public function create(Request $request)
     {
-        return Inertia::render('Tenants/Create');
+        return Inertia::render('Admin/Tenants/Create');
     }
 
     public function store(Request $request)
@@ -107,7 +108,7 @@ class TenantController extends Controller
             }
         }
 
-        return redirect()->route('tenants.index')
+        return redirect()->route('admin.tenants.index')
             ->with('success', 'Tenant created successfully with roles & permissions.');
     }
 
@@ -116,7 +117,7 @@ class TenantController extends Controller
     // Edit画面
     public function edit(Request $request, Tenant $tenant)
     {
-        return Inertia::render('Tenants/Edit', [
+        return Inertia::render('Admin/Tenants/Edit', [
             'tenant' => $tenant
         ]);
     }
@@ -179,7 +180,7 @@ class TenantController extends Controller
             }
         }
 
-        return redirect()->route('tenants.index')
+        return redirect()->route('admin.tenants.index')
             ->with('success', 'Tenant updated successfully with roles & permissions.');
     }
 
@@ -190,7 +191,7 @@ class TenantController extends Controller
     public function destroy(Tenant $tenant)
     {
         $tenant->delete();
-        return redirect()->route('tenants.index')->with('success', __('Tenant has been deleted.'));
+        return redirect()->route('admin.tenants.index')->with('success', __('Tenant has been deleted.'));
     }
 
     // 複数削除

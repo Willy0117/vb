@@ -3,7 +3,7 @@
     <Head title="会員登録（情報入力）" />
 
     <div class="max-w-5xl mx-auto bg-white p-8 rounded shadow">
-      <h2 class="text-2xl font-bold mb-6">会員情報入力</h2>
+      <h2 class="text-2xl font-bold mb-6">{{ t('registers.members') }}</h2>
 
       <form @submit.prevent="submitForm" class="space-y-8">
 
@@ -12,33 +12,72 @@
 
           <!-- 左カラム：会社情報 -->
           <div class="space-y-4">
-            <h3 class="text-lg font-semibold mb-2">会社情報</h3>
+            <h3 class="text-lg font-semibold mb-2">{{ t('registers.organization') }}</h3>
 
             <div>
               <InputLabel value="会社名（フリガナ）" />
-              <TextInput v-model="form.company_furigana" class="w-full" />
+              <TextInput
+                v-model="companyFurigana"
+                class="w-full"
+              />
               <InputError :message="errors.company_furigana" />
             </div>
 
             <div>
-              <InputLabel value="会社名" />
-              <TextInput v-model="form.company_name" class="w-full" />
-              <InputError :message="errors.company_name" />
+            <InputLabel value="会社名" />
+
+            <div class="flex items-center gap-2 mt-1">
+              <!-- 前 -->
+              <select
+                v-model="form.company_type_prefix"
+                class="w-28 rounded-md border-gray-300 text-sm"
+              >
+                <option v-for="type in companyTypes" :key="type.value" :value="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+
+              <!-- 会社名 -->
+              <TextInput
+                v-model="form.company_name"
+                class="flex-1"
+                placeholder="〇〇商事"
+              />
+
+              <!-- 後 -->
+              <select
+                v-model="form.company_type_suffix"
+                class="w-28 rounded-md border-gray-300 text-sm"
+              >
+                <option v-for="type in companyTypes" :key="type.value" :value="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
             </div>
 
+            <InputError :message="errors.company_name" />
+          </div>
+          <p class="text-xs text-gray-500 mt-1">
+            例）株式会社〇〇商事 ／ 〇〇商事株式会社
+          </p>
             <div>
-              <InputLabel value="所在地 郵便番号" />
-              <TextInput v-model="form.address_zip" placeholder="000-0000" @keydown.enter.prevent />
-              
-              <!-- 候補が2件以上ある場合は選択させる -->
-              <ul v-if="candidates && candidates.length > 1" class="border mt-1 p-2 bg-white">
+              <InputLabel :value="t('registers.address_zip')" />
+              <TextInput
+                v-model="form.address_zip"
+                placeholder="000-0000"
+                maxlength="8"
+                @input="onAddressZipInput"
+                @keydown.enter.prevent
+              />
+  
+              <ul v-if="candidates.length > 1" class="border rounded bg-white">
                 <li
-                  v-for="(c, i) in candidates"
-                  :key="i"
-                  @click="selectCandidate(c)"
-                  class="cursor-pointer hover:bg-gray-100 p-1 rounded"
+                  v-for="candidate in candidates"
+                  :key="candidate.label"
+                  class="p-2 hover:bg-gray-100 cursor-pointer"
+                  @click="selectCandidate(candidate, 'address1')"
                 >
-                  {{ c.label }}
+                  {{ candidate.label }}
                 </li>
               </ul>
 
@@ -48,9 +87,19 @@
 
 
             <div>
-              <InputLabel value="所在地 住所" />
-              <TextInput v-model="form.address" class="w-full" />
-              <InputError :message="errors.address" />
+              <InputLabel :value="t('registers.address1')" />
+              <TextInput v-model="form.address1" class="w-full" />
+              <InputError :message="errors.address1" />
+            </div>
+            <div>
+              <InputLabel :value="t('registers.address2')" />
+              <TextInput v-model="form.address2" class="w-full" />
+              <InputError :message="errors.address2" />
+            </div>
+            <div>
+              <InputLabel :value="t('registers.address3')" />
+              <TextInput v-model="form.address3" class="w-full" />
+              <InputError :message="errors.address3" />
             </div>
           </div>
 
@@ -69,42 +118,98 @@
               <TextInput v-model="form.representative" class="w-full" />
               <InputError :message="errors.representative" />
             </div>
-<!--
+
             <div>
-              <InputLabel value="郵送先 郵便番号" />
-              <TextInput v-model="form.post_zip" class="w-full" placeholder="000-0000" />
+              <InputLabel :value="t('registers.post_zip')" />
+              <TextInput
+                v-model="form.post_zip"
+                placeholder="000-0000"
+                maxlength="8"
+                @input="onPostZipInput"
+                @keydown.enter.prevent
+              />
+              <!-- 候補が2件以上ある場合は選択させる -->
+              <ul v-if="candidates.length > 1" class="border rounded bg-white">
+                <li
+                  v-for="candidate in candidates"
+                  :key="candidate.label"
+                  class="p-2 hover:bg-gray-100 cursor-pointer"
+                  @click="selectCandidate(candidate, 'zip_address1')"
+                >
+                  {{ candidate.label }}
+                </li>
+              </ul>
+
               <InputError :message="errors.post_zip" />
             </div>
 
             <div>
-              <InputLabel value="郵送先 住所" />
-              <TextInput v-model="form.post_address" class="w-full" />
-              <InputError :message="errors.post_address" />
+              <InputLabel :value="t('registers.post_address1')" />
+              <TextInput v-model="form.post_address1" class="w-full" placeholder="○○県△△市xx区" />
+              <InputError :message="errors.post_address1" />
             </div>
--->
             <div>
-              <InputLabel value="TEL" />
-              <TextInput v-model="form.tel" class="w-full" />
+              <InputLabel :value="t('registers.post_address2')" />
+              <TextInput v-model="form.post_address2" class="w-full" placeholder="○○丁目○○番地" />
+              <InputError :message="errors.post_address2" />
+            </div>
+            <div>
+              <InputLabel :value="t('registers.post_address3')" />
+              <TextInput v-model="form.post_address3" class="w-full" placeholder="xxxビル○○F" />
+              <InputError :message="errors.post_address3" />
+            </div>
+
+            <div>
+              <InputLabel :value="t('registers.tel')" />
+              <TextInput
+                v-model="form.tel"
+                maxlength="12"
+                @input="onTelInput"
+                placeholder="03-1234-5678"
+              />
               <InputError :message="errors.tel" />
             </div>
+            <p v-if="form.tel && form.tel.length !== 12"
+              class="text-xs text-red-500 mt-1">
+              電話番号は 03-1234-5678 の形式で入力してください
+            </p>
 
             <div>
-              <InputLabel value="FAX" />
-              <TextInput v-model="form.fax" class="w-full" />
+              <InputLabel :value="t('registers.fax')" />
+              <TextInput
+                v-model="form.fax"
+                maxlength="12"
+                @input="onFaxInput"
+                placeholder="03-1234-5678"
+              />
               <InputError :message="errors.fax" />
             </div>
+            <p v-if="form.fax && form.fax.length !== 12"
+              class="text-xs text-red-500 mt-1">
+              FAX番号は 03-1234-5678 の形式で入力してください
+            </p>
 
             <div>
-              <InputLabel value="担当者" />
+              <InputLabel :value="t('registers.staff')" />
               <TextInput v-model="form.staff" class="w-full" />
               <InputError :message="errors.staff" />
             </div>
 
             <div>
-              <InputLabel value="携帯電話" />
-              <TextInput v-model="form.mobile" class="w-full" placeholder="090-xxxx-xxxx" />
+              <InputLabel :value="t('registers.mobile')" />
+              <TextInput
+                v-model="form.mobile"
+                class="w-full"
+                placeholder="090-xxxx-xxxx"
+                maxlength="13"
+                @input="onMobileInput"
+              />
               <InputError :message="errors.mobile" />
             </div>
+            <p v-if="form.mobile && form.mobile.length !== 13"
+              class="text-xs text-red-500 mt-1">
+              携帯電話は 090-1234-5678 の形式で入力してください
+            </p>
           </div>
 
         </div>
@@ -114,7 +219,7 @@
           <div class="space-y-4 max-w-xl mx-auto p-2">
 
             <!-- 銀行選択 -->
-            <InputLabel value="銀行選択" />
+            <InputLabel :value="bankCategories.select_bank" />
             <div class="grid grid-cols-4 gap-2 mb-3">
               <button
                 v-for="c in bankCategories"
@@ -149,7 +254,7 @@
                 </p>
               </div>
               <div>
-                <InputLabel value="銀行コード" />
+                <InputLabel :value="t('banks.bank_code')" />
                 <TextInput v-model="form.bank_code" class="w-full" />
               </div>
             </div>
@@ -160,7 +265,7 @@
                 <Autocomplete
                   v-if="form.bank_code"
                   :model-value="selectedBranch"
-                  label="支店名"
+                  :label="t('banks.branch_name')"
                   fetch-url="/api/branches"
                   :extra-params="{ bank_code: form.bank_code }"
                   :initial="form.branch_name"
@@ -171,7 +276,7 @@
                 </p>
               </div>
               <div>
-                <InputLabel value="支店コード" />
+                <InputLabel :value="t('banks.branch_code')" />
                 <TextInput v-model="form.branch_code" class="w-full" />
               </div>
             </div>
@@ -205,6 +310,10 @@
                 <TextInput v-model="form.account_name" class="w-full" />
                 <InputError :message="form.errors.account_name" />
             </div>
+                <!-- 注意文言 -->
+            <p class="text-xs text-gray-500 mt-2">
+                肩書を忘れないように！
+            </p>
           </div>  
         </div>
         <!-- PDF アップロード 2点 -->
@@ -294,7 +403,9 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Autocomplete from '@/Components/Autocomplete.vue'    
 import axios from 'axios'
 import { useZipcode } from '@/composables/useZipcode'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 
 const page = usePage()
 const bankInput = ref(null)
@@ -304,10 +415,18 @@ console.log(page.props,page.props.token) // ← ここで form が見える
 const form = useForm({
   company_furigana: page.props.form?.company_furigana ?? 'クーネット',
   representative_furigana: page.props.form?.representative_furigana ?? 'クモダ',
-  company_name: page.props.form?.company_name ?? '株式会社クーネット',
+  company_type_prefix: page.props.form?.company_type_prefix ?? '株式会社',
+  company_name: page.props.form?.company_name ?? 'クーネット',
+  company_type_suffix: page.props.form?.company_type_suffix ?? '',
   representative: page.props.form?.representative ?? '雲田敏広',
   address_zip: page.props.form?.address_zip ?? '224-0021',
-  address: page.props.form?.address ?? '横浜市',
+  address1: page.props.form?.address1 ?? '横浜市都筑区北山田',
+  address2: page.props.form?.address2 ?? '横浜市',
+  address3: page.props.form?.address3 ?? '横浜市',
+  address_zip: page.props.form?.address_zip ?? '224-0021',
+  post_address1: page.props.form?.zip_address1 ?? '横浜市都筑区北山田',
+  post_address2: page.props.form?.zip_address2 ?? '２丁目3番３号',
+  post_address3: page.props.form?.zip_address3 ?? 'RACAビル５F',
   tel: page.props.form?.tel ?? '045-590-0090',
   fax: page.props.form?.fax ?? '045-590-0091',
   bank_type: page.props.form?.bank_type ?? '',
@@ -323,7 +442,30 @@ const form = useForm({
   mobile: '',
   history_certificate: null,
 });
-
+/*
+const form = useForm({
+  company_furigana: page.props.form?.company_furigana ?? '',
+  representative_furigana: page.props.form?.representative_furigana ?? '',
+  company_name: page.props.form?.company_name ?? '',
+  representative: page.props.form?.representative ?? '',
+  address_zip: page.props.form?.address_zip ?? '',
+  address: page.props.form?.address ?? '',
+  tel: page.props.form?.tel ?? '',
+  fax: page.props.form?.fax ?? '',
+  bank_type: page.props.form?.bank_type ?? '',
+  bank_name: page.props.form?.bank_name ?? '',
+  bank_code: page.props.form?.bank_code ?? '',
+  branch_name: page.props.form?.branch_name ?? '',
+  branch_code: page.props.form?.branch_code ?? '',  
+  account_type: page.props.form?.account_type ?? '普通',
+  account_no: page.props.form?.account_no ?? '',
+  account_kana: page.props.form?.account_kana ?? '',
+  account_name: page.props.form?.account_name ?? '',
+  staff: '',
+  mobile: '',
+  history_certificate: null,
+});
+*/
 // エラー
 //const errors = page.props.errors || {}
 const errors = ref({})
@@ -337,8 +479,11 @@ const validateRequired = () => {
     'company_name',
     'representative',
     'address_zip',
-    'address',
+    'address1',
+    'address2',
     'tel',
+    'post_address1',
+    'post_address2',
     'bank_type',
     'bank_name',
     'branch_name',
@@ -360,15 +505,6 @@ const validateRequired = () => {
 }
 
 
-
-
-const candidates = ref([])
-// 複数住所の対応
-function selectCandidate(candidate) {
-  if (!candidate) return
-  form.address = candidate.label
-  if (candidates.value) candidates.value = []
-}
 
 const historyCertificateInput = ref(null)
 
@@ -523,15 +659,125 @@ const submitPDF = async () => {
   }
 }
 
+const normalizePhone = (value) => {
+  if (!value) return ''
+
+  // 全角数字 → 半角
+  value = value.replace(/[０-９]/g, s =>
+    String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
+  )
+
+  // 全角ハイフン → 半角
+  value = value.replace(/[ー－―]/g, '-')
+
+  // 数字とハイフン以外を除去
+  return value.replace(/[^0-9-]/g, '')
+}
+
+const onMobileInput = (e) => {
+  form.mobile = normalizePhone(e.target.value)
+}
+
+const onTelInput = (e) => {
+  form.tel = normalizePhone(e.target.value)
+}
+
+const onFaxInput = (e) => {
+  form.fax = normalizePhone(e.target.value)
+}
+
+
+const normalizeFurigana = (value) => {
+  if (!value) return ''
+
+  // ひらがな → カタカナ
+  value = value.replace(/[\u3041-\u3096]/g, s =>
+    String.fromCharCode(s.charCodeAt(0) + 0x60)
+  )
+
+  // 全角カタカナ・長音・全角スペースのみ
+  return value.replace(/[^\u30A0-\u30FFー　]/g, '')
+}
+
+const companyFurigana = computed({
+  get: () => form.company_furigana,
+  set: (value) => {
+    form.company_furigana = normalizeFurigana(value)
+  },
+})
+const companyTypes = [
+  { label: 'なし', value: '' },
+  { label: '株式会社', value: '株式会社' },
+  { label: '有限会社', value: '有限会社' },
+  { label: '合同会社', value: '合同会社' },
+]
+
+form.company_type_prefix = ''
+form.company_type_suffix = ''
+
+watch(() => form.company_type_prefix, () => {
+  if (form.company_type_prefix) {
+    form.company_type_suffix = ''
+  }
+})
+
+watch(() => form.company_type_suffix, () => {
+  if (form.company_type_suffix) {
+    form.company_type_prefix = ''
+  }
+})
+
+//〒番号関係
+const candidates = ref([])
+/*
+ * 郵便番号正規化
+ * ・全角数字 → 半角
+ * ・全角ハイフン → 半角
+ * ・数字とハイフン以外を除去
+ */
+const normalizeZip = (value) => {
+  if (!value) return ''
+
+  // 全角数字 → 半角
+  value = value.replace(/[０-９]/g, s =>
+    String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
+  )
+
+  // 全角ハイフン → 半角
+  value = value.replace(/[ー－―]/g, '-')
+
+  // 数字とハイフン以外を除去
+  return value.replace(/[^0-9-]/g, '')
+}
+/**
+ * 住所候補選択
+ * @param {Object} candidate
+ * @param {String} field  formのキー名
+ */
+function selectCandidate(candidate, field) {
+  if (!candidate || !field) return
+  if (!(field in form)) return
+
+  form[field] = candidate.label
+  candidates.value = []
+}
+
+const onAddressZipInput = (e) => {
+  form.address_zip = normalizeZip(e.target.value)
+}
+
+const onPostZipInput = (e) => {
+  form.post_zip = normalizeZip(e.target.value)
+}
 
 useZipcode(
   toRef(form, 'post_zip'),
-  toRef(form, 'post_address')
+  toRef(form, 'post_address1')
 )
 
 useZipcode(
   toRef(form, 'address_zip'),
-  toRef(form, 'address')
+  toRef(form, 'address1')
 )
 
 </script>

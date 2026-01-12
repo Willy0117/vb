@@ -52,7 +52,7 @@
         <div class="flex space-x-2">
           <button @click="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">{{ t('save') }}</button>
           <button
-            @click="router.get(route('tenants.index', props.filters), { preserveState: true })"
+            @click="router.get(route('admin.tenants.index', props.filters), { preserveState: true })"
             class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
           >
             {{ t('cancel') }}
@@ -64,7 +64,7 @@
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/Admin/AppLayout.vue'
 import { router } from '@inertiajs/vue3'
 import { reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -103,9 +103,9 @@ onMounted(() => {
 })
 
 const submit = () => {
-  router.post(route('tenants.store'), form, {
+  router.post(route('admin.tenants.store'), form, {
     preserveState: true,
-    onSuccess: () => router.get(route('tenants.index', props.filters)),
+    onSuccess: () => router.get(route('admin.tenants.index', props.filters)),
     onError: (errs) => Object.assign(errors, errs)
   })
 }

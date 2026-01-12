@@ -43,7 +43,7 @@
               {{ t('update') }}
             </button>
             <button
-              @click="router.get(route('tenants.index'), props.filters, { preserveState: true })"
+              @click="router.get(route('admin.tenants.index'), props.filters, { preserveState: true })"
               class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
             >
               {{ t('cancel') }}
@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/Admin/AppLayout.vue'
 import { router } from '@inertiajs/vue3'
 import { reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -85,12 +85,12 @@ const errors = reactive({
 
 const submitForm = () => {
   router.put(
-    route('tenants.update', props.tenant.id),
+    route('admin.tenants.update', props.tenant.id),
     form,
     {
       preserveState: true,
       onError: (err) => Object.assign(errors, err),
-      onSuccess: () => router.get(route('tenants.index', props.filters))
+      onSuccess: () => router.get(route('admin.tenants.index', props.filters))
     }
   )
 }

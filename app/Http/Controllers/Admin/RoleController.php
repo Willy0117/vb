@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -17,7 +18,7 @@ class RoleController extends Controller
 
         $query = Role::with('permissions');
 
-        if (! $user->hasRole('Super Admin')) {
+        if (! $user->hasRole('super_admin')) {
             $query->where('tenant_id', $user->tenant_id);
         }
 
@@ -34,7 +35,7 @@ class RoleController extends Controller
                        ->paginate($request->get('per_page', 10))
                        ->withQueryString();
 
-        return Inertia::render('Roles/Index', [
+        return Inertia::render('Admin/Roles/Index', [
             'roles' => $roles,
             'filters' => $request->only(['search', 'per_page', 'sort', 'order']),
         ]);
@@ -49,7 +50,7 @@ class RoleController extends Controller
             : Permission::where('tenant_id', $user->tenant_id)->orWhereNull('tenant_id')->get();
 
         // Super Admin がテナントを選べるよう tenants は必要なら追加して渡してください（既にある構成に合わせて）
-        return Inertia::render('Roles/Edit', [
+        return Inertia::render('Admin/Roles/Edit', [
             'role' => null,
             'permissions' => $permissions,
             'user' => $user,
@@ -79,7 +80,7 @@ class RoleController extends Controller
             $role->syncPermissions($request->permissions);
         }
 
-        return redirect()->route('roles.index')->with('success', __('Role created successfully.'));
+        return redirect()->route('admin.roles.index')->with('success', __('Role created successfully.'));
     }
 
     public function edit(Role $role)
@@ -106,7 +107,7 @@ class RoleController extends Controller
 
         $role->load('permissions');
 
-        return Inertia::render('Roles/Edit', [
+        return Inertia::render('Admin/Roles/Edit', [
             'role' => $role,
             'permissions' => $permissions,
             'user' => $user,
@@ -144,7 +145,7 @@ class RoleController extends Controller
 
         $role->syncPermissions($permissions);
 
-        return redirect()->route('roles.index')->with('success', __('Role updated successfully.'));
+        return redirect()->route('admin.roles.index')->with('success', __('Role updated successfully.'));
     }
 
     public function destroy(Role $role)
@@ -157,7 +158,7 @@ class RoleController extends Controller
 
         $role->delete();
 
-        return redirect()->route('roles.index')->with('success', __('Role deleted successfully.'));
+        return redirect()->route('admin.roles.index')->with('success', __('Role deleted successfully.'));
     }
 
     public function bulkDelete(Request $request)
@@ -172,7 +173,7 @@ class RoleController extends Controller
 
         $roles->delete();
 
-        return redirect()->route('roles.index')
+        return redirect()->route('admin.roles.index')
                          ->with('success', __('Selected roles deleted successfully.'));
     }
 }

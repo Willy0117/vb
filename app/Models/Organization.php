@@ -2,30 +2,54 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Organization extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
+        'member_id',
         'name',
-        'billing_name',
-        'billing_postal',
-        'billing_address',
-        'contact_person',
-        'contact_email',
-        'contact_phone',
+        'prefix',
+        'suffix',
         'registration_number',
     ];
 
-    // 会員との多対多
-    public function members()
+    public function member()
     {
-        return $this->belongsToMany(Member::class)
-                    ->withPivot('role')
-                    ->withTimestamps();
+        return $this->belongsTo(Member::class);
     }
-}
 
+    public function contacts()
+    {
+        return $this->hasMany(OrganizationContact::class);
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(OrganizationAddress::class);
+    }
+    
+    public function documents()
+    {
+        return $this->hasMany(OrganizationDocument::class);
+    }
+
+    public function historyCertificate()
+    {
+        return $this->hasOne(OrganizationDocument::class)
+            ->where('type', 'history_certificate');
+    }
+    /**
+     * 法人正式名称
+     * 例：株式会社ビジョンブリッジ
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim(
+            ($this->prefix ?? '')
+            . $this->name
+            . ($this->suffix ?? '')
+        );
+    }
+    
+}

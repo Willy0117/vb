@@ -56,7 +56,7 @@
           </select>
 
           <Link
-            :href="route('roles.create', persistQuery())"
+            :href="route('admin.roles.create', persistQuery())"
             class="px-4 h-10 bg-green-500 text-white rounded hover:bg-green-600 flex items-center space-x-1"
           >
             <PlusIcon class="w-4 h-4"/>
@@ -105,7 +105,7 @@
               <button @click="copyRole(role.id)" class="text-green-500 hover:text-green-700">
                 <DocumentDuplicateIcon class="w-4 h-4" />
               </button>
-              <Link :href="route('roles.edit', { role: role.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
+              <Link :href="route('admin.roles.edit', { role: role.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
                 <PencilIcon class="w-4 h-4"/>
               </Link>
               <button @click="deleteRole(role.id)" class="text-red-500 hover:text-red-700">
@@ -122,7 +122,7 @@
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/Admin/AppLayout.vue'
 import Pagination from '@/Components/Pagination.vue'
 import { Link, router } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch } from 'vue'
@@ -166,7 +166,7 @@ const persistQuery = () => ({
 })
 
 const submitSearch = () => {
-  router.get(route('roles.index'), { ...persistQuery(), page: 1 }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
+  router.get(route('admin.roles.index'), { ...persistQuery(), page: 1 }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
 }
 
 const goPage = (page) => {
@@ -181,16 +181,16 @@ const sortBy = (field) => {
 
 const deleteRole = (role_id) => {
   if (!confirm(t('confirm_delete'))) return
-  router.delete(route('roles.destroy', role_id), { preserveState: true, onSuccess: () => submitSearch() })
+  router.delete(route('admin.roles.destroy', role_id), { preserveState: true, onSuccess: () => submitSearch() })
 }
 
 const bulkDelete = () => {
   if (!confirm(t('confirm_delete_selected'))) return
-  router.post(route('roles.bulkDelete'), { ids: selectedIds.value }, { preserveState: true, onSuccess: () => submitSearch() })
+  router.post(route('admin.roles.bulkDelete'), { ids: selectedIds.value }, { preserveState: true, onSuccess: () => submitSearch() })
 }
 
 const copyRole = (role_id) => {
-  router.get(route('roles.create', { ...persistQuery(), mode: 'copy', role_id }))
+  router.get(route('admin.roles.create', { ...persistQuery(), mode: 'copy', role_id }))
 }
 
 const startItem = computed(() => props.roles.per_page * (props.roles.current_page - 1) + 1)

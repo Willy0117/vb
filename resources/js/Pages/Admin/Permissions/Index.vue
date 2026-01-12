@@ -11,7 +11,7 @@
           </select>
 
           <Link
-            :href="route('permissions.create', persistQuery())"
+            :href="route('admin.permissions.create', persistQuery())"
             class="px-4 h-10 bg-green-500 text-white rounded hover:bg-green-600 flex items-center space-x-1"
           >
             <PlusIcon class="w-4 h-4"/>
@@ -58,11 +58,11 @@
               <button @click="copyPermission(permission.id)" class="text-green-500 hover:text-green-700">
                 <DocumentDuplicateIcon class="w-4 h-4" />
               </button>
-              <Link :href="route('permissions.edit', { permission: permission.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
+              <Link :href="route('admin.permissions.edit', { permission: permission.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
                 <PencilIcon class="w-4 h-4"/>
               </Link>
              <!-- 新規: 割り当てボタン -->
-              <Link :href="route('permissions.assign', permission.id)" class="text-green-500 hover:text-green-700">
+              <Link :href="route('admin.permissions.assign', permission.id)" class="text-green-500 hover:text-green-700">
                 <UserIcon class="w-4 h-4" />
               </Link>
               <button @click="deletePermission(permission.id)" class="text-red-500 hover:text-red-700">
@@ -79,7 +79,7 @@
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/Admin/AppLayout.vue'
 import Pagination from '@/Components/Pagination.vue'
 import { Link, router } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch } from 'vue'
@@ -111,7 +111,7 @@ const isSuperAdmin = computed(() =>
 
 const form = reactive({
   name: props.filters.name,
-  per_page: props.filters.per_page,
+  per_page: props.filters.per_page??20,
   sort: props.filters.sort,
   direction: props.filters.direction
 })
@@ -133,11 +133,11 @@ const persistQuery = () => ({
 })
 
 const submitSearch = () => {
-  router.get(route('permissions.index'), { ...persistQuery(), page: 1 }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
+  router.get(route('admin.permissions.index'), { ...persistQuery(), page: 1 }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
 }
 
 const goPage = (page) => {
-  router.get(route('permissions.index'), { ...persistQuery(), page }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
+  router.get(route('admin.permissions.index'), { ...persistQuery(), page }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
 }
 
 const sortBy = (field) => {
@@ -148,16 +148,16 @@ const sortBy = (field) => {
 
 const deletePermission = (permission_id) => {
   if (!confirm(t('confirm_delete'))) return
-  router.delete(route('permissions.destroy', permission_id), { preserveState: true, onSuccess: () => submitSearch() })
+  router.delete(route('admin.permissions.destroy', permission_id), { preserveState: true, onSuccess: () => submitSearch() })
 }
 
 const bulkDelete = () => {
   if (!confirm(t('confirm_delete_selected'))) return
-  router.post(route('permissions.bulkDelete'), { ids: selectedIds.value }, { preserveState: true, onSuccess: () => submitSearch() })
+  router.post(route('admin.permissions.bulkDelete'), { ids: selectedIds.value }, { preserveState: true, onSuccess: () => submitSearch() })
 }
 
 const copyPermission = (permission_id) => {
-  router.get(route('permissions.create', { ...persistQuery(), mode: 'copy', permission_id }))
+  router.get(route('admin.permissions.create', { ...persistQuery(), mode: 'copy', permission_id }))
 }
 
 const startItem = computed(() => props.permissions.per_page * (props.permissions.current_page - 1) + 1)

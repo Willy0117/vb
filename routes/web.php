@@ -9,64 +9,60 @@ use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SetLocaleController;
 use App\Http\Controllers\Admin\AuthController;
-use App\Http\Controllers\Profile\MemberController;
 use App\Http\Controllers\Admin\MemberController as AdminMemberController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\MemberController as MemberRegController;
 use App\Http\Controllers\BankSearchController;
 use App\Http\Controllers\PreRegister\PreRegisterController;
 use App\Http\Controllers\PreRegister\EmailVerifyController;
+use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
 
-    /**
-     * -------------------------------
-     * ① 管理者ログイン（guest のみ）
-     * -------------------------------
-     */
-    Route::middleware('guest')->group(function () {
-        Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-        Route::post('/login', [AuthController::class, 'login']);
-    });
+    // ログイン（Jetstream）
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])
+        ->middleware('guest')
+        ->name('login');
 
+    Route::post('/admin/login', [\App\Http\Controllers\Admin\LoginController::class, 'store'])
+        ->middleware('guest');
 
-    /**
-     * -------------------------------
-     * ② 認証後（auth）＋ロール（admin/super_admin）
-     * -------------------------------
-     */
+    // 認証後
     Route::middleware(['auth', 'role:admin|super_admin'])->group(function () {
 
-        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        Route::post('/logout', function () {
+            auth()->logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
 
-        // ダッシュボード
-        Route::get('/dashboard', fn() => inertia('Admin/Dashboard'))->name('dashboard');
+            return Inertia::location('/admin/login');
+        })->name('logout');
+        
+        Route::get('/dashboard', fn () => inertia('Admin/Dashboard'))
+            ->name('dashboard');
+        // Tenant
+        Route::resource('tenants', \App\Http\Controllers\Admin\TenantController::class);
+        Route::post('tenants/bulk-delete', [\App\Http\Controllers\Admin\TenantController::class, 'bulkDelete'])->name('tenants.bulkDelete');
+        // Role
+        Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
+        Route::post('roles/bulk-delete', [\App\Http\Controllers\Admin\RoleController::class, 'bulkDelete'])->name('roles.bulkDelete');
+        // Permission
+        Route::resource('permissions', \App\Http\Controllers\Admin\PermissionController::class);
+        Route::post('permissions/bulk-delete', [\App\Http\Controllers\Admin\PermissionController::class, 'bulkDelete'])->name('permissions.bulkDelete');
+        Route::post('permissions/assign', [\App\Http\Controllers\Admin\PermissionController::class, 'assign'])->name('permissions.assign');
+        // user
+        Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+
+        Route::prefix('member')->name('member.')->group(function () {
+            Route::get('/', [AdminMemberController::class, 'index'])->name('index');
+            Route::get('/pdf/{id}', [AdminMemberController::class, 'pdfPreview'])->name('pdf.preview');
+            Route::get('/{id}/edit', [AdminMemberController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [AdminMemberController::class, 'update'])->name('update');
+        });
     });
 });
-/*
-Route::get('/', function () {
-    return redirect()->route('login');
-});
-*/
-Route::middleware(['auth', 'verified'])->group(function () {
-    //Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('users', \App\Http\Controllers\UserController::class);
-    Route::post('users/bulk-delete', [\App\Http\Controllers\UserController::class, 'bulkDelete'])->name('users.bulkDelete');
-    // Tenant
-    Route::resource('tenants', \App\Http\Controllers\TenantController::class);
-    Route::post('tenants/bulk-delete', [\App\Http\Controllers\TenantController::class, 'bulkDelete'])->name('tenants.bulkDelete');
-    // Role
-    Route::resource('roles', \App\Http\Controllers\RoleController::class);
-    Route::post('roles/bulk-delete', [\App\Http\Controllers\RoleController::class, 'bulkDelete'])->name('roles.bulkDelete');
-    // Members 
-    Route::get('/profile/member', [MemberController::class, 'edit'])->name('profile.member.edit');
-    Route::put('/profile/member', [MemberController::class, 'update'])->name('profile.member.update');
-    // Organizations 
-    Route::get('/profile/organization', [OrganizationController::class, 'edit'])->name('profile.organization.edit');
-    Route::put('/profile/organization', [OrganizationController::class, 'update'])->name('profile.organization.update');
-        // 他の認証が必要なルートもここに追加
-});
 // メール仮登録
 Route::prefix('pre-register')->name('pre-register.')->group(function () {
     // メール入力画面

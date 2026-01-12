@@ -63,7 +63,7 @@
           </select>
 
           <Link
-            :href="route('tenants.create', persistQuery())"
+            :href="route('admin.tenants.create', persistQuery())"
             class="px-4 h-10 bg-green-500 text-white rounded hover:bg-green-600 flex items-center space-x-1"
           >
             <PlusIcon class="w-4 h-4"/>
@@ -118,7 +118,7 @@
               <button @click="copyTenant(tenant.id)" class="text-green-500 hover:text-green-700">
                 <DocumentDuplicateIcon class="w-4 h-4" />
               </button>
-              <Link :href="route('tenants.edit', { tenant: tenant.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
+              <Link :href="route('admin.tenants.edit', { tenant: tenant.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
                 <PencilIcon class="w-4 h-4"/>
               </Link>
               <button @click="deleteTenant(tenant.id)" class="text-red-500 hover:text-red-700">
@@ -135,7 +135,7 @@
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/Admin/AppLayout.vue'
 import Pagination from '@/Components/Pagination.vue'
 import { Link, router } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch } from 'vue'
@@ -161,7 +161,7 @@ const form = reactive({
   contact_email: props.filters.contact_email,
   contact_phone: props.filters.contact_phone,
   address: props.filters.address,
-  per_page: props.filters.per_page,
+  per_page: props.filters.per_page??20,
   sort: props.filters.sort,
   direction: props.filters.direction
 })
@@ -186,11 +186,11 @@ const persistQuery = () => ({
 })
 
 const submitSearch = () => {
-  router.get(route('tenants.index'), { ...persistQuery(), page: 1 }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
+  router.get(route('admin.tenants.index'), { ...persistQuery(), page: 1 }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
 }
 
 const goPage = (page) => {
-  router.get(route('tenants.index'), { ...persistQuery(), page }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
+  router.get(route('admin.tenants.index'), { ...persistQuery(), page }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
 }
 
 const sortBy = (field) => {
@@ -201,16 +201,16 @@ const sortBy = (field) => {
 
 const deleteTenant = (tenant_id) => {
   if (!confirm(t('confirm_delete'))) return
-  router.delete(route('tenants.destroy', tenant_id), { preserveState: true, onSuccess: () => submitSearch() })
+  router.delete(route('admin.tenants.destroy', tenant_id), { preserveState: true, onSuccess: () => submitSearch() })
 }
 
 const bulkDelete = () => {
   if (!confirm(t('confirm_delete_selected'))) return
-  router.post(route('tenants.bulkDelete'), { ids: selectedIds.value }, { preserveState: true, onSuccess: () => submitSearch() })
+  router.post(route('admin.tenants.bulkDelete'), { ids: selectedIds.value }, { preserveState: true, onSuccess: () => submitSearch() })
 }
 
 const copyTenant = (tenant_id) => {
-  router.get(route('tenants.create', { ...persistQuery(), mode: 'copy', tenant_id }))
+  router.get(route('admin.tenants.create', { ...persistQuery(), mode: 'copy', tenant_id }))
 }
 
 const startItem = computed(() => props.tenants.per_page * (props.tenants.current_page - 1) + 1)

@@ -1,5 +1,6 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+<div class="min-h-screen flex flex-col bg-gray-100">
+  <div class="flex justify-center items-start pt-20 text-sm">
     <div class="w-full max-w-md bg-white p-8 rounded shadow">
       <h2 class="text-2xl font-bold mb-6">{{ t('login') }}</h2>
       <form @submit.prevent="submit">
@@ -15,6 +16,11 @@
       </form>
     </div>
   </div>
+    <!-- フッター -->
+  <footer class="w-full py-4 text-center text-sm text-gray-500 bg-gray-200">
+    &copy {{ t('copyright') }}
+  </footer>
+</div>
 </template>
 
 <script setup>

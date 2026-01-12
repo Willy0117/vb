@@ -50,7 +50,7 @@
           </button>
           <button
             type="button"
-            @click="router.get(route('roles.index', filters), { preserveState: true })"
+            @click="router.get(route('admin.roles.index', filters), { preserveState: true })"
             class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
           >
             {{ t('cancel') }}
@@ -64,7 +64,7 @@
 <script setup>
 import { reactive, computed } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/Admin/AppLayout.vue'
 import { useI18n } from 'vue-i18n'
 
 // Props
@@ -90,13 +90,13 @@ const errors = reactive({})
 const submitForm = () => {
   const method = props.role ? 'put' : 'post'
   const url = props.role
-    ? route('roles.update', props.role.id)
-    : route('roles.store')
+    ? route('admin.roles.update', props.role.id)
+    : route('admin.roles.store')
 
   router[method](url, form, {
     preserveState: true,
     onError: err => Object.assign(errors, err),
-    onSuccess: () => router.get(route('roles.index', props.filters)),
+    onSuccess: () => router.get(route('admin.roles.index', props.filters)),
   })
 }
 </script>
