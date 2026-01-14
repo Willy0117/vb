@@ -43,11 +43,30 @@ class MemberController extends Controller
     // 3. Register 入力ページ
     public function showRegisterForm($token)
     {
-        $form = session('member_form', [
+        // ① Vue 用の完成形（初期値）
+        $form = [
             'agree'     => session('agree', false),
             'affiliate' => session('affiliate', null),
             'agree_at'  => session('agree_at', null),
-        ]);        
+
+            'email' => '',
+
+            'org' => [
+                'corp' => [
+                    'prefix' => '',
+                    'name'   => '',
+                ],
+                'mail' => [
+                    'prefix' => '',
+                    'name'   => '',
+                ],
+            ],
+        ];
+
+        // ② session があれば上書き（PDF戻り用）
+        if (session()->has('member_form')) {
+            $form = array_replace_recursive($form, session('member_form'));
+        }    
         return Inertia::render('Members/Register', [
             'token' => $token,
             'form'  => $form,
@@ -63,6 +82,8 @@ class MemberController extends Controller
         $validated = $request->validate([
             // member
             'company_name' => 'required|string',
+            'name_prefix' => 'nullable|string',
+            'name_suffix' => 'nullable|string',
             'company_furigana' => 'required|string',
             'representative' => 'required|string',
             'representative_furigana' => 'required|string',
@@ -211,7 +232,7 @@ class MemberController extends Controller
     public function pdfCreate()
     {
         $form = session('member_form', [
-            'company_furigana' => 'クーネット',
+            'company_furigana' => '',
             'representative_furigana' => '',
             'company_name' => '',
             'representative' => '',

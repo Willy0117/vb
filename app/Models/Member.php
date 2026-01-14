@@ -24,14 +24,19 @@ class Member extends Model
     {
         return $this->belongsTo(Progress::class, 'progress_id'); 
     }
-/*
-    public function progress()
-    {
-        return $this->belongsTo(Progress::class);
-    }
-*/
+
     public function organization()
     {
         return $this->hasOne(Organization::class);
     }
+    
+    public function organizations()
+    {
+        return $this->hasMany(Organization::class);
+    }
+
+    public function getFullNameAttribute()
+    {
+        return trim($this->last_name . ' ' . $this->first_name);
+    }    
 }

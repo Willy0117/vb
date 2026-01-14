@@ -1,5 +1,6 @@
 <template>
   <GuestLayout>
+    <RegisterStep current="company" />
     <Head title="会員登録（情報入力）" />
 
     <div class="max-w-5xl mx-auto bg-white p-8 rounded shadow">
@@ -9,6 +10,7 @@
 
         <!-- 2カラム -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!--  ここから会社情報　-->
 
           <!-- 左カラム：会社情報 -->
           <div class="space-y-4">
@@ -17,159 +19,267 @@
             <div>
               <InputLabel value="会社名（フリガナ）" />
               <TextInput
-                v-model="companyFurigana"
+                v-model="companyKana"
                 class="w-full"
               />
-              <InputError :message="errors.company_furigana" />
-            </div>
-
-            <div>
-            <InputLabel value="会社名" />
-
-            <div class="flex items-center gap-2 mt-1">
-              <!-- 前 -->
-              <select
-                v-model="form.company_type_prefix"
-                class="w-28 rounded-md border-gray-300 text-sm"
-              >
-                <option v-for="type in companyTypes" :key="type.value" :value="type.value">
-                  {{ type.label }}
-                </option>
-              </select>
-
-              <!-- 会社名 -->
-              <TextInput
-                v-model="form.company_name"
-                class="flex-1"
-                placeholder="〇〇商事"
-              />
-
-              <!-- 後 -->
-              <select
-                v-model="form.company_type_suffix"
-                class="w-28 rounded-md border-gray-300 text-sm"
-              >
-                <option v-for="type in companyTypes" :key="type.value" :value="type.value">
-                  {{ type.label }}
-                </option>
-              </select>
-            </div>
-
-            <InputError :message="errors.company_name" />
-          </div>
-          <p class="text-xs text-gray-500 mt-1">
-            例）株式会社〇〇商事 ／ 〇〇商事株式会社
-          </p>
-            <div>
-              <InputLabel :value="t('registers.address_zip')" />
-              <TextInput
-                v-model="form.address_zip"
-                placeholder="000-0000"
-                maxlength="8"
-                @input="onAddressZipInput"
-                @keydown.enter.prevent
-              />
-  
-              <ul v-if="candidates.length > 1" class="border rounded bg-white">
-                <li
-                  v-for="candidate in candidates"
-                  :key="candidate.label"
-                  class="p-2 hover:bg-gray-100 cursor-pointer"
-                  @click="selectCandidate(candidate, 'address1')"
-                >
-                  {{ candidate.label }}
-                </li>
-              </ul>
-
-              <InputError :message="errors.address_zip" />
-            </div>
-
-
-
-            <div>
-              <InputLabel :value="t('registers.address1')" />
-              <TextInput v-model="form.address1" class="w-full" />
-              <InputError :message="errors.address1" />
+              <InputError :message="errors.company_kana" />
             </div>
             <div>
-              <InputLabel :value="t('registers.address2')" />
-              <TextInput v-model="form.address2" class="w-full" />
-              <InputError :message="errors.address2" />
-            </div>
-            <div>
-              <InputLabel :value="t('registers.address3')" />
-              <TextInput v-model="form.address3" class="w-full" />
-              <InputError :message="errors.address3" />
-            </div>
+              <InputLabel value="会社名" />
+              <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div class="flex-1">
+                  <!-- 前 -->
+                  <select
+                    v-model="form.company_type_prefix"
+                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2"
+                  >
+                    <option v-for="type in companyTypes" :key="type.value" :value="type.value">
+                      {{ type.label }}
+                    </option>
+                  </select>
+
+                </div>
+                <div class="flex-1">
+                  <!-- 会社名 -->
+                  <TextInput
+                    v-model="form.company_name"
+                    class="flex-1"
+                    placeholder="〇〇商事"
+                  />
+                </div>
+                <div class="flex-1">
+                <!-- 後 -->
+                  <select
+                    v-model="form.company_type_suffix"
+                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2"
+                  >
+                    <option v-for="type in companyTypes" :key="type.value" :value="type.value">
+                      {{ type.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <InputError :message="errors.company_name" />
+              <p class="text-xs text-gray-500 mt-1">
+                例）株式会社〇〇商事 ／ 〇〇商事株式会社
+              </p>
+            </div>  
           </div>
 
-          <!-- 右カラム：代表者/担当者 -->
+         <!-- 右カラム：代表者/担当者 -->
           <div class="space-y-4">
-            <h3 class="text-lg font-semibold mb-2">代表者・担当者情報</h3>
-
+            <h3 class="text-lg font-semibold mb-2">代表者</h3>
             <div>
               <InputLabel value="代表者名（フリガナ）" />
-              <TextInput v-model="form.representative_furigana" class="w-full" />
-              <InputError :message="errors.representative_furigana" />
-            </div>
+              <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div class="flex-1">
+                  <TextInput v-model="form.representative_last_kana" class="w-full" :placeholder="t('registers.last_name_kana')" />
+                  <InputError :message="errors.representative_last_kana" />
+                </div>  
+                <div class="flex-1">
+                  <TextInput v-model="form.representative_first_kana" class="w-full" :placeholder="t('registers.first_name_kana')" />
+                  <InputError :message="errors.representative_first_kana" />
+                </div>
+              </div>
 
-            <div>
-              <InputLabel value="代表者名" />
-              <TextInput v-model="form.representative" class="w-full" />
-              <InputError :message="errors.representative" />
             </div>
-
             <div>
-              <InputLabel :value="t('registers.post_zip')" />
+             <InputLabel value="代表者名" />
+              <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div class="flex-1">
+                  <TextInput v-model="form.representative_last_name" class="w-full" :placeholder="t('registers.last_name')" />
+                  <InputError :message="errors.representative_last_name" />
+                </div>
+                <div class="flex-1">  
+                  <TextInput v-model="form.representative_first_name" class="w-full" :placeholder="t('registers.first_name')" />
+                  <InputError :message="errors.representative_first_name" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+<!--  ここまでが会社情報　-->
+
+        <div>
+          <InputLabel :value="t('registers.address_zip')" />
+          <TextInput
+            v-model="form.org.corp.postal_code"
+            placeholder="000-0000"
+            maxlength="8"
+            @input="onAddressZipInput"
+            @keydown.enter.prevent
+          />
+
+          <ul v-if="candidates.length > 1" class="border rounded bg-white">
+            <li
+              v-for="candidate in candidates"
+              :key="candidate.label"
+              class="p-2 hover:bg-gray-100 cursor-pointer"
+              @click="selectCandidate(candidate, 'org.corp.address1')"
+            >
+              {{ candidate.label }}
+            </li>
+          </ul>
+          <InputError :message="errors?.org?.corp?.postal_code" />
+
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div class="flex-1">
+              <InputLabel :value="t('registers.address1')" />
+              <TextInput v-model="form.org.corp.address1" class="w-full" />
+              <InputError :message="errors?.org?.corp?.address1" />
+            </div>
+            <div class="flex-1">
+              <InputLabel :value="t('registers.address2')" />
+              <TextInput v-model="form.org.corp.address2" class="w-full" />
+              <InputError :message="errors?.org?.corp?.address2" />
+            </div>
+            <div class="flex-1">
+              <InputLabel :value="t('registers.address3')" />
+              <TextInput v-model="form.org.corp.address3" class="w-full" />
+              <InputError :message="errors?.org?.corp?.address3" />
+            </div>
+          </div>
+        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div class="flex-1">
+              <InputLabel :value="t('registers.tel')" />
               <TextInput
-                v-model="form.post_zip"
-                placeholder="000-0000"
-                maxlength="8"
-                @input="onPostZipInput"
-                @keydown.enter.prevent
+                v-model="form.org.corp.tel"
+                maxlength="12"
+                @input="e => onPhoneInput('corp', 'tel', e)"
+                placeholder="03-1234-5678"
               />
-              <!-- 候補が2件以上ある場合は選択させる -->
-              <ul v-if="candidates.length > 1" class="border rounded bg-white">
-                <li
-                  v-for="candidate in candidates"
-                  :key="candidate.label"
-                  class="p-2 hover:bg-gray-100 cursor-pointer"
-                  @click="selectCandidate(candidate, 'zip_address1')"
-                >
-                  {{ candidate.label }}
-                </li>
-              </ul>
-
-              <InputError :message="errors.post_zip" />
+              <InputError :message="errors?.org?.corp?.tel" />
+              <p v-if="form.org.corp.tel && form.org.corp.tel.length !== 12"
+                class="text-xs text-red-500 mt-1">
+                電話番号は 03-1234-5678 の形式で入力してください
+              </p>
             </div>
 
+            <div class="flex-1">
+              <InputLabel :value="t('registers.fax')" />
+              <TextInput
+                v-model="form.org.corp.fax"
+                maxlength="12"
+                @input="e => onPhoneInput('corp', 'fax', e)"
+                placeholder="03-1234-5678"
+              />
+              <InputError :message="errors?.org?.corp?.fax" />
+              <p v-if="form.org.corp.fax && form.org.corp.fax.length !== 12"
+                class="text-xs text-red-500 mt-1">
+                FAX番号は 03-1234-5678 の形式で入力してください
+              </p>
+            </div>
+            <div class="flex-1">
+              <InputLabel :value="t('registers.mobile')" />
+              <TextInput
+                v-model="form.org.corp.mobile"
+                class="w-full"
+                placeholder="090-xxxx-xxxx"
+                maxlength="13"
+                @input="e => onPhoneInput('corp', 'mobile', e)"
+              />
+              <InputError :message="errors.mobile" />
+              <p v-if="form.org.corp.mobile && form.org.corp.mobile.length !== 13"
+                class="text-xs text-red-500 mt-1">
+                携帯電話は 090-1234-5678 の形式で入力してください
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+          <!-- 肩書き -->
+          <div class="flex-1">
             <div>
+              <InputLabel :value="t('registers.position')" />
+              <TextInput v-model="form.org.corp.position" class="w-full" />
+            </div>
+            <InputError :message="errors?.org?.corp?.position" />
+          </div>
+
+          <!-- 氏名 -->
+          <div class="flex-1">
+            <div>
+              <InputLabel :value="t('registers.staff')" />
+              <div class="flex gap-2">
+                <TextInput v-model="form.org.corp.last_name" class="w-full" />
+                <TextInput v-model="form.org.corp.first_name" class="w-full" />
+              </div>
+            </div>
+            <InputError :message="errors?.org?.corp?.staff" />
+          </div>
+        </div>
+
+<!--     -->                  
+        <div class="mb-4">
+          <label class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              v-model="form.same_as_corp"
+              class="rounded border-gray-300 text-indigo-600 shadow-sm"
+            />
+            <span class="text-sm text-gray-700">
+              郵送先は現住所と同じ
+            </span>
+          </label>
+        </div>
+        <!-- チェックが入ると入力不可 -->
+        <!-- ここから郵送先-->         
+       <div
+          :class="{
+            'pointer-events-none opacity-50': form.same_as_corp
+          }"
+        > 
+          <div>
+            <InputLabel :value="t('registers.post_zip')" />
+            <TextInput
+              v-model="form.org.mail.postal_code"
+              placeholder="000-0000"
+              maxlength="8"
+              @input="onPostZipInput"
+              @keydown.enter.prevent
+            />
+            <!-- 候補が2件以上ある場合は選択させる -->
+            <ul v-if="candidates.length > 1" class="border rounded bg-white">
+              <li
+                v-for="candidate in candidates"
+                :key="candidate.label"
+                class="p-2 hover:bg-gray-100 cursor-pointer"
+                @click="selectCandidate(candidate, 'zip_address1')"
+              >
+                {{ candidate.label }}
+              </li>
+            </ul>
+            <InputError :message="errors.org?.mail?.post_zip" />
+          </div>
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div class="flex-1">
               <InputLabel :value="t('registers.post_address1')" />
-              <TextInput v-model="form.post_address1" class="w-full" placeholder="○○県△△市xx区" />
-              <InputError :message="errors.post_address1" />
+              <TextInput v-model="form.org.mail.address1" class="w-full" placeholder="○○県△△市xx区" />
+              <InputError :message="errors?.org?.mail?.address1" />
             </div>
-            <div>
+            <div class="flex-1">
               <InputLabel :value="t('registers.post_address2')" />
-              <TextInput v-model="form.post_address2" class="w-full" placeholder="○○丁目○○番地" />
-              <InputError :message="errors.post_address2" />
+              <TextInput v-model="form.org.mail.address2" class="w-full" placeholder="○○丁目○○番地" />
+              <InputError :message="errors?.org?.mail?.address2" />
             </div>
-            <div>
+            <div class="flex-1">
               <InputLabel :value="t('registers.post_address3')" />
-              <TextInput v-model="form.post_address3" class="w-full" placeholder="xxxビル○○F" />
-              <InputError :message="errors.post_address3" />
+              <TextInput v-model="form.org.mail.address3" class="w-full" placeholder="xxxビル○○F" />
+              <InputError :message="errors?.org?.mail?.address3" />
             </div>
-
+          </div>            
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
             <div>
               <InputLabel :value="t('registers.tel')" />
               <TextInput
-                v-model="form.tel"
+                v-model="form.org.mail.tel"
                 maxlength="12"
-                @input="onTelInput"
+                @input="e => onPhoneInput('mail', 'tel', e)"
                 placeholder="03-1234-5678"
               />
               <InputError :message="errors.tel" />
             </div>
-            <p v-if="form.tel && form.tel.length !== 12"
+            <p v-if="form.org.mail.tel && form.org.mail.tel.length !== 12"
               class="text-xs text-red-500 mt-1">
               電話番号は 03-1234-5678 の形式で入力してください
             </p>
@@ -177,42 +287,57 @@
             <div>
               <InputLabel :value="t('registers.fax')" />
               <TextInput
-                v-model="form.fax"
+                v-model="form.org.mail.fax"
                 maxlength="12"
-                @input="onFaxInput"
+                @input="e => onPhoneInput('mail', 'fax', e)"
                 placeholder="03-1234-5678"
               />
-              <InputError :message="errors.fax" />
+              <InputError :message="errors?.org?.mail?.fax" />
             </div>
-            <p v-if="form.fax && form.fax.length !== 12"
+            <p v-if="form.org.mail.fax && form.org.mail.fax.length !== 12"
               class="text-xs text-red-500 mt-1">
               FAX番号は 03-1234-5678 の形式で入力してください
             </p>
-
-            <div>
-              <InputLabel :value="t('registers.staff')" />
-              <TextInput v-model="form.staff" class="w-full" />
-              <InputError :message="errors.staff" />
-            </div>
-
             <div>
               <InputLabel :value="t('registers.mobile')" />
               <TextInput
-                v-model="form.mobile"
+                v-model="form.org.mail.mobile"
                 class="w-full"
                 placeholder="090-xxxx-xxxx"
                 maxlength="13"
-                @input="onMobileInput"
+                @input="e => onPhoneInput('mail', 'mobile', e)"
               />
-              <InputError :message="errors.mobile" />
+              <InputError :message="errors?.org?.mail?.mobile" />
             </div>
-            <p v-if="form.mobile && form.mobile.length !== 13"
+            <p v-if="form.org.mail.mobile && form.org.mail.mobile.length !== 13"
               class="text-xs text-red-500 mt-1">
               携帯電話は 090-1234-5678 の形式で入力してください
             </p>
-          </div>
+          </div>            
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+            <!-- 肩書き -->
+            <div class="flex-1">
+              <div>
+                <InputLabel :value="t('registers.position')" />
+                <TextInput v-model="form.org.mail.position" class="w-full" />
+              </div>
+              <InputError :message="errors?.org?.mail?.position" />
+            </div>
 
+            <!-- 氏名 -->
+            <div class="flex-1">
+              <div>
+                <InputLabel :value="t('registers.staff')" />
+                <div class="flex gap-2">
+                  <TextInput v-model="form.org.mail.last_name" class="w-full" />
+                  <TextInput v-model="form.org.mail.first_name" class="w-full" />
+                </div>
+              </div>
+              <InputError :message="errors?.org?.mail?.staff" />
+            </div>
+          </div>
         </div>
+      <!-- ここまでが郵送先-->         
         <!-- 2カラム -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- 左カラム -->
@@ -343,24 +468,35 @@
               @change="handleFileSelect"
             />
           </div>
-
           <InputError :message="errors.history_certificate" />
 
-          <!-- 口座振替依頼書 -->
-<!--
-          <div
-            @dragover.prevent
-            @dragenter.prevent
-            @drop.prevent="handleDrop($event, 'bank_transfer_request')"
-            class="border-2 border-dashed border-gray-300 p-6 text-center cursor-pointer"
-            @click="triggerFileSelect('bank_transfer_request')"
-          >
-            <p>口座振替依頼書（PDF）をドラッグ＆ドロップ または クリックして選択</p>
-            <input type="file" class="hidden" ref="bankTransferInput" accept="application/pdf"
-              @change="handleFileSelect($event, 'bank_transfer_request')" />
+          <div v-if="!form.same_as_corp" class="mt-6">
+            <div
+              @dragover.prevent
+              @dragenter.prevent
+              @drop.prevent="handleMailCertDrop"
+              class="border-2 border-dashed border-gray-300 p-6 text-center cursor-pointer"
+              @click="triggerMailCertSelect"
+            >
+              <p v-if="!form.mail_address_certificate">
+                郵送先確認資料（PDF）をアップロードしてください
+              </p>
+              <p v-else class="text-green-600 font-medium">
+                選択済み: {{ form.mail_address_certificate.name }}
+              </p>
+
+              <input
+                type="file"
+                class="hidden"
+                ref="mailAddressCertInput"
+                accept="application/pdf"
+                @change="handleMailCertSelect"
+              />
+            </div>
+
+            <InputError :message="errors.mail_address_certificate" />
           </div>
-          <InputError :message="errors.bank_transfer_request" />
--->
+
         </div>
 
         <div v-if="pdfUrl" class="mt-5">
@@ -400,7 +536,8 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import Autocomplete from '@/Components/Autocomplete.vue'    
+import Autocomplete from '@/Components/Autocomplete.vue'
+import RegisterStep from '@/Components/RegisterStep.vue'    
 import axios from 'axios'
 import { useZipcode } from '@/composables/useZipcode'
 import { useI18n } from 'vue-i18n'
@@ -413,22 +550,48 @@ const bankInput = ref(null)
 console.log(page.props,page.props.token) // ← ここで form が見える
 
 const form = useForm({
-  company_furigana: page.props.form?.company_furigana ?? 'クーネット',
-  representative_furigana: page.props.form?.representative_furigana ?? 'クモダ',
+  company_kana: page.props.form?.company_kana ?? 'クーネット',
+  rep_last_kana: page.props.form?.representative_last_kana ?? 'クモダ',
+  rep_first_kana: page.props.form?.representative_first_kana ?? 'トシヒロ',
   company_type_prefix: page.props.form?.company_type_prefix ?? '株式会社',
   company_name: page.props.form?.company_name ?? 'クーネット',
   company_type_suffix: page.props.form?.company_type_suffix ?? '',
-  representative: page.props.form?.representative ?? '雲田敏広',
-  address_zip: page.props.form?.address_zip ?? '224-0021',
-  address1: page.props.form?.address1 ?? '横浜市都筑区北山田',
-  address2: page.props.form?.address2 ?? '横浜市',
-  address3: page.props.form?.address3 ?? '横浜市',
-  address_zip: page.props.form?.address_zip ?? '224-0021',
-  post_address1: page.props.form?.zip_address1 ?? '横浜市都筑区北山田',
-  post_address2: page.props.form?.zip_address2 ?? '２丁目3番３号',
-  post_address3: page.props.form?.zip_address3 ?? 'RACAビル５F',
-  tel: page.props.form?.tel ?? '045-590-0090',
-  fax: page.props.form?.fax ?? '045-590-0091',
+  representative_last_name: page.props.form?.representative_last_name ?? '雲田',
+  representative_first_name: page.props.form?.representative_first_name ?? '敏広',
+  same_as_corp: false,
+
+  org: {
+    corp: {
+      type: 1,
+      postal_code: page.props.form?.org?.corp?.postal_code ?? '224-0021',
+      address1: page.props.form?.org?.corp?.address1 ?? '横浜市都筑区北山田',
+      address2: page.props.form?.org?.corp?.address2 ?? '２−３−３',
+      address3: page.props.form?.org?.corp?.address3 ?? 'RACAビル５F',
+      tel: page.props.form?.org?.corp?.tel ?? '045-590-0090',
+      fax: page.props.form?.org?.corp?.fax ?? '045-590-0091',
+      mobile: page.props.form?.org?.mail?.mobile ?? '',
+      email: page.props.form?.org?.corp?.email ?? 't_kumoda@coo-net.co.jp',
+      position: page.props.form?.org?.corp?.position ?? '代表取締役',
+      last_name: page.props.form?.org?.corp?.last_name ?? '',
+      first_name: page.props.form?.org?.corp?.first_name ?? '',
+    },
+
+    mail: {
+      type: 2,
+      postal_code: page.props.form?.org?.mail?.postal_code ?? '',
+      address1: page.props.form?.org?.mail?.address1 ?? '',
+      address2: page.props.form?.org?.mail?.address2 ?? '',
+      address3: page.props.form?.org?.mail?.address3 ?? '',
+      tel: page.props.form?.org?.mail?.tel ?? '',
+      fax: page.props.form?.org?.mail?.fax ?? '',
+      mobile: page.props.form?.org?.mail?.mobile ?? '',
+      email: page.props.form?.org?.mail?.email ?? '',
+      position: page.props.form?.org?.mail?.position ?? '',
+      last_name: page.props.form?.org?.mail?.last_name ?? '',
+      first_name: page.props.form?.org?.mail?.first_name ?? '',
+    },
+  },
+
   bank_type: page.props.form?.bank_type ?? '',
   bank_name: page.props.form?.bank_name ?? '',
   bank_code: page.props.form?.bank_code ?? '',
@@ -438,34 +601,10 @@ const form = useForm({
   account_no: page.props.form?.account_no ?? '1234567',
   account_kana: page.props.form?.account_kana ?? 'クーネット',
   account_name: page.props.form?.account_name ?? 'クーネット',
-  staff: '',
-  mobile: '',
   history_certificate: null,
+  mail_address_certificate: null,   
 });
-/*
-const form = useForm({
-  company_furigana: page.props.form?.company_furigana ?? '',
-  representative_furigana: page.props.form?.representative_furigana ?? '',
-  company_name: page.props.form?.company_name ?? '',
-  representative: page.props.form?.representative ?? '',
-  address_zip: page.props.form?.address_zip ?? '',
-  address: page.props.form?.address ?? '',
-  tel: page.props.form?.tel ?? '',
-  fax: page.props.form?.fax ?? '',
-  bank_type: page.props.form?.bank_type ?? '',
-  bank_name: page.props.form?.bank_name ?? '',
-  bank_code: page.props.form?.bank_code ?? '',
-  branch_name: page.props.form?.branch_name ?? '',
-  branch_code: page.props.form?.branch_code ?? '',  
-  account_type: page.props.form?.account_type ?? '普通',
-  account_no: page.props.form?.account_no ?? '',
-  account_kana: page.props.form?.account_kana ?? '',
-  account_name: page.props.form?.account_name ?? '',
-  staff: '',
-  mobile: '',
-  history_certificate: null,
-});
-*/
+
 // エラー
 //const errors = page.props.errors || {}
 const errors = ref({})
@@ -474,12 +613,14 @@ const validateRequired = () => {
   errors.value = {}
 
   const required = [
-    'company_furigana',
-    'representative_furigana',
+    'company_kana',
+    'representative_last_name_kana',
+    'representative_first_name_kana',
     'company_name',
-    'representative',
-    'address_zip',
-    'address1',
+    'representative_last_name',
+    'representative_first_name',
+    'org.corp.postal_code',
+    'org.corp.address1',
     'address2',
     'tel',
     'post_address1',
@@ -658,7 +799,6 @@ const submitPDF = async () => {
     console.error(e)
   }
 }
-
 const normalizePhone = (value) => {
   if (!value) return ''
 
@@ -674,20 +814,16 @@ const normalizePhone = (value) => {
   return value.replace(/[^0-9-]/g, '')
 }
 
-const onMobileInput = (e) => {
-  form.mobile = normalizePhone(e.target.value)
-}
-
-const onTelInput = (e) => {
-  form.tel = normalizePhone(e.target.value)
-}
-
-const onFaxInput = (e) => {
-  form.fax = normalizePhone(e.target.value)
+/**
+ * @param {'corp'|'mail'} target
+ * @param {'tel'|'fax'|'mobile'} field
+ */
+const onPhoneInput = (target, field, e) => {
+  form.org[target][field] = normalizePhone(e.target.value)
 }
 
 
-const normalizeFurigana = (value) => {
+const normalizeKana = (value) => {
   if (!value) return ''
 
   // ひらがな → カタカナ
@@ -699,33 +835,13 @@ const normalizeFurigana = (value) => {
   return value.replace(/[^\u30A0-\u30FFー　]/g, '')
 }
 
-const companyFurigana = computed({
-  get: () => form.company_furigana,
+const companyKana = computed({
+  get: () => form.company_kana,
   set: (value) => {
-    form.company_furigana = normalizeFurigana(value)
+    form.company_kana = normalizeKana(value)
   },
 })
-const companyTypes = [
-  { label: 'なし', value: '' },
-  { label: '株式会社', value: '株式会社' },
-  { label: '有限会社', value: '有限会社' },
-  { label: '合同会社', value: '合同会社' },
-]
 
-form.company_type_prefix = ''
-form.company_type_suffix = ''
-
-watch(() => form.company_type_prefix, () => {
-  if (form.company_type_prefix) {
-    form.company_type_suffix = ''
-  }
-})
-
-watch(() => form.company_type_suffix, () => {
-  if (form.company_type_suffix) {
-    form.company_type_prefix = ''
-  }
-})
 
 //〒番号関係
 const candidates = ref([])
@@ -763,21 +879,78 @@ function selectCandidate(candidate, field) {
 }
 
 const onAddressZipInput = (e) => {
-  form.address_zip = normalizeZip(e.target.value)
+  form.org.corp.postal_code = normalizeZip(e.target.value)
 }
 
 const onPostZipInput = (e) => {
-  form.post_zip = normalizeZip(e.target.value)
+  form.org.mail.postal_code = normalizeZip(e.target.value)
 }
 
 useZipcode(
-  toRef(form, 'post_zip'),
-  toRef(form, 'post_address1')
+  toRef(form.org.corp, 'postal_code'),
+  toRef(form.org.corp, 'address1')
 )
 
 useZipcode(
-  toRef(form, 'address_zip'),
-  toRef(form, 'address1')
+  toRef(form.org.mail, 'postal_code'),
+  toRef(form.org.mail, 'address1')
+)
+
+const companyTypes = [
+  { label: 'なし', value: '', kana: '' },
+  { label: '株式会社', value: '株式会社', kana: 'カ' },
+  { label: '有限会社', value: '有限会社', kana: 'ユ' },
+  { label: '合名会社', value: '合名会社', kana: 'メ' },
+  { label: '合資会社', value: '合資会社', kana: 'シ' },
+  { label: '合同会社', value: '合同会社', kana: 'ゴ' },
+]
+
+const buildAccountKana = () => {
+  const base = form.company_name_kana ?? ''
+
+  // prefix（前）
+  if (form.company_type_prefix) {
+    const type = companyTypes.find(
+      t => t.value === form.company_type_prefix
+    )
+    return type?.kana
+      ? `${type.kana})${base}`
+      : base
+  }
+
+  // suffix（後ろ）
+  if (form.company_type_suffix) {
+    const type = companyTypes.find(
+      t => t.value === form.company_type_suffix
+    )
+    return type?.kana
+      ? `${base}(${type.kana}`
+      : base
+  }
+
+  return base
+}
+
+watch(
+  () => [
+    form.company_type_prefix,
+    form.company_type_suffix,
+    form.company_name_kana,
+  ],
+  () => {
+    form.account_kana = buildAccountKana()
+  }
+)
+
+watch(
+  () => form.same_as_corp,
+  (checked) => {
+    if (!checked) return
+
+    form.org.mail = {
+      ...form.org.corp,
+    }
+  }
 )
 
 </script>

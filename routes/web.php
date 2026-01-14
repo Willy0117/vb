@@ -57,8 +57,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::prefix('member')->name('member.')->group(function () {
             Route::get('/', [AdminMemberController::class, 'index'])->name('index');
             Route::get('/pdf/{id}', [AdminMemberController::class, 'pdfPreview'])->name('pdf.preview');
-            Route::get('/{id}/edit', [AdminMemberController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [AdminMemberController::class, 'update'])->name('update');
+            Route::get('/{member}', [AdminMemberController::class, 'show'])->name('show');
+            Route::get('/{member}/edit', [AdminMemberController::class, 'edit'])->name('edit');
+            Route::put('/{member}', [AdminMemberController::class, 'update'])->name('update');
         });
     });
 });

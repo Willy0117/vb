@@ -9,7 +9,7 @@ class OrganizationDocument extends Model
 {
     protected $fillable = [
         'organization_id',
-        'type', // history_certificate 固定
+        'type', // 1:history_certificate 2:
         'path',
         'thumbnail_path',
     ];

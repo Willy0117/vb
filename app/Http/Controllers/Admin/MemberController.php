@@ -20,8 +20,6 @@ class MemberController extends Controller
                 'status',
                 'progress',
                 'organization',
-                'organization.contacts' => fn ($q) => $q->where('type', 1), // 代表者
-                'organization.addresses' => fn ($q) => $q->where('type', 1), // 登記住所
                 'organization.documents' => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
             ]);
 
@@ -68,43 +66,35 @@ class MemberController extends Controller
             ->withQueryString()
             ->through(function ($member) {
 
-                $document = $member->organization
-                    ?->documents
-                    ?->first();
-
-                $representative = $member->organization
-                    ?->contacts
-                    ?->first();
-                $contact = $member->organization?->contacts?->first();
-                $address = $member->organization?->addresses?->first();
+                $org = $member->organization;
+                $doc = $org?->documents?->first(); // type=1 は with 側で絞る前提
 
                 return [
                     'id' => $member->id,
 
                     // ステータス
-                    'status' => $member->status,
+                    'status'   => $member->status,
                     'progress' => $member->progress,
 
                     // 法人
                     'organization' => [
-                        'name' => $member->organization?->full_name,
+                        'name' => $org?->full_name,
                     ],
 
-                    // 代表者
-                    'representative' => $representative?->full_name,
-                    'tel' => $representative?->tel ?? null,
-                    'address' => $address
-                        ? ($address->address1 ?? '') 
-                        . ($address->address2 ? ' ' . $address->address2 : '') 
-                        . ($address->address3 ? ' ' . $address->address3 : '')
-                        : null,
-                    // 履歴事項全部証明書（★ここが正）
-                    'history_certificate' => $document ? [
-                        'path' => $document->path
-                            ? Storage::url($document->path)
+                    // 申請者（member）
+                    'name' => $member->full_name,
+
+                    // 連絡先（organization に集約）
+                    'tel' => $org?->tel,
+                    'address' => $org?->full_address,
+
+                    // 履歴事項全部証明書
+                    'history_certificate' => $doc ? [
+                        'path' => $doc->path
+                            ? Storage::url($doc->path)
                             : null,
-                        'thumbnail_path' => $document->thumbnail_path
-                            ? Storage::url($document->thumbnail_path)
+                        'thumbnail_path' => $doc->thumbnail_path
+                            ? Storage::url($doc->thumbnail_path)
                             : null,
                     ] : null,
 
@@ -144,24 +134,123 @@ class MemberController extends Controller
             ->with('success', __('member_created'));
     }
 
-    // 編集画面
-    public function edit(Member $member)
+    public function show(Request $request, Member $member)
     {
-        return Inertia::render('Admin/Members/Edit', [
-            'member' => $member
+        $member->load([
+            'status',
+            'progress',
+            'organizations',
+            'organizations.documents', // documents はここで取得するだけ
+        ]);
+        // persistQuery() 用に現在のクエリを保持
+        $queryParams = $request->only([
+            'company_name',
+            'name',
+            'tel',
+            'per_page',
+            'sort_by',
+            'sort_dir',
+            'page',
+        ]);
+        // 書類は type ごとに全部取得
+        $documents = $member->organizations
+            ->flatMap(fn ($org) => $org->documents)
+            ->map(fn ($doc) => [
+                'type'           => $doc->type,
+                'path'           => $doc->path ? Storage::url($doc->path) : null,
+                'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
+            ]);
+
+        return Inertia::render('Admin/Members/Show', [
+            'member' => [
+                'id' => $member->id,
+
+                // 申請者
+                'first_name' => $member->first_name,
+                'last_name'  => $member->last_name,
+                'name'       => $member->full_name,
+
+                // ステータス
+                'status'   => $member->status,
+                'progress' => $member->progress,
+
+                // organization（typeごとに整理）
+                'organizations' => $member->organizations->map(fn ($o) => [
+                    'id'           => $o->id,
+                    'type'         => $o->type,
+                    'name'         => $o->full_name,
+                    'postal_code'  => $o->postal_code,
+                    'address'      => $o->full_address,
+                    'tel'          => $o->tel,
+                    'fax'          => $o->fax,
+                    'mobile'       => $o->mobile,
+                    'email'        => $o->email,
+                    'contact_name' => $o->contact_name,
+                ]),
+
+                // 書類は独立
+                'documents' => $documents,
+
+                'created_at' => $member->created_at,
+            ],
+            // 検索条件をそのまま渡す
+            'filters' => $request->only([
+                'company_name', 'name', 'tel', 'per_page', 'sort_by', 'sort_dir', 'page'
+            ]),            
         ]);
     }
 
-    // 更新
-    public function update(Request $request, Member $member)
+    // 編集画面
+    public function edit(Member $member, Request $request)
     {
-        $validated = $request->validate([
+        $member->load([
+            'status',
+            'progress',
+            'organization',
         ]);
 
-        $member->update($validated);
+        $org = $member->organization;
 
-        return redirect()->route('admin.members.index')
-            ->with('success', __('profile.member_updated'));
+        return Inertia::render('Admin/Members/Edit', [
+            'member' => [
+                'id'         => $member->id,
+                'last_name'  => $member->last_name,
+                'first_name' => $member->first_name,
+                'status_id'  => $member->status_id,
+                'progress_id'=> $member->progress_id,
+                // 法人情報も分割して渡す
+                'organization' => $org ? [
+                    'name'         => $org->name,
+                    'prefix'       => $org->prefix,
+                    'suffix'       => $org->suffix,
+                    'postal_code'  => $org->postal_code,
+                    'address1'     => $org->address1,
+                    'address2'     => $org->address2,
+                    'address3'     => $org->address3,
+                    'tel'          => $org->tel,
+                    'fax'          => $org->fax,
+                    'mobile'       => $org->mobile,
+                    'email'        => $org->email,
+                    'contact_name' => $org->contact_name,
+                ] : null,
+            ],
+            'filters' => $request->only(['company_name', 'name', 'tel', 'per_page', 'sort_by', 'sort_dir']),
+        ]);
+    }
+
+
+    public function update(Request $request, Member $member)
+    {
+        $data = $request->validate([
+            'first_name' => 'required|string',
+            'last_name'  => 'required|string',
+        ]);
+
+        $member->update($data);
+
+        return redirect()
+            ->route('admin.member.show', $member)
+            ->with('success', '更新しました');
     }
 
     // 削除

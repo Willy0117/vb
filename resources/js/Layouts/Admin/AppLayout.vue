@@ -89,14 +89,6 @@ const user = props.auth.user
 //const { t } = useI18n()
 const { t, messages, locale } = useI18n();
 
-// ログを出して、その場で common.logout を評価してみる
-console.log('Manual check:', t('common.logout')); 
-console.log('Manual check:', t('action.save'));
-
-console.log('Locale:', locale.value); // "ja" と表示されるか
-console.log('All Messages:', messages.value); // { en: {...}, ja: {...} } となっているか
-console.log('JA Messages:', messages.value[locale.value]); // ここが undefined なら読み込み失敗
-
 const logout = () => {
   router.post('logout')
 }

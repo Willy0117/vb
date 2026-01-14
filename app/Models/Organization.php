@@ -8,48 +8,54 @@ class Organization extends Model
 {
     protected $fillable = [
         'member_id',
+        'type',
+        'name_prefix',
         'name',
-        'prefix',
-        'suffix',
+        'name_suffix',
+        'name_kana',
+        'postal_code',
+        'address1',
+        'address2',
+        'address3',
+        'last_name','first_name',
+        'tel',
+        'mobile',
+        'fax',
+        'email',
         'registration_number',
     ];
 
-    public function member()
+    /* ===== 表示用 ===== */
+
+    public function getFullNameAttribute()
     {
-        return $this->belongsTo(Member::class);
+        return trim(
+            ($this->name_prefix ?? '') .
+            ($this->name ?? '') .
+            ($this->name_suffix ?? '')
+        );
     }
 
-    public function contacts()
-    {
-        return $this->hasMany(OrganizationContact::class);
-    }
-
-    public function addresses()
-    {
-        return $this->hasMany(OrganizationAddress::class);
-    }
-    
     public function documents()
     {
         return $this->hasMany(OrganizationDocument::class);
     }
 
-    public function historyCertificate()
+    public function getFullAddressAttribute()
     {
-        return $this->hasOne(OrganizationDocument::class)
-            ->where('type', 'history_certificate');
+        return collect([
+            $this->address1,
+            $this->address2,
+            $this->address3,
+        ])->filter()->implode('');
     }
-    /**
-     * 法人正式名称
-     * 例：株式会社ビジョンブリッジ
-     */
-    public function getFullNameAttribute(): string
+
+    public function getContactNameAttribute()
     {
-        return trim(
-            ($this->prefix ?? '')
-            . $this->name
-            . ($this->suffix ?? '')
-        );
+        return collect([
+            $this->last_name,
+            $this->first_name,
+        ])->filter()->implode(' ');
     }
-    
 }
+

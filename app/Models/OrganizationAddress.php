@@ -24,5 +24,15 @@ class OrganizationAddress extends Model
     {
         return $this->hasMany(OrganizationAddressDocument::class);
     }
-        
+    
+    public function getFullAddressAttribute(): string
+    {
+        return collect([
+            $this->address1,
+            $this->address2,
+            $this->address3,
+        ])
+        ->filter(fn ($v) => filled($v)) // null, '' を除外
+        ->implode('');
+    }    
 }
