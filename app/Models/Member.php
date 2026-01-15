@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Member extends Model
 {
     protected $fillable = [
+        'last_name',
+        'first_name',
+        'last_name_kana',
+        'first_name_kana',
         'agree',
         'affiliate',
         'agreed_at',
@@ -29,7 +33,7 @@ class Member extends Model
     {
         return $this->hasOne(Organization::class);
     }
-    
+
     public function organizations()
     {
         return $this->hasMany(Organization::class);

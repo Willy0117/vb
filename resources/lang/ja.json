@@ -185,6 +185,8 @@
 
   "registers": {
     "title": "一般社団法人 全国中小建設工事業団体連合会 入会（加盟）申請",
+    "company_kana": "会社名(カナ)",
+    "company_name": "会社名",
     "last_name": "姓",
     "first_name": "名",
     "position": "役職または肩書",

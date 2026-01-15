@@ -10,7 +10,7 @@ class OrganizationDocument extends Model
     protected $fillable = [
         'organization_id',
         'type', // 1:history_certificate 2:
-        'path',
+        'file_path',
         'thumbnail_path',
     ];
 

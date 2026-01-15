@@ -1,5 +1,6 @@
 <template>
   <GuestLayout>
+    <RegisterStep current="bank" />
     <Head title="PDF確認" />
 
     <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
@@ -31,6 +32,7 @@
 import { ref, onMounted } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
+import RegisterStep from '@/Components/RegisterStep.vue'    
 
 const canvas = ref(null)
 const page = usePage()

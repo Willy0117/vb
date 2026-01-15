@@ -9,20 +9,21 @@ class Organization extends Model
     protected $fillable = [
         'member_id',
         'type',
-        'name_prefix',
+        'position',
         'name',
-        'name_suffix',
         'name_kana',
+        'name_prefix',
+        'name_suffix',
         'postal_code',
         'address1',
         'address2',
         'address3',
-        'last_name','first_name',
+        'last_name',
+        'first_name',
         'tel',
         'mobile',
         'fax',
         'email',
-        'registration_number',
     ];
 
     /* ===== 表示用 ===== */

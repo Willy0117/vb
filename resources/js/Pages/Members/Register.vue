@@ -17,15 +17,20 @@
             <h3 class="text-lg font-semibold mb-2">{{ t('registers.organization') }}</h3>
 
             <div>
-              <InputLabel value="会社名（フリガナ）" />
+              <InputLabel :value="t('registers.company_kana')" />
+
               <TextInput
                 v-model="companyKana"
+                :class="{
+                  'border-red-500': getError('company_kana'),
+                  'border-gray-300': !getError('company_kana')
+                }"
                 class="w-full"
               />
-              <InputError :message="errors.company_kana" />
             </div>
             <div>
-              <InputLabel value="会社名" />
+              <InputLabel :value="t('company_name')" /> 
+
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
                 <div class="flex-1">
                   <!-- 前 -->
@@ -43,6 +48,10 @@
                   <!-- 会社名 -->
                   <TextInput
                     v-model="form.company_name"
+                    :class="{
+                      'border-red-500': getError('company_name'),
+                      'border-gray-300': !getError('company_name')
+                    }"
                     class="flex-1"
                     placeholder="〇〇商事"
                   />
@@ -59,7 +68,6 @@
                   </select>
                 </div>
               </div>
-              <InputError :message="errors.company_name" />
               <p class="text-xs text-gray-500 mt-1">
                 例）株式会社〇〇商事 ／ 〇〇商事株式会社
               </p>
@@ -73,12 +81,20 @@
               <InputLabel value="代表者名（フリガナ）" />
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
                 <div class="flex-1">
-                  <TextInput v-model="form.representative_last_kana" class="w-full" :placeholder="t('registers.last_name_kana')" />
-                  <InputError :message="errors.representative_last_kana" />
+                  <TextInput v-model="form.rep_last_kana"
+                    :class="{
+                      'border-red-500': getError('rep_last_kana'),
+                      'border-gray-300': !getError('rep_last_kana')
+                    }"
+                   class="w-full" :placeholder="t('registers.last_name_kana')" />
                 </div>  
                 <div class="flex-1">
-                  <TextInput v-model="form.representative_first_kana" class="w-full" :placeholder="t('registers.first_name_kana')" />
-                  <InputError :message="errors.representative_first_kana" />
+                  <TextInput v-model="form.rep_first_kana"
+                    :class="{
+                      'border-red-500': getError('rep_first_kana'),
+                      'border-gray-300': !getError('rep_first_kana')
+                    }"
+                    class="w-full" :placeholder="t('registers.first_name_kana')" />
                 </div>
               </div>
 
@@ -87,12 +103,20 @@
              <InputLabel value="代表者名" />
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
                 <div class="flex-1">
-                  <TextInput v-model="form.representative_last_name" class="w-full" :placeholder="t('registers.last_name')" />
-                  <InputError :message="errors.representative_last_name" />
+                  <TextInput v-model="form.rep_last_name"
+                    :class="{
+                      'border-red-500': getError('rep_last_name'),
+                      'border-gray-300': !getError('rep_last_name')
+                    }"
+                    class="w-full" :placeholder="t('registers.last_name')" />
                 </div>
                 <div class="flex-1">  
-                  <TextInput v-model="form.representative_first_name" class="w-full" :placeholder="t('registers.first_name')" />
-                  <InputError :message="errors.representative_first_name" />
+                  <TextInput v-model="form.rep_first_name"
+                    :class="{
+                      'border-red-500': getError('rep_first_name'),
+                      'border-gray-300': !getError('rep_first_name')
+                    }"
+                    class="w-full" :placeholder="t('registers.first_name')" />
                 </div>
               </div>
             </div>
@@ -124,19 +148,27 @@
 
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
             <div class="flex-1">
-              <InputLabel :value="t('registers.address1')" />
-              <TextInput v-model="form.org.corp.address1" class="w-full" />
-              <InputError :message="errors?.org?.corp?.address1" />
+              <InputLabel :value="t('registers.address1')" /> <InputError :message="getError('org.corp.address1')" />
+              <TextInput v-model="form.org.corp.address1"
+                :class="{
+                  'border-red-500': getError('org.corp.address1'),
+                  'border-gray-300': !getError('org.corp.address1')
+                }"
+                class="w-full"
+              />
             </div>
             <div class="flex-1">
               <InputLabel :value="t('registers.address2')" />
-              <TextInput v-model="form.org.corp.address2" class="w-full" />
-              <InputError :message="errors?.org?.corp?.address2" />
+              <TextInput v-model="form.org.corp.address2"
+                :class="{
+                  'border-red-500': getError('org.corp.address2'),
+                  'border-gray-300': !getError('org.corp.address2')
+                }"
+                class="w-full" />
             </div>
             <div class="flex-1">
               <InputLabel :value="t('registers.address3')" />
               <TextInput v-model="form.org.corp.address3" class="w-full" />
-              <InputError :message="errors?.org?.corp?.address3" />
             </div>
           </div>
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -144,11 +176,14 @@
               <InputLabel :value="t('registers.tel')" />
               <TextInput
                 v-model="form.org.corp.tel"
+                :class="{
+                  'border-red-500': getError('org.corp.tel'),
+                  'border-gray-300': !getError('org.corp.tel')
+                }"
                 maxlength="12"
                 @input="e => onPhoneInput('corp', 'tel', e)"
                 placeholder="03-1234-5678"
               />
-              <InputError :message="errors?.org?.corp?.tel" />
               <p v-if="form.org.corp.tel && form.org.corp.tel.length !== 12"
                 class="text-xs text-red-500 mt-1">
                 電話番号は 03-1234-5678 の形式で入力してください
@@ -163,7 +198,6 @@
                 @input="e => onPhoneInput('corp', 'fax', e)"
                 placeholder="03-1234-5678"
               />
-              <InputError :message="errors?.org?.corp?.fax" />
               <p v-if="form.org.corp.fax && form.org.corp.fax.length !== 12"
                 class="text-xs text-red-500 mt-1">
                 FAX番号は 03-1234-5678 の形式で入力してください
@@ -178,7 +212,6 @@
                 maxlength="13"
                 @input="e => onPhoneInput('corp', 'mobile', e)"
               />
-              <InputError :message="errors.mobile" />
               <p v-if="form.org.corp.mobile && form.org.corp.mobile.length !== 13"
                 class="text-xs text-red-500 mt-1">
                 携帯電話は 090-1234-5678 の形式で入力してください
@@ -193,19 +226,30 @@
               <InputLabel :value="t('registers.position')" />
               <TextInput v-model="form.org.corp.position" class="w-full" />
             </div>
-            <InputError :message="errors?.org?.corp?.position" />
+            <p v-if="form.org.corp.mobile && form.org.corp.mobile.length !== 13"
+                class="text-xs text-red-500 mt-1">
+                携帯電話は 090-1234-5678 の形式で入力してください
+            </p>
           </div>
-
           <!-- 氏名 -->
-          <div class="flex-1">
+          <div class="flex-[2]">
             <div>
               <InputLabel :value="t('registers.staff')" />
               <div class="flex gap-2">
-                <TextInput v-model="form.org.corp.last_name" class="w-full" />
-                <TextInput v-model="form.org.corp.first_name" class="w-full" />
+                <TextInput v-model="form.org.corp.last_name"
+                  :class="{
+                    'border-red-500': getError('org.corp.last_name'),
+                    'border-gray-300': !getError('org.corp.last_name')
+                    }"
+                    class="w-full" />
+                <TextInput v-model="form.org.corp.first_name"
+                  :class="{
+                    'border-red-500': getError('org.corp.first_name'),
+                    'border-gray-300': !getError('org.corp.first_name')
+                  }"
+                  class="w-full" />
               </div>
             </div>
-            <InputError :message="errors?.org?.corp?.staff" />
           </div>
         </div>
 
@@ -386,24 +430,53 @@
 
             <!-- 支店名 + 支店コード -->
             <div class="grid grid-cols-2 gap-4">
+
+              <!-- 支店名（通常銀行のみ） -->
               <div>
-                <Autocomplete
-                  v-if="form.bank_code"
-                  :model-value="selectedBranch"
-                  :label="t('banks.branch_name')"
-                  fetch-url="/api/branches"
-                  :extra-params="{ bank_code: form.bank_code }"
-                  :initial="form.branch_name"
-                  @selected="handleBranchSelected"
+                <template v-if="form.bank_code !== '9900'">
+                  <Autocomplete
+                    v-if="form.bank_code"
+                    :model-value="selectedBranch"
+                    :label="t('banks.branch_name')"
+                    fetch-url="/api/branches"
+                    :extra-params="{ bank_code: form.bank_code }"
+                    :initial="form.branch_name"
+                    @selected="handleBranchSelected"
+                  />
+                  <p v-if="errors.branch_name" class="text-red-500 text-sm mt-1">
+                    {{ errors.branch_name }}
+                  </p>
+                </template>
+
+                <!-- ゆうちょ時のダミー表示（任意） -->
+                <template v-else>
+                  <InputLabel :value="t('banks.branch_name')" />
+                  <p class="text-gray-400 text-sm mt-2">なし</p>
+                </template>
+              </div>
+
+              <!-- 支店コード（常に入力可） -->
+              <div>
+                <InputLabel
+                  :value="form.bank_code === '9900'
+                    ? '記号'
+                    : t('banks.branch_code')"
                 />
-                <p v-if="errors.branch_name" class="text-red-500 text-sm mt-1">
-                  {{ errors.branch_name }}
+
+                <TextInput
+                  v-model="form.branch_code"
+                  class="w-full"
+                  :maxlength="form.bank_code === '9900' ? 5 : 3"
+                  :placeholder="form.bank_code === '9900'
+                    ? '記号（5桁）'
+                    : '支店コード（3桁）'"
+                />
+
+                <p v-if="errors.branch_code" class="text-red-500 text-sm mt-1">
+                  {{ errors.branch_code }}
                 </p>
               </div>
-              <div>
-                <InputLabel :value="t('banks.branch_code')" />
-                <TextInput v-model="form.branch_code" class="w-full" />
-              </div>
+
             </div>
 
           </div>
@@ -499,16 +572,6 @@
 
         </div>
 
-        <div v-if="pdfUrl" class="mt-5">
-          <h2 class="text-lg font-bold mb-2">PDFが生成されました</h2>
-
-          <iframe :src="pdfUrl" width="100%" height="500px"></iframe>
-
-          <a :href="pdfUrl" download class="text-blue-600 underline">
-            ダウンロード
-          </a>
-        </div>
-        <!-- 送信 -->
         <PrimaryButton class="mt-6" type="submit">
           データ送信
         </PrimaryButton>
@@ -547,18 +610,26 @@ const { t } = useI18n()
 const page = usePage()
 const bankInput = ref(null)
 
-console.log(page.props,page.props.token) // ← ここで form が見える
+watch(
+  () => page.props.errors,
+  e => {
+    console.log('Laravel errors:', e)
+  },
+  { deep: true }
+)
+
+console.log(page.props) // ← ここで form が見える
 
 const form = useForm({
   company_kana: page.props.form?.company_kana ?? 'クーネット',
-  rep_last_kana: page.props.form?.representative_last_kana ?? 'クモダ',
-  rep_first_kana: page.props.form?.representative_first_kana ?? 'トシヒロ',
+  rep_last_kana: page.props.form?.rep_last_kana ?? 'クモダ',
+  rep_first_kana: page.props.form?.rep_first_kana ?? 'トシヒロ',
   company_type_prefix: page.props.form?.company_type_prefix ?? '株式会社',
   company_name: page.props.form?.company_name ?? 'クーネット',
   company_type_suffix: page.props.form?.company_type_suffix ?? '',
-  representative_last_name: page.props.form?.representative_last_name ?? '雲田',
-  representative_first_name: page.props.form?.representative_first_name ?? '敏広',
-  same_as_corp: false,
+  rep_last_name: page.props.form?.rep_last_name ?? '雲田',
+  rep_first_name: page.props.form?.rep_first_name ?? '敏広',
+  same_as_corp: page.props.form?.same_as_corp??false,
 
   org: {
     corp: {
@@ -601,51 +672,94 @@ const form = useForm({
   account_no: page.props.form?.account_no ?? '1234567',
   account_kana: page.props.form?.account_kana ?? 'クーネット',
   account_name: page.props.form?.account_name ?? 'クーネット',
-  history_certificate: null,
-  mail_address_certificate: null,   
+  history_certificate: page.props.form?.history_certificate??null,
+  mail_address_certificate: page.props.form?.mail_address_certificate??null,   
 });
 
 // エラー
 //const errors = page.props.errors || {}
 const errors = ref({})
 
+//function getError(key) {
+//  const keys = key.split('.')
+//  return keys.reduce((acc, k) => (acc ? acc[k] : undefined), errors.value)
+//}
+
+function getError(key) {
+  // ① 今まで通り：ネスト構造（フロント独自 errors）
+  const keys = key.split('.')
+  const nestedError = keys.reduce(
+    (acc, k) => (acc ? acc[k] : undefined),
+    errors.value
+  )
+
+  if (nestedError) return nestedError
+
+  // ② 追加：Laravel / Inertia errors（ドット文字列キー）
+  return page.props.errors?.[key]
+}
+
+
 const validateRequired = () => {
   errors.value = {}
 
-  const required = [
+  const isYuucho = form.bank_code === '9900'
+
+  // ===== フラット必須 =====
+  const requiredFlat = [
     'company_kana',
-    'representative_last_name_kana',
-    'representative_first_name_kana',
+    'rep_last_kana',
+    'rep_first_kana',
     'company_name',
-    'representative_last_name',
-    'representative_first_name',
-    'org.corp.postal_code',
-    'org.corp.address1',
-    'address2',
-    'tel',
-    'post_address1',
-    'post_address2',
+    'rep_last_name',
+    'rep_first_name',
     'bank_type',
     'bank_name',
-    'branch_name',
     'account_type',
     'account_no',
     'account_kana',
     'account_name',
   ]
 
-  required.forEach(key => {
-    const v = form[key]
-    if (!v || (typeof v === 'string' && v.trim() === '')) {
+  requiredFlat.forEach(key => {
+    if (!form[key] || form[key].toString().trim() === '') {
+      console.log(key)
       errors.value[key] = '必須項目です'
     }
   })
-  console.log(errors)
+
+  // ===== org.corp 必須（address3/ fax / mobile/ email 除外）=====
+  if (form.org?.corp) {
+    Object.entries(form.org.corp).forEach(([key, value]) => {
+      if (['address3', 'fax', 'mobile', 'email'].includes(key)) return
+
+      if (value === null || value === undefined || value === '') {
+        // ネストオブジェクトを作る
+        if (!errors.value.org) errors.value.org = {}
+        if (!errors.value.org.corp) errors.value.org.corp = {}
+        errors.value.org.corp[key] = '必須項目です'
+      }
+    })
+  }
+
+
+  // ===== 銀行 =====
+  if (!isYuucho) {
+    // ゆうちょ以外 → 支店名必須
+    if (!form.branch_name) {
+      errors.value.branch_name = '必須項目です'
+    }
+  }
+
+  if (isYuucho) {
+    // ゆうちょ → 記号（branch_code）必須
+    if (!form.branch_code) {
+      errors.value.branch_code = '必須項目です'
+    }
+  }
 
   return Object.keys(errors.value).length === 0
 }
-
-
 
 const historyCertificateInput = ref(null)
 
@@ -664,28 +778,93 @@ const handleDrop = (e) => {
   if (!file) return
   form.history_certificate = file
 }
-  
+
+// 郵送先確認資料 input
+const mailAddressCertInput = ref(null)
+
+// クリックでファイル選択
+const triggerMailCertSelect = () => {
+  mailAddressCertInput.value?.click()
+}
+
+// 通常のファイル選択
+const handleMailCertSelect = (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  form.mail_address_certificate = file
+}
+
+// ドラッグ＆ドロップ
+const handleMailCertDrop = (e) => {
+  const file = e.dataTransfer.files?.[0]
+  if (!file) return
+  form.mail_address_certificate = file
+}  
 
 // 送信処理
 const submitForm = () => {
-  console.log(page.props.token)
   if (!validateRequired()) return
 
-  const data = new FormData()
+  // flatten して送信
+  const payload = {
+    company_name: form.company_name,
+    company_kana: form.company_kana,
+    rep_last_kana: form.rep_last_kana,
+    rep_first_kana: form.rep_first_kana,
+    company_type_prefix: form.company_type_prefix,
+    company_type_suffix: form.company_type_suffix,
+    rep_last_name: form.rep_last_name,
+    rep_first_name: form.rep_first_name,
+    same_as_corp: form.same_as_corp,
 
-  Object.keys(form).forEach(key => {
-    if (form[key] !== null && form[key] !== undefined) {
-      data.append(key, form[key])
+    bank_type: form.bank_type,
+    bank_name: form.bank_name,
+    bank_code: form.bank_code,
+    branch_name: form.branch_name,
+    branch_code: form.branch_code,
+    account_type: form.account_type,
+    account_no: form.account_no,
+    account_kana: form.account_kana,
+    account_name: form.account_name,
+
+    // ここが肝
+    'corp.postal_code': form.org.corp.postal_code,
+    'corp.address1': form.org.corp.address1,
+    'corp.address2': form.org.corp.address2,
+    'corp.address3': form.org.corp.address3,
+    'corp.tel': form.org.corp.tel,
+    'corp.fax': form.org.corp.fax,
+    'corp.mobile': form.org.corp.mobile,
+    'corp.position': form.org.corp.position,
+    'corp.last_name': form.org.corp.last_name,
+    'corp.first_name': form.org.corp.first_name,
+
+    'mail.postal_code': form.org.mail.postal_code,
+    'mail.address1': form.org.mail.address1,
+    'mail.address2': form.org.mail.address2,
+    'mail.address3': form.org.mail.address3,
+    'mail.tel': form.org.mail.tel,
+    'mail.fax': form.org.mail.fax,
+    'mail.mobile': form.org.mail.mobile,
+    'mail.email': form.org.mail.email,
+    'mail.position': form.org.mail.position,
+    'mail.last_name': form.org.mail.last_name,
+    'mail.first_name': form.org.mail.first_name,
+  }
+  console.log(payload)
+
+  form.post(route('members.register.complete', { token: page.props.token }), {
+    data: payload,
+    preserveScroll: true,
+    onError: (errors) => {
+      console.log('Validation errors:', errors)
+      // ここで errors を元にフォームの枠を赤くしたり
+      // InputError コンポーネントに渡したりできる
+    },
+    onFinish: () => {
+      console.log('Submission finished')
     }
   })
-  console.log(data)
-  Inertia.post(
-    route('members.register.complete', { token: page.props.token }),
-    data,
-    {
-      preserveScroll: true,
-    }
-  )
 }
 
 
@@ -941,7 +1120,7 @@ watch(
     form.account_kana = buildAccountKana()
   }
 )
-
+// 郵送先が同じならコピーする
 watch(
   () => form.same_as_corp,
   (checked) => {
@@ -952,6 +1131,105 @@ watch(
     }
   }
 )
+// 会社情報から口座名カナ、口座名を自動設定する
+const getCompanyTypeKana = (prefix) => {
+  const type = companyTypes.find(t => t.value === prefix)
+  return type?.kana ?? ''
+}
+// prefix 用
+const prefixKana = getCompanyTypeKana(form.company_type_prefix)
+
+// suffix 用（同じ関数をそのまま使う）
+const suffixKana = getCompanyTypeKana(form.company_type_suffix)
+
+watch(
+  [
+    () => form.company_type_prefix,
+    () => form.company_kana,
+    () => form.company_name,
+    () => form.company_type_suffix,
+    () => form.org.corp.position,
+    () => form.rep_last_name,
+    () => form.rep_first_name,
+  ],
+  () => {
+    // ===== 口座名義（フリガナ） =====
+    // ===== 口座名義（フリガナ） =====
+    const prefixKana = getCompanyTypeKana(form.company_type_prefix)
+    const suffixKana = getCompanyTypeKana(form.company_type_suffix)
+
+    if (prefixKana) {
+      // 株式会社○○ → カ）○○ / 有限会社○○ → ユ）○○
+      form.account_kana = `${prefixKana}）${form.company_kana ?? ''}`
+    } else if (suffixKana) {
+      // ○○株式会社 → ○○（カ / ○○有限会社 → ○○（ユ
+      form.account_kana = `${form.company_kana ?? ''}（${suffixKana}`
+    } else {
+      form.account_kana = form.company_kana ?? ''
+    }
+
+    form.account_kana = form.account_kana.replace(/\s+/g, '')
+
+
+    // ===== 口座名義（漢字） =====
+    form.account_name = (
+      `${form.company_type_prefix ?? ''}` +
+      `${form.company_name ?? ''}` +
+      `${form.company_type_suffix ?? ''}` + 
+      `${form.org.corp.position ?? ''}` +
+      `${form.rep_last_name ?? ''}` +
+      `${form.rep_first_name ?? ''}`
+    ).replace(/\s+/g, '')
+  },
+  { immediate: true }
+)
+// prefixまたはsuffixが入ったらもう一方は消す
+watch(
+  () => form.company_type_prefix,
+  (val) => {
+    if (val) form.company_type_suffix = ''
+  }
+)
+
+watch(
+  () => form.company_type_suffix,
+  (val) => {
+    if (val) form.company_type_prefix = ''
+  }
+)
+// 会社情報の代表者名が入力されたら,org.corp.にも入れる
+watch(
+  () => [form.rep_last_name, form.rep_first_name],
+  ([last, first]) => {
+    if (last) {
+      form.org.corp.last_name = last
+    }
+    if (first) {
+      form.org.corp.first_name = first
+    }
+  },
+  { immediate: true }
+)
+
+
+//銀行コードまたは支店コードを半角数字化
+const toHalfWidthNumber = (value) => {
+  if (!value) return ''
+  return value
+    .replace(/[０-９]/g, (s) =>
+      String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
+    )
+    .replace(/[^0-9]/g, '')
+}
+
+watch(() => form.bank_code, (val) => {
+  form.bank_code = toHalfWidthNumber(val)
+})
+
+watch(() => form.branch_code, (val) => {
+  form.branch_code = toHalfWidthNumber(val)
+})
+
 
 </script>
 

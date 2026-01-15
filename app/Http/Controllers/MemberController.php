@@ -11,6 +11,7 @@ use setasign\Fpdi\Tcpdf\Fpdi;
 use App\Models\Member;
 use App\Models\PreUser;
 use Imagick;
+use Illuminate\Validation\Rule;
 
 class MemberController extends Controller
 {
@@ -82,24 +83,15 @@ class MemberController extends Controller
         $validated = $request->validate([
             // member
             'company_name' => 'required|string',
-            'name_prefix' => 'nullable|string',
-            'name_suffix' => 'nullable|string',
-            'company_furigana' => 'required|string',
+            'company_kana' => 'required|string',
             'representative' => 'required|string',
-            'representative_furigana' => 'required|string',
-            'address_zip' => 'required|string',
-            'address1' => 'required|string',
-            'address2' => 'nullable|string',
-            'address3' => 'nullable|string',
-            'tel' => 'required|string',
-            'fax' => 'nullable|string',
-            'post_zip' => 'nullable|string',
-            'post_address1' => 'nullable|string',
-            'post_address2' => 'nullable|string',
-            'post_address3' => 'nullable|string',
-            'mobile' => 'nullable|string',
-            'staff' => 'nullable|string',
-
+            'rep_last_kana'  => 'required|string',
+            'rep_first_kana'  => 'required|string',
+            'company_type_prefix' => 'nullable|string',
+            'company_type_suffix' => 'nullable|string',
+            'rep_last_name'  => 'required|string',
+            'rep_first_name'  => 'required|string',
+            'same_as_corp' => 'required|integer',
             // bank
             'bank_type' => 'required|integer',
             'bank_name' => 'required|string',
@@ -110,9 +102,34 @@ class MemberController extends Controller
             'account_no' => 'required|string',
             'account_kana' => 'required|string',
             'account_name' => 'required|string',
-
             // pdf
             'history_certificate' => 'required|file|mimes:pdf',
+            'mail_address_certificate' => 'nullable|file|mimes:pdf',
+            // corp
+            'corp'=> array(),
+            'corp_postal_code' => 'required|string',
+            'corp_address1'    => 'required|string',
+            'corp.address2'    => 'nullable|string',
+            'corp.address3'    => 'nullable|string',
+            'corp.tel'         => 'required|string',
+            'corp.fax'         => 'nullable|string',
+            'corp.mobile'      => 'nullable|string',
+            'corp.position'    => 'nullable|string',
+            'corp.last_name'   => 'nullable|string',
+            'corp.first_name'  => 'nullable|string',
+            // mail
+            'mail'=> array(),
+            'mail.postal_code' => 'required|string',
+            'mail.address1'    => 'required|string',
+            'mail.address2'    => 'nullable|string',
+            'mail.address3'    => 'nullable|string',
+            'mail.tel'         => 'required|string',
+            'mail.fax'         => 'nullable|string',
+            'mail.mobile'      => 'nullable|string',
+            'mail.email'       => 'nullable|string',
+            'mail.position'    => 'nullable|string',
+            'mail.last_name'   => 'nullable|string',
+            'mail.first_name'  => 'nullable|string',            
         ]);
 
         $member = null;
@@ -147,25 +164,16 @@ class MemberController extends Controller
 
                 // members
                 $member = Member::create([
-                    'company_name' => $validated['company_name'],
-                    'company_furigana' => $validated['company_furigana'],
-                    'representative' => $validated['representative'],
-                    'representative_furigana' => $validated['representative_furigana'],
-                    'address_zip' => $validated['address_zip'],
-                    'address' => $validated['address'],
-                    'email' => $preUser->email,
-                    'tel' => $validated['tel'],
-                    'fax' => $validated['fax'] ?? null,
-                    'mobile' => $validated['mobile'] ?? '',
-                    'staff' => $validated['staff'] ?? '',
+                    'rep_last_name'  => $validated['rep_last_name'],
+                    'rep_first_name' => $validated['rep_first_name'],
+                    'rep_last_name_kana'  => $validated['rep_last_kana'],
+                    'rep_first_name_kana' => $validated['rep_first_kana'],
                     'agree' => 1,
                     'affiliate' => 1,
                     'agreed_at' => now(),
-                    'history_certificate_path' => $pdfRelativePath,
-                    'history_certificate_thumbnail_path' => $thumbnailRelativePath,
                     'status' => 1,
+                    'progress' => 1,
                 ]);
-
                 // bank_accounts
                 $member->bankAccount()->create([
                     'bank_type' => $validated['bank_type'],
@@ -179,6 +187,78 @@ class MemberController extends Controller
                     'account_name' => $validated['account_name'],
                 ]);
 
+                $corp = $validated['corp'];
+
+                $corpOrg = $member->organization()->create([    
+                    'type' => 1,
+                    'name' => $validated['company_name'],
+                    'name_kana' => $validated['company_kana'],
+                    'name_prefix' => $validated['company_type_prefix'],
+                    'name_suffix' => $validated['company_type_suffix'],
+                    'postal_code' => $corp['postal_code'],
+                    'address1' => $corp['address1'],
+                    'address2' => $corp['address2'],
+                    'address3' => $corp['address3'],
+                    'tel' => $corp['tel'],
+                    'fax' => $corp['fax'],
+                    'mobile' => $corp['mobile'],
+                    'email' => $preUser->email,
+                    'position'  => $corp['position'],
+                    'last_name' => $corp['last_name'],
+                    'first_name' => $corp['first_name'],
+                ]);
+
+                $mail = $validated['mail'];
+
+                $mailOrg = $member->organization()->create([    
+                    'type' => 2,
+                    'name' => $validated['company_name'],
+                    'name_kana' => $validated['company_kana'],
+                    'name_prefix' => $validated['company_type_prefix'],
+                    'name_suffix' => $validated['company_type_suffix'],
+                    'postal_code' => $mail['postal_code'],
+                    'address1' => $mail['address1'],
+                    'address2' => $mail['address2'],
+                    'address3' => $mail['address3'],
+                    'tel' => $mail['tel'],
+                    'fax' => $mail['fax'],
+                    'mobile' => $mail['mobile'],
+                    'email' => $mail['email'],
+                    'position'  => $mail['position'],
+                    'last_name' => $mail['last_name'],
+                    'first_name' => $mail['first_name'],
+                ]);
+                    //1:履歴事項全部証明書
+                $corpOrg->documents()->create([  
+                    'type' => 1,
+                    'file_path' => $pdfRelativePath,
+                    'thumbnail_path' => $thumbnailRelativePath,
+                ]);
+ /*
+                if ($validated['same_as_corp'] != 1 && $request->hasFile('mail_address_certificate')) {
+                    // PDF保存（public）
+                    $pdfRelativePath = $request->file('mail_address_certificate')
+                        ->store('members/mail_address_certificates', 'public');
+
+                    $pdfFullPath = storage_path('app/public/' . $pdfRelativePath);
+
+                    // サムネイル保存先
+                    $thumbnailRelativePath =
+                        'members/mail_address_certificates/thumbnails/' . basename($pdfRelativePath, '.pdf') . '.png';
+
+                    $thumbnailFullPath = storage_path('app/public/' . $thumbnailRelativePath);
+
+                    if (!Storage::disk('public')->exists('members/mail_address_certificates/thumbnails')) {
+                        Storage::disk('public')->makeDirectory('members/mail_address_certificates/thumbnails');
+                    }
+                    //2:郵送先確認書類
+                    $corpOrg->documents()->create([  
+                        'type' => 2,
+                        'file_path' => $pdfRelativePath,
+                        'thumbnail_path' => $thumbnailRelativePath,
+                    ]);
+             }
+*/
                 session()->forget(['agree', 'affiliate', 'agree_at']);
 
                 $preUser->update([
@@ -196,11 +276,6 @@ class MemberController extends Controller
         }
         return redirect()->route('members.complete')
             ->with('success', 'ご登録ありがとうございました');
-/*
-        return redirect()->route('members.complete')
-            ->with('member_id', $member->id)
-            ->with('success', 'ご登録ありがとうございました');
-*/
     }
 
 
@@ -254,23 +329,6 @@ class MemberController extends Controller
     // Apuls Pdf Generate
     public function pdfGenerate(Request $request)
     {
-        $data = $request->validate([
-            'company_furigana'=> 'required|string',
-            'representative_furigana'=> 'required|string',
-            'company_name'=> 'required|string',
-            'representative'=> 'required|string',
-            'address_zip'=> 'required|string',
-            'address'=> 'required|string',
-            'tel'=> 'required|string',
-            'bank_type'    => 'required|integer',
-            'bank_name'    => 'required|string',
-            'branch_name'  => 'required|string',
-            'account_type' => 'required|string',
-            'account_no'   => 'required|string',
-            'account_kana'   => 'required|string',
-            'account_name' => 'required|string',
-        ]);
-
         // フォーム全体を取得
         $form = $request->all();
 
@@ -302,51 +360,131 @@ class MemberController extends Controller
 
         // ---- 1) 契約者名（フリガナ）
         $pdf->SetXY(50, 65);
-        $pdf->Write(8, $data['company_furigana']);
+        $pdf->Write(8, $form['company_kana']??'');
 
         // ---- 2) 契約者名（漢字）
+        $pdf->SetXY(50, 73);
+        $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
+
         $pdf->SetXY(50, 80);
-        $pdf->Write(8, $data['company_name']);
+        $pdf->Write(8, $form['org']['corp']['position'] ?? '');
+        $pdf->SetXY(80, 80);
+        $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
 
         // ---- 3) zip code
-        $pdf->SetXY(50, 85);
-        $pdf->Write(8, $data['address_zip']);
+        $pdf->SetXY(50, 90);
+        $pdf->Write(7, $form['org']['corp']['postal_code'] ?? null);
 
+        $address = ($form['org']['corp']['address1']??'') . ($form['org']['corp']['address2']??'') . ($form['org']['corp']['address3']??'');
         // ---- 3) 住所
         $pdf->SetXY(50, 95);
-        $pdf->Write(8, $data['address']);
+        $pdf->Write(8, $address);
 
         // ---- 4) 電話番号
-        $pdf->SetXY(140, 100);
-        $pdf->Write(8, $data['tel']);
+        $tel = $form['org']['corp']['tel'] ?? ''; // 例: 03-1234-5678
+        if ($tel != '') {
+            $parts = explode('-', $tel); // '-' で分割
+
+            // 開始座標
+            $x = 139;
+            $y = 99;
+            $widths = [15, 15, 15];
+            $height = 8;
+
+            $pdf->SetY($y);
+            for ($i = 0; $i < count($parts); $i++) {
+                $pdf->SetX($x);
+                $pdf->Cell($widths[$i], $height, $parts[$i], 0, 0, 'C'); // 枠付き中央寄せ
+                $x += $widths[$i] + 2; // 次の枠との間隔 2mm
+            }
+        }
+
+
+
+
+        // ゆうちょ銀行の場合
+        if ($form['bank_code'] == '9900') {
+
+        }
+        // ---- 5) 銀行コード
+        $x = 125;
+        $y = 135;
+        $width = 23; // 枠幅
+        $chars = str_split($form['bank_code']);
+        $cellWidth = $width / count($chars);
+
+        $pdf->SetXY($x, $y);
+        foreach ($chars as $c) {
+            $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+        }        
+
+        // ---- 6) 支店コード
+        $x = 174;
+        $y = 135;
+        $width = 17; // 枠幅
+        $chars = str_split($form['branch_code']);
+        $cellWidth = $width / count($chars);
+
+        $pdf->SetXY($x, $y);
+        foreach ($chars as $c) {
+            $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+        }        
+        // ---- ゆうちょ記号
+        $x = 26;
+        $y = 161;
+        $width = 17; // 枠幅
+        $chars = str_split($form['branch_code']);
+        $cellWidth = $width / count($chars);
+
+        $pdf->SetXY($x, $y);
+        foreach ($chars as $c) {
+            $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+        }
+        $x = 55;
+        $y = 161;
+        $width = 45; // 枠幅
+        $chars = str_split($form['account_no'] . '0');
+        $cellWidth = $width / count($chars);
+
+        $pdf->SetXY($x, $y);
+        foreach ($chars as $c) {
+            $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+        }
 
         // ---- 5) 銀行名
         $pdf->SetXY(105, 145);
-        $pdf->Write(8, $data['bank_name']);
+        $pdf->Write(8, $form['bank_name']);
 
         // ---- 6) 支店名
         $pdf->SetXY(150, 145);
-        $pdf->Write(8, $data['branch_name']);
+        $pdf->Write(8, $form['branch_name']);
 
         // ---- 7) 預金種目（普通 / 当座 → マル）
-        if ($data['account_type'] === '普通') {
+        if ($form['account_type'] === '普通') {
             $pdf->SetXY(103, 160);
         } else {
             $pdf->SetXY(128, 160);
         }
         $pdf->Write(8, '〇');
 
-        // ---- 8) 口座番号（記号）
-        $pdf->SetXY(150, 162);
-        $pdf->Write(8, $data['account_no']);
+        $x = 149;
+        $y = 161;
+        $width = 43; // 枠幅
+        $chars = str_split($form['account_no']);
+        $cellWidth = $width / count($chars);
+
+        $pdf->SetXY($x, $y);
+        foreach ($chars as $c) {
+            $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+        }
 
         // ---- 9) 口座名義（フリガナ）
         $pdf->SetXY(35, 170);
-        $pdf->Write(8, $data['account_kana']);
+        $pdf->Write(8, $form['account_kana']);
 
         // ---- 10) 口座名義（漢字）
         $pdf->SetXY(35, 190);
-        $pdf->Write(8, $data['account_name']);
+        $pdf->Write(8, $form['account_name']);
 
         // 保存先ファイル名
         $output = 'generated/bank-info-' . time() . '.pdf';

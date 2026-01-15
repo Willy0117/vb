@@ -1,5 +1,7 @@
 <template>
   <GuestLayout>
+    <RegisterStep current="agree" />
+
     <Head :title="t('registers.title')" />
 
     <div class="max-w-4xl mx-auto bg-white p-8 rounded shadow">
@@ -39,6 +41,7 @@ import { useI18n } from 'vue-i18n';
 
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import Agree from '@/Components/Agree.vue';
+import RegisterStep from '@/Components/RegisterStep.vue'    
 import AffiliatesList from '@/Components/AffiliatesList.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 
