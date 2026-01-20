@@ -42,5 +42,10 @@ class Member extends Model
     public function getFullNameAttribute()
     {
         return trim($this->last_name . ' ' . $this->first_name);
+    }
+    
+    public function bankAccount()
+    {
+        return $this->hasOne(BankAccount::class);
     }    
 }

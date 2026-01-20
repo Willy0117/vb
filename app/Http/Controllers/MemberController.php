@@ -16,61 +16,50 @@ use Illuminate\Validation\Rule;
 class MemberController extends Controller
 {
     // 1. 誓約 + 加盟団体 ページ
-    public function showRegistrationForm($token)
+    public function showRegistrationForm(Request $request,$token)
     {
         return Inertia::render('Members/AgreeAndAffiliates', [
             'token' => $token,
+            'agree' => false,
+            'affiliate' => 0,
+            'is_agent' => $request->has('agent'),
         ]);
     }
 
     // 2. 誓約チェック後、Registerへ遷移
-    public function agreeNext(Request $request, $token)
+/*    public function agreeNext(Request $request, $token)
     {
         // バリデーション
-        $request->validate([
+        $validate = $request->validate([
             'agree' => 'required|boolean',
+            'is_agent' => 'required|boolean',
         ]);
-
-        // セッション保存
-        session([
-            'agree' => $request->agree,
-            'affiliate' => $request->affiliate,
-            'agree_at'  => now()->toDateTimeString(), // 追加
-        ]);
-
-        return redirect()->route('members.register.register', ['token' => $token]);
+        var_dump($validate);stp();        
+        return redirect()->route('members.register.register', ['token' => $token])
+            ->with([
+                'agree'    => $validate['agree'],
+                'is_agent' => $validate['is_agent'],
+            ]);
     }
-
+*/
     // 3. Register 入力ページ
-    public function showRegisterForm($token)
+    public function showRegisterForm(Request $request,$token)
     {
-        // ① Vue 用の完成形（初期値）
-        $form = [
-            'agree'     => session('agree', false),
-            'affiliate' => session('affiliate', null),
-            'agree_at'  => session('agree_at', null),
+        $form = [];
 
-            'email' => '',
-
-            'org' => [
-                'corp' => [
-                    'prefix' => '',
-                    'name'   => '',
-                ],
-                'mail' => [
-                    'prefix' => '',
-                    'name'   => '',
-                ],
-            ],
-        ];
-
-        // ② session があれば上書き（PDF戻り用）
+        // PDF 戻り（最優先）
         if (session()->has('member_form')) {
             $form = array_replace_recursive($form, session('member_form'));
-        }    
+        }
+
+        // 初回遷移（Agree → Register）
+        if (!array_key_exists('is_agent', $form)) {
+            $form['is_agent'] = $request->boolean('is_agent');
+        }
+        
         return Inertia::render('Members/Register', [
-            'token' => $token,
-            'form'  => $form,
+            'token'    => $token,
+            'form'     => $form,
         ]);
     }
 
@@ -84,7 +73,6 @@ class MemberController extends Controller
             // member
             'company_name' => 'required|string',
             'company_kana' => 'required|string',
-            'representative' => 'required|string',
             'rep_last_kana'  => 'required|string',
             'rep_first_kana'  => 'required|string',
             'company_type_prefix' => 'nullable|string',
@@ -106,9 +94,8 @@ class MemberController extends Controller
             'history_certificate' => 'required|file|mimes:pdf',
             'mail_address_certificate' => 'nullable|file|mimes:pdf',
             // corp
-            'corp'=> array(),
-            'corp_postal_code' => 'required|string',
-            'corp_address1'    => 'required|string',
+            'corp.postal_code' => 'required|string',
+            'corp.address1'    => 'required|string',
             'corp.address2'    => 'nullable|string',
             'corp.address3'    => 'nullable|string',
             'corp.tel'         => 'required|string',
@@ -118,7 +105,6 @@ class MemberController extends Controller
             'corp.last_name'   => 'nullable|string',
             'corp.first_name'  => 'nullable|string',
             // mail
-            'mail'=> array(),
             'mail.postal_code' => 'required|string',
             'mail.address1'    => 'required|string',
             'mail.address2'    => 'nullable|string',
@@ -126,7 +112,7 @@ class MemberController extends Controller
             'mail.tel'         => 'required|string',
             'mail.fax'         => 'nullable|string',
             'mail.mobile'      => 'nullable|string',
-            'mail.email'       => 'nullable|string',
+            'mail.email'       => 'nullable|email',
             'mail.position'    => 'nullable|string',
             'mail.last_name'   => 'nullable|string',
             'mail.first_name'  => 'nullable|string',            
@@ -164,10 +150,10 @@ class MemberController extends Controller
 
                 // members
                 $member = Member::create([
-                    'rep_last_name'  => $validated['rep_last_name'],
-                    'rep_first_name' => $validated['rep_first_name'],
-                    'rep_last_name_kana'  => $validated['rep_last_kana'],
-                    'rep_first_name_kana' => $validated['rep_first_kana'],
+                    'last_name'  => $validated['rep_last_name'],
+                    'first_name' => $validated['rep_first_name'],
+                    'last_name_kana'  => $validated['rep_last_kana'],
+                    'first_name_kana' => $validated['rep_first_kana'],
                     'agree' => 1,
                     'affiliate' => 1,
                     'agreed_at' => now(),
@@ -234,7 +220,7 @@ class MemberController extends Controller
                     'file_path' => $pdfRelativePath,
                     'thumbnail_path' => $thumbnailRelativePath,
                 ]);
- /*
+ 
                 if ($validated['same_as_corp'] != 1 && $request->hasFile('mail_address_certificate')) {
                     // PDF保存（public）
                     $pdfRelativePath = $request->file('mail_address_certificate')
@@ -258,7 +244,7 @@ class MemberController extends Controller
                         'thumbnail_path' => $thumbnailRelativePath,
                     ]);
              }
-*/
+
                 session()->forget(['agree', 'affiliate', 'agree_at']);
 
                 $preUser->update([
@@ -332,14 +318,8 @@ class MemberController extends Controller
         // フォーム全体を取得
         $form = $request->all();
 
-        // agree情報もまとめて保存
-        $form['agree']     = session('agree', false);
-        $form['affiliate'] = session('affiliate', null);
-        $form['agree_at']  = session('agree_at', null);
-
         // session に保存
         session(['member_form' => $form]);
-
 
                 // FPDI + TCPDF
         $pdf = new Fpdi();
@@ -367,21 +347,21 @@ class MemberController extends Controller
         $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
 
         $pdf->SetXY(50, 80);
-        $pdf->Write(8, $form['org']['corp']['position'] ?? '');
+        $pdf->Write(8, $form['corp']['position'] ?? '');
         $pdf->SetXY(80, 80);
         $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
 
         // ---- 3) zip code
         $pdf->SetXY(50, 90);
-        $pdf->Write(7, $form['org']['corp']['postal_code'] ?? null);
+        $pdf->Write(7, $form['corp']['postal_code'] ?? null);
 
-        $address = ($form['org']['corp']['address1']??'') . ($form['org']['corp']['address2']??'') . ($form['org']['corp']['address3']??'');
+        $address = ($form['corp']['address1']??'') . ($form['corp']['address2']??'') . ($form['corp']['address3']??'');
         // ---- 3) 住所
         $pdf->SetXY(50, 95);
         $pdf->Write(8, $address);
 
         // ---- 4) 電話番号
-        $tel = $form['org']['corp']['tel'] ?? ''; // 例: 03-1234-5678
+        $tel = $form['corp']['tel'] ?? ''; // 例: 03-1234-5678
         if ($tel != '') {
             $parts = explode('-', $tel); // '-' で分割
 
@@ -486,8 +466,91 @@ class MemberController extends Controller
         $pdf->SetXY(35, 190);
         $pdf->Write(8, $form['account_name']);
 
+        // 2ページ目を追加
+        $pdf->AddPage();
+
+        $templatePath2 = storage_path('app/templates/entry.pdf');
+        $pageCount2 = $pdf->setSourceFile($templatePath2);
+        $tpl2 = $pdf->importPage(1);
+        $pdf->useTemplate($tpl2);
+
+        // ---- 1) 契約者名（フリガナ）
+        $pdf->SetXY(50, 76);
+        $pdf->Write(8, $form['company_kana']??'');
+
+        // ---- 2) 契約者名（漢字）
+        $pdf->SetXY(50, 88);
+        $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
+        $pdf->SetXY(125, 210);
+        $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
+        $pdf->SetXY(125, 215);
+        $pdf->Write(8, $form['corp']['position'] ?? '');
+        $pdf->SetXY(150, 215);
+        $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
+
+//        $pdf->SetXY(50, 80);
+//        $pdf->Write(8, $form['corp']['position'] ?? '');
+        $pdf->SetXY(150, 76);
+        $pdf->Write(8, ($form['rep_last_kana']??'') . ($form['rep_first_kana']??''));
+        $pdf->SetXY(150, 88);
+        $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
+
+        // ---- 3) zip code
+        $pdf->SetXY(50, 102);
+        $pdf->Write(7, $form['corp']['postal_code'] ?? null);
+
+        $address = ($form['corp']['address1']??'') . ($form['corp']['address2']??'') . ($form['corp']['address3']??'');
+        // ---- 3) 住所
+        $pdf->SetXY(50, 113);
+        $pdf->Write(8, $address);
+        // ここから郵送先
+        // ---- 3) zip code
+        $pdf->SetXY(50, 123);
+        $pdf->Write(7, $form['mail']['postal_code'] ?? null);
+
+        $address = ($form['mail']['address1']??'') . ($form['mail']['address2']??'') . ($form['mail']['address3']??'');
+        // ---- 3) 住所
+        $pdf->SetXY(50, 133);
+        $pdf->Write(8, $address);
+
+        // ---- 4) 電話番号
+        $tel = $form['mail']['tel'] ?? ''; // 例: 03-1234-5678
+        $pdf->SetXY(50, 145);
+        $pdf->Write(8, $tel);
+        // ---- 4) 電話番号
+        $fax = $form['mail']['fax'] ?? ''; // 例: 03-1234-5678
+        $pdf->SetXY(130, 145);
+        $pdf->Write(8, $fax);
+
+        $pdf->SetXY(50, 157);
+        $pdf->Write(8, ($form['mail']['last_name']??'') . ($form['mail']['first_name']??''));
+        $pdf->SetXY(130, 159);
+        $pdf->Write(8, ($form['mail']['mobile']??'') );
+        // Agent部
+        $pdf->SetXY(45, 202);
+        $pdf->Write(3, $form['agent']['company_name']);
+        $pdf->SetFontSize(7); 
+        $pdf->SetXY(45, 206);
+        $pdf->Write(7, $form['agent']['postal_code'] ?? null);
+        $pdf->SetFontSize(10); 
+        $address = ($form['agent']['address1']??'') . ($form['agent']['address2']??'');
+        // ---- 3) 住所
+        $pdf->SetXY(45, 208);
+        $pdf->Write(10, $address);
+        // ---- 3) 住所
+        $pdf->SetXY(45, 212);
+        $pdf->Write(10, $form['agent']['address3']??'');
+        // ---- 4) 電話番号
+        $pdf->SetFontSize(8); 
+        $tel = ($form['agent']['tel'] ?? '') . '・' . ($form['agent']['fax'] ?? ''); // 例: 03-1234-5678
+        $pdf->SetXY(45, 223);
+        $pdf->Write(7, $tel);
+
+        $pdf->SetXY(45, 218);
+        $pdf->Write(7, ($form['agent']['last_name']??'') . ($form['agent']['first_name']??''));
+
         // 保存先ファイル名
-        $output = 'generated/bank-info-' . time() . '.pdf';
+        $output = 'generated/entry-sheet-' . time() . '.pdf';
         $file_path = storage_path('app/public/' . $output);
 
         // ディレクトリが存在しない場合は作成

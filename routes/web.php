@@ -67,7 +67,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 // メール仮登録
 Route::prefix('pre-register')->name('pre-register.')->group(function () {
     // メール入力画面
-    Route::get('/mail', function () { return inertia('PreRegister/Email'); })->name('mail');
+//  Route::get('/mail', function () { return inertia('PreRegister/Email'); })->name('mail');
+    Route::get('/mail', function (Request $request) {
+        return inertia('PreRegister/Email', [
+            'isAgent' => $request->has('agent'),
+        ]);
+    })->name('mail');    
     // 仮登録 → メール送信
     Route::post('/pre', [PreRegisterController::class, 'store'])->name('pre');
     // メール確認
@@ -78,17 +83,20 @@ Route::prefix('pre-register')->name('pre-register.')->group(function () {
 
 
 Route::prefix('members')->group(function () {
-
+/*
     Route::get('pdf', [MemberRegController::class, 'pdf']);
-
+*/
     Route::get('register/{token}', 
         [MemberRegController::class, 'showRegistrationForm']
     )->name('members.register');
+/*
     Route::post('members/agree/{token}', [MemberRegController::class, 'agreeNext'])
     ->name('members.register.agree');
+*/
     Route::get('register/{token}/register', 
         [MemberRegController::class, 'showRegisterForm']
     )->name('members.register.register');
+
     Route::post('register/{token}', 
         [MemberRegController::class, 'completeRegistration']
     )->name('members.register.complete');
@@ -99,9 +107,6 @@ Route::prefix('members')->group(function () {
             'member_id' => session('member_id'), // 必要なら
         ]);
     })->name('members.complete');
-
-
-
     // 加盟団体加入で拒否された場合のメッセージ画面
     Route::get('register/{token}/rejected', [MemberRegController::class, 'showRejectedMessage'])
         ->name('members.register.rejected');

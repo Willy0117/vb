@@ -6,7 +6,12 @@
     <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
       <h2 class="text-xl font-bold mb-4">口座振替申請書 確認</h2>
 
-      <canvas ref="canvas" class="border w-full mb-4"></canvas>
+      <div
+        id="pdf-container"
+        class="space-y-6 overflow-y-auto max-h-[80vh] border p-4 bg-gray-50"
+      ></div>
+
+      <!-- canvas ref="canvas" class="border w-full mb-4"></canvas -->
 
       <div class="flex gap-4">
         <a
@@ -37,7 +42,7 @@ import RegisterStep from '@/Components/RegisterStep.vue'
 const canvas = ref(null)
 const page = usePage()
 const pdfUrl = usePage().props.pdfUrl
-
+/*
 onMounted(async () => {
   // PDF.js CDN
   const pdfjsLib = window.pdfjsLib
@@ -64,6 +69,42 @@ onMounted(async () => {
     viewport,
     renderInteractiveForms: true,
   }).promise
+})
+*/
+onMounted(async () => {
+  const pdfjsLib = window.pdfjsLib
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+
+  const pdf = await pdfjsLib.getDocument({
+    url: pdfUrl,
+    cMapUrl: '/cmaps/',
+    cMapPacked: true,
+  }).promise
+
+  const container = document.getElementById('pdf-container')
+
+  // 全ページ描画
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum)
+
+    const viewport = page.getViewport({ scale: 1.5 })
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+
+    canvas.width = viewport.width
+    canvas.height = viewport.height
+    canvas.classList.add('shadow', 'mx-auto')
+
+    container.appendChild(canvas)
+
+    await page.render({
+      canvasContext: context,
+      viewport,
+      renderInteractiveForms: true,
+    }).promise
+  }
 })
 
 const goBack = () => {

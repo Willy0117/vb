@@ -70,7 +70,7 @@
             </p>
         </div>
         <!-- 注意文言 -->
-        <p v-if="!scrolledToBottom" class="text-xs text-gray-500 mt-2">
+        <p v-if="!scrolledToBottom" class="text-xs text-red-500 mt-2">
             最後までスクロールするとチェックできます
         </p>
 

@@ -36,7 +36,7 @@
 
 <script setup>
 import { ref , computed } from 'vue';
-import { usePage, router } from '@inertiajs/vue3';
+import { usePage, router, useForm } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 
 import GuestLayout from '@/Layouts/GuestLayout.vue';
@@ -56,37 +56,45 @@ const errors = props.errors || {};
 // token を安全に取得
 const token = props.token;
 
-// フォーム
-const form = ref({
-  agree: false,
-  agree_at: null,
-  affiliate: null
+const form = useForm({
+  agree: props.agree ?? false,
+  affiliate: props.affiliate ?? null,
+  is_agent: props.is_agent ?? false,  
 });
-
+console.log(form)
 // 送信
 const submitForm = () => {
-  if (!form.value.agree) {
+  if (!form.agree) {
     alert('誓約書に同意してください');
     return;
   }
 
   // 加盟団体チェック
-  if (!form.value.affiliate) {
+  if (!form.affiliate) {
     alert('加盟団体の選択をしてください');
     return;
   }
-
-  // 加盟済みの場合は Rejected ページへ遷移
-  if (form.value.affiliate === 'yes') {
-    router.visit(route('members.register.rejected', { token }));
-    return;
+  // 加盟済みなら rejected
+  if (form.affiliate === 'yes') {
+    router.visit(route('members.register.rejected', { token }))
+    return
   }
-  // 同意日時をセット
-  form.value.agree_at = new Date().toISOString();
-  // 加盟団体に加入している場合
+
+  // Register へ遷移（POSTしない）
+  router.visit(route('members.register.register', { token }), {
+    data: {
+      agree: form.agree,
+      affiliate: form.affiliate,
+      is_agent: form.is_agent,
+    },
+    preserveState: false,
+    preserveScroll: true,
+  })
+};
+/*
   router.post(
     route('members.register.agree', { token }),
-    form.value,
+    form,
     {
       onSuccess: () => {
         // Registory ページへ遷移
@@ -98,5 +106,6 @@ const submitForm = () => {
       }
     }
   );
-};
+  */
+
 </script>
