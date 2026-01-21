@@ -17,6 +17,9 @@
   "disabled": "有効/無効",
   "enable": "有効",
   "disable": "無効",
+  "download": "ダウンロード",
+  "return": "戻る",
+  "revise": "訂正する",
   "actions": {
     "action": "操 作",
     "save": "保 存",

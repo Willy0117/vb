@@ -97,11 +97,12 @@ Route::prefix('members')->group(function () {
         [MemberRegController::class, 'showRegisterForm']
     )->name('members.register.register');
 
-    Route::post('register/{token}', 
-        [MemberRegController::class, 'completeRegistration']
-    )->name('members.register.complete');
+    Route::post(
+        'register/{token}/register',
+        [MemberRegController::class, 'register']
+    )->name('members.register.register');
     // 完了画面GET
-    Route::get('members/register/complete', function () {
+    Route::get('register/complete', function () {
         return Inertia::render('Members/Complete', [
             'success' => session('success'),
             'member_id' => session('member_id'), // 必要なら
@@ -110,10 +111,10 @@ Route::prefix('members')->group(function () {
     // 加盟団体加入で拒否された場合のメッセージ画面
     Route::get('register/{token}/rejected', [MemberRegController::class, 'showRejectedMessage'])
         ->name('members.register.rejected');
-/*
-    Route::get('pdfcreate', [MemberRegController::class, 'showPdfForm'])
-    ->name('members.pdfcreate');
-*/
+
+    Route::get('resend', [MemberRegController::class, 'resend'])
+        ->name('members.resend');
+
     Route::get('bank', [MemberRegController::class, 'bank'])
         ->name('members.bank');
 

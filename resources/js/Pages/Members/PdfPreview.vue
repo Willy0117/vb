@@ -11,22 +11,44 @@
         class="space-y-6 overflow-y-auto max-h-[80vh] border p-4 bg-gray-50"
       ></div>
 
-      <!-- canvas ref="canvas" class="border w-full mb-4"></canvas -->
+      <div class="space-y-3 mt-6">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" v-model="confirmed" />
+          <span>記載内容に相違ありません。</span>
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" v-model="downloaded" />
+          <span>PDFをダウンロードしました。</span>
+        </label>
+      </div>
 
       <div class="flex gap-4">
-        <a
-          :href="pdfUrl"
-          download
-          class="bg-blue-600 text-white px-4 py-2 rounded"
+        <PrimaryButton
+          class="mt-6"
+          :disabled="!canSubmit"
+          @click="submitRegister"
         >
-          ダウンロード
+          データ登録
+        </PrimaryButton>
+
+        <a
+          :href="confirmed ? pdfUrl : null"
+          download
+          :class="[
+            'px-4 py-2 rounded text-white',
+            confirmed ? 'bg-blue-600 cursor-pointer' : 'bg-gray-400 cursor-not-allowed'
+          ]"
+        >
+          {{ t('download') }}
         </a>
+
 
         <button
           @click="goBack"
           class="bg-gray-300 px-4 py-2 rounded"
         >
-          戻る
+        {{ t('revise') }} 
         </button>
       </div>
     </div>
@@ -38,39 +60,17 @@ import { ref, onMounted } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
 import RegisterStep from '@/Components/RegisterStep.vue'    
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const canvas = ref(null)
 const page = usePage()
 const pdfUrl = usePage().props.pdfUrl
-/*
-onMounted(async () => {
-  // PDF.js CDN
-  const pdfjsLib = window.pdfjsLib
+const confirmed = ref(false)
 
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
 
-  const pdf = await pdfjsLib.getDocument({
-    url: pdfUrl,
-    cMapUrl: '/cmaps/',
-    cMapPacked: true,
-  }).promise
-
-  const page1 = await pdf.getPage(1)
-
-  const viewport = page1.getViewport({ scale: 1.5 })
-  const context = canvas.value.getContext('2d')
-
-  canvas.value.height = viewport.height
-  canvas.value.width = viewport.width
-
-  await page1.render({
-    canvasContext: context,
-    viewport,
-    renderInteractiveForms: true,
-  }).promise
-})
-*/
 onMounted(async () => {
   const pdfjsLib = window.pdfjsLib
 

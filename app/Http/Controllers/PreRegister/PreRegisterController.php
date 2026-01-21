@@ -36,6 +36,7 @@ class PreRegisterController extends Controller
                 'token' => Str::uuid(),
                 'expires_at' => now()->addHours(24),
                 'verified_at' => null,
+                'agent' => $isAgent,
             ]
         );
         // 代理人申請の場合は?agentをurlに追加する

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use TCPDF_FONTS;
 use setasign\Fpdi\Tcpdf\Fpdi;
+use Carbon\Carbon;
 use App\Models\Member;
 use App\Models\PreUser;
 use Imagick;
@@ -18,6 +19,19 @@ class MemberController extends Controller
     // 1. 誓約 + 加盟団体 ページ
     public function showRegistrationForm(Request $request,$token)
     {
+        $preUser = PreUser::where('token', $token)->first();
+
+        if (!$preUser || Carbon::now()->greaterThan($preUser->expires_at)) {
+            return redirect()
+                ->route('members.resend');
+        }
+        
+        $sessionToken = session('token'); 
+
+        if ($sessionToken !== $request->token) {
+            $request->session()->forget('member_form');
+        }
+
         return Inertia::render('Members/AgreeAndAffiliates', [
             'token' => $token,
             'agree' => false,
@@ -26,36 +40,22 @@ class MemberController extends Controller
         ]);
     }
 
-    // 2. 誓約チェック後、Registerへ遷移
-/*    public function agreeNext(Request $request, $token)
-    {
-        // バリデーション
-        $validate = $request->validate([
-            'agree' => 'required|boolean',
-            'is_agent' => 'required|boolean',
-        ]);
-        var_dump($validate);stp();        
-        return redirect()->route('members.register.register', ['token' => $token])
-            ->with([
-                'agree'    => $validate['agree'],
-                'is_agent' => $validate['is_agent'],
-            ]);
-    }
-*/
     // 3. Register 入力ページ
     public function showRegisterForm(Request $request,$token)
     {
-        $form = [];
+        $preUser = PreUser::where('token', $token)->first();
+
+        if (!$preUser || Carbon::now()->greaterThan($preUser->expires_at)) {
+            return redirect()
+                ->route('members.resend');
+        }
 
         // PDF 戻り（最優先）
         if (session()->has('member_form')) {
             $form = array_replace_recursive($form, session('member_form'));
         }
 
-        // 初回遷移（Agree → Register）
-        if (!array_key_exists('is_agent', $form)) {
-            $form['is_agent'] = $request->boolean('is_agent');
-        }
+        $form['is_agent'] = $request->has('agent');
         
         return Inertia::render('Members/Register', [
             'token'    => $token,
@@ -315,6 +315,9 @@ class MemberController extends Controller
     // Apuls Pdf Generate
     public function pdfGenerate(Request $request)
     {
+        // 仮登録ユーザー取得（email 用）
+        $preUser = PreUser::where('token', $token)->firstOrFail();
+
         // フォーム全体を取得
         $form = $request->all();
 
@@ -384,78 +387,89 @@ class MemberController extends Controller
 
         // ゆうちょ銀行の場合
         if ($form['bank_code'] == '9900') {
+            // ---- ゆうちょ記号
+            $x = 26;
+            $y = 161;
+            $width = 17; // 枠幅
+            $code = $form['branch_code'];
 
-        }
-        // ---- 5) 銀行コード
-        $x = 125;
-        $y = 135;
-        $width = 23; // 枠幅
-        $chars = str_split($form['bank_code']);
-        $cellWidth = $width / count($chars);
+            if (strlen($code) === 5) {
+                $chars = substr($code, 1, 3);
+            } else {
+                $chars = $code;
+            }
+            $chars = str_split($chars);
+            $cellWidth = $width / count($chars);
 
-        $pdf->SetXY($x, $y);
-        foreach ($chars as $c) {
-            $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
-        }        
+            $pdf->SetXY($x, $y);
+            foreach ($chars as $c) {
+                $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+            }
 
-        // ---- 6) 支店コード
-        $x = 174;
-        $y = 135;
-        $width = 17; // 枠幅
-        $chars = str_split($form['branch_code']);
-        $cellWidth = $width / count($chars);
+            // 口座番号
+            $x = 55;
+            $y = 161;
+            $width = 45; // 枠幅
+            $chars = str_split($form['account_no']);
+            $cellWidth = $width / count($chars);
 
-        $pdf->SetXY($x, $y);
-        foreach ($chars as $c) {
-            $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
-        }        
-        // ---- ゆうちょ記号
-        $x = 26;
-        $y = 161;
-        $width = 17; // 枠幅
-        $chars = str_split($form['branch_code']);
-        $cellWidth = $width / count($chars);
+            $pdf->SetXY($x, $y);
+            foreach ($chars as $c) {
+                $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+            }
 
-        $pdf->SetXY($x, $y);
-        foreach ($chars as $c) {
-            $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
-        }
-        $x = 55;
-        $y = 161;
-        $width = 45; // 枠幅
-        $chars = str_split($form['account_no'] . '0');
-        $cellWidth = $width / count($chars);
-
-        $pdf->SetXY($x, $y);
-        foreach ($chars as $c) {
-            $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
-        }
-
-        // ---- 5) 銀行名
-        $pdf->SetXY(105, 145);
-        $pdf->Write(8, $form['bank_name']);
-
-        // ---- 6) 支店名
-        $pdf->SetXY(150, 145);
-        $pdf->Write(8, $form['branch_name']);
-
-        // ---- 7) 預金種目（普通 / 当座 → マル）
-        if ($form['account_type'] === '普通') {
-            $pdf->SetXY(103, 160);
         } else {
-            $pdf->SetXY(128, 160);
-        }
-        $pdf->Write(8, '〇');
+            // ---- 5) 銀行コード
+            $x = 125;
+            $y = 135;
+            $width = 23; // 枠幅
+            $chars = str_split($form['bank_code']);
+            $cellWidth = $width / count($chars);
 
-        $x = 149;
-        $y = 161;
-        $width = 43; // 枠幅
-        $chars = str_split($form['account_no']);
-        $cellWidth = $width / count($chars);
+            $pdf->SetXY($x, $y);
+            foreach ($chars as $c) {
+                $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+            }        
 
-        $pdf->SetXY($x, $y);
-        foreach ($chars as $c) {
-            $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+            // ---- 6) 支店コード
+            $x = 174;
+            $y = 135;
+            $width = 17; // 枠幅
+            $chars = str_split($form['branch_code']);
+            $cellWidth = $width / count($chars);
+
+            $pdf->SetXY($x, $y);
+            foreach ($chars as $c) {
+                $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+            }        
+
+            // ---- 5) 銀行名
+            $pdf->SetXY(105, 145);
+            $pdf->Write(8, $form['bank_name']);
+
+            // ---- 6) 支店名
+            $pdf->SetXY(150, 145);
+            $pdf->Write(8, $form['branch_name']);
+
+            // ---- 7) 預金種目（普通 / 当座 → マル）
+            if ($form['account_type'] === '普通') {
+                $pdf->SetXY(103, 160);
+            } else {
+                $pdf->SetXY(128, 160);
+            }
+            $pdf->Write(8, '〇');
+            // 口座番号    
+            $x = 149;
+            $y = 161;
+            $width = 43; // 枠幅
+            $chars = str_split($form['account_no']);
+            $cellWidth = $width / count($chars);
+
+            $pdf->SetXY($x, $y);
+            foreach ($chars as $c) {
+                $pdf->Cell($cellWidth, 10, $c, 0, 0, 'C'); // 'C'で文字中央に
+            }
+            
         }
 
         // ---- 9) 口座名義（フリガナ）
@@ -466,88 +480,91 @@ class MemberController extends Controller
         $pdf->SetXY(35, 190);
         $pdf->Write(8, $form['account_name']);
 
-        // 2ページ目を追加
-        $pdf->AddPage();
+        if ($form['is_agent']) {
 
-        $templatePath2 = storage_path('app/templates/entry.pdf');
-        $pageCount2 = $pdf->setSourceFile($templatePath2);
-        $tpl2 = $pdf->importPage(1);
-        $pdf->useTemplate($tpl2);
+            // 2ページ目を追加
+            $pdf->AddPage();
 
-        // ---- 1) 契約者名（フリガナ）
-        $pdf->SetXY(50, 76);
-        $pdf->Write(8, $form['company_kana']??'');
+            $templatePath2 = storage_path('app/templates/entry.pdf');
+            $pageCount2 = $pdf->setSourceFile($templatePath2);
+            $tpl2 = $pdf->importPage(1);
+            $pdf->useTemplate($tpl2);
 
-        // ---- 2) 契約者名（漢字）
-        $pdf->SetXY(50, 88);
-        $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
-        $pdf->SetXY(125, 210);
-        $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
-        $pdf->SetXY(125, 215);
-        $pdf->Write(8, $form['corp']['position'] ?? '');
-        $pdf->SetXY(150, 215);
-        $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
+            // ---- 1) 契約者名（フリガナ）
+            $pdf->SetXY(50, 76);
+            $pdf->Write(8, $form['company_kana']??'');
 
-//        $pdf->SetXY(50, 80);
-//        $pdf->Write(8, $form['corp']['position'] ?? '');
-        $pdf->SetXY(150, 76);
-        $pdf->Write(8, ($form['rep_last_kana']??'') . ($form['rep_first_kana']??''));
-        $pdf->SetXY(150, 88);
-        $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
+            // ---- 2) 契約者名（漢字）
+            $pdf->SetXY(50, 88);
+            $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
+            $pdf->SetXY(125, 210);
+            $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
+            $pdf->SetXY(125, 215);
+            $pdf->Write(8, $form['corp']['position'] ?? '');
+            $pdf->SetXY(150, 215);
+            $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
 
-        // ---- 3) zip code
-        $pdf->SetXY(50, 102);
-        $pdf->Write(7, $form['corp']['postal_code'] ?? null);
+    //        $pdf->SetXY(50, 80);
+    //        $pdf->Write(8, $form['corp']['position'] ?? '');
+            $pdf->SetXY(150, 76);
+            $pdf->Write(8, ($form['rep_last_kana']??'') . ($form['rep_first_kana']??''));
+            $pdf->SetXY(150, 88);
+            $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
 
-        $address = ($form['corp']['address1']??'') . ($form['corp']['address2']??'') . ($form['corp']['address3']??'');
-        // ---- 3) 住所
-        $pdf->SetXY(50, 113);
-        $pdf->Write(8, $address);
-        // ここから郵送先
-        // ---- 3) zip code
-        $pdf->SetXY(50, 123);
-        $pdf->Write(7, $form['mail']['postal_code'] ?? null);
+            // ---- 3) zip code
+            $pdf->SetXY(50, 102);
+            $pdf->Write(7, $form['corp']['postal_code'] ?? null);
 
-        $address = ($form['mail']['address1']??'') . ($form['mail']['address2']??'') . ($form['mail']['address3']??'');
-        // ---- 3) 住所
-        $pdf->SetXY(50, 133);
-        $pdf->Write(8, $address);
+            $address = ($form['corp']['address1']??'') . ($form['corp']['address2']??'') . ($form['corp']['address3']??'');
+            // ---- 3) 住所
+            $pdf->SetXY(50, 113);
+            $pdf->Write(8, $address);
+            // ここから郵送先
+            // ---- 3) zip code
+            $pdf->SetXY(50, 123);
+            $pdf->Write(7, $form['mail']['postal_code'] ?? null);
 
-        // ---- 4) 電話番号
-        $tel = $form['mail']['tel'] ?? ''; // 例: 03-1234-5678
-        $pdf->SetXY(50, 145);
-        $pdf->Write(8, $tel);
-        // ---- 4) 電話番号
-        $fax = $form['mail']['fax'] ?? ''; // 例: 03-1234-5678
-        $pdf->SetXY(130, 145);
-        $pdf->Write(8, $fax);
+            $address = ($form['mail']['address1']??'') . ($form['mail']['address2']??'') . ($form['mail']['address3']??'');
+            // ---- 3) 住所
+            $pdf->SetXY(50, 133);
+            $pdf->Write(8, $address);
 
-        $pdf->SetXY(50, 157);
-        $pdf->Write(8, ($form['mail']['last_name']??'') . ($form['mail']['first_name']??''));
-        $pdf->SetXY(130, 159);
-        $pdf->Write(8, ($form['mail']['mobile']??'') );
-        // Agent部
-        $pdf->SetXY(45, 202);
-        $pdf->Write(3, $form['agent']['company_name']);
-        $pdf->SetFontSize(7); 
-        $pdf->SetXY(45, 206);
-        $pdf->Write(7, $form['agent']['postal_code'] ?? null);
-        $pdf->SetFontSize(10); 
-        $address = ($form['agent']['address1']??'') . ($form['agent']['address2']??'');
-        // ---- 3) 住所
-        $pdf->SetXY(45, 208);
-        $pdf->Write(10, $address);
-        // ---- 3) 住所
-        $pdf->SetXY(45, 212);
-        $pdf->Write(10, $form['agent']['address3']??'');
-        // ---- 4) 電話番号
-        $pdf->SetFontSize(8); 
-        $tel = ($form['agent']['tel'] ?? '') . '・' . ($form['agent']['fax'] ?? ''); // 例: 03-1234-5678
-        $pdf->SetXY(45, 223);
-        $pdf->Write(7, $tel);
+            // ---- 4) 電話番号
+            $tel = $form['mail']['tel'] ?? ''; // 例: 03-1234-5678
+            $pdf->SetXY(50, 145);
+            $pdf->Write(8, $tel);
+            // ---- 4) 電話番号
+            $fax = $form['mail']['fax'] ?? ''; // 例: 03-1234-5678
+            $pdf->SetXY(130, 145);
+            $pdf->Write(8, $fax);
 
-        $pdf->SetXY(45, 218);
-        $pdf->Write(7, ($form['agent']['last_name']??'') . ($form['agent']['first_name']??''));
+            $pdf->SetXY(50, 157);
+            $pdf->Write(8, ($form['mail']['last_name']??'') . ($form['mail']['first_name']??''));
+            $pdf->SetXY(130, 159);
+            $pdf->Write(8, ($form['mail']['mobile']??'') );
+            // Agent部
+            $pdf->SetXY(45, 202);
+            $pdf->Write(3, $form['agent']['company_name'] ?? '');
+            $pdf->SetFontSize(7); 
+            $pdf->SetXY(45, 206);
+            $pdf->Write(7, $form['agent']['postal_code'] ?? '');
+            $pdf->SetFontSize(10); 
+            $address = ($form['agent']['address1']??'') . ($form['agent']['address2']??'');
+            // ---- 3) 住所
+            $pdf->SetXY(45, 208);
+            $pdf->Write(10, $address);
+            // ---- 3) 住所
+            $pdf->SetXY(45, 212);
+            $pdf->Write(10, $form['agent']['address3']??'');
+            // ---- 4) 電話番号
+            $pdf->SetFontSize(8); 
+            $tel = ($form['agent']['tel'] ?? '') . '・' . ($form['agent']['fax'] ?? ''); // 例: 03-1234-5678
+            $pdf->SetXY(45, 223);
+            $pdf->Write(7, $tel);
+
+            $pdf->SetXY(45, 218);
+            $pdf->Write(7, ($form['agent']['last_name']??'') . ($form['agent']['first_name']??''));
+        }
 
         // 保存先ファイル名
         $output = 'generated/entry-sheet-' . time() . '.pdf';
@@ -558,13 +575,36 @@ class MemberController extends Controller
             mkdir(dirname($file_path), 0775, true);
         }
 
-        // PDFを直接ファイルに書き込む
+        try {
+            $pdf->Output($file_path, 'F');
+
+            if (!file_exists($file_path)) {
+                throw new \RuntimeException('PDF file not created');
+            }
+
+            return response()->json([
+                'url' => Storage::url($output),
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('PDF生成エラー', [
+                'message' => $e->getMessage(),
+                'path'    => $file_path,
+            ]);
+
+            return response()->json([
+                'message' => 'PDFの作成に失敗しました'
+            ], 422);
+        }
+        /*
+       // PDFを直接ファイルに書き込む
         $pdf->Output($file_path, 'F');
 
         // JSONでURL返却
         return response()->json([
             'url' => Storage::url($output)
-        ]);    
+        ]); 
+        */
     }
 
     public function pdfPreview(Request $request,$token)
@@ -580,6 +620,13 @@ class MemberController extends Controller
         return Inertia::render('Members/Rejected', [
             'token' => $token,
             'message' => '大変申し訳ありませんが、当団体への加盟はお受け出来かねます。',
+        ]);
+    }
+
+    public function resend()
+    {
+        return Inertia::render('Members/Resend', [
+            'message' => "このURLは24時間以上経過しており、有効期限が切れています。\n大変申し訳ありませんが、もう一度メール送信から入会申込をやり直してください。\n\nどうぞよろしくお願い致します。",
         ]);
     }
 

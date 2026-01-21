@@ -9,6 +9,7 @@ class PreUser extends Model
     protected $fillable = [
         'email',
         'token',
+        'agent',
         'expires_at',
         'verified_at'
     ];

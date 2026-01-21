@@ -81,15 +81,15 @@ const submitForm = () => {
   }
 
   // Register へ遷移（POSTしない）
-  router.visit(route('members.register.register', { token }), {
-    data: {
-      agree: form.agree,
-      affiliate: form.affiliate,
-      is_agent: form.is_agent,
-    },
-    preserveState: false,
-    preserveScroll: true,
-  })
+  router.visit(
+    route('members.register.register', {
+      token,
+      agent: form.is_agent ? 1 : undefined,
+    }),
+    {
+      preserveState: false,
+    }
+  )
 };
 /*
   router.post(

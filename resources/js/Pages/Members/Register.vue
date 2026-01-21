@@ -759,7 +759,23 @@
           </div>
 
         </div>
+        <div class="flex items-center mt-6">
+          <!-- 左：データ送信 -->
+           <!--
+          <PrimaryButton type="submit">
+            データ送信
+          </PrimaryButton>
+          -->
 
+          <PrimaryButton
+            type="button"
+            class="ml-auto bg-blue-600 hover:bg-blue-700"
+            @click="submitPDF"
+          >
+          {{ t('members.next') }}
+          </PrimaryButton>
+        </div>
+        <!--
         <PrimaryButton class="mt-6" type="submit">
           データ送信
         </PrimaryButton>
@@ -771,7 +787,7 @@
         >
           PDF作成
         </button>
-
+        -->
       </form>
     </div>
   </GuestLayout>
@@ -1128,6 +1144,7 @@ const submitPDF = async () => {
     }
   } catch (e) {
     console.error(e)
+    alert('PDFの作成に失敗しました。入力内容をご確認ください。')
   }
 }
 const normalizePhone = (value) => {
