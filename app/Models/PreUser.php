@@ -36,4 +36,9 @@ class PreUser extends Model
         ]);
     }
 
+    public function isAgent(): bool
+    {
+        return (bool) $this->agent;
+    }
+    
 }

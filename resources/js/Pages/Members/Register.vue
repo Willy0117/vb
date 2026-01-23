@@ -714,12 +714,20 @@
             class="border-2 border-dashed border-gray-300 p-6 text-center cursor-pointer"
             @click="triggerFileSelect"
           >
-            <p v-if="!form.history_certificate">
+            <p v-if="!form.history_certificate && !form.history_certificate_path">
               履歴事項全部証明書（PDF）をドラッグ＆ドロップ または クリックして選択
             </p>
             <p v-else class="text-green-600 font-medium">
-              選択済み: {{ form.history_certificate.name }}
+              選択済み:
+              {{
+                form.history_certificate
+                  ? form.history_certificate.name
+                  : form.history_certificate_path
+                    ? 'アップロード済み'
+                    : ''
+              }}
             </p>
+
 
             <input
               type="file"
@@ -739,11 +747,19 @@
               class="border-2 border-dashed border-gray-300 p-6 text-center cursor-pointer"
               @click="triggerMailCertSelect"
             >
-              <p v-if="!form.mail_address_certificate">
+              <p v-if="!form.mail_address_certificate && !form.mail_address_certificate_path">
                 郵送先確認資料（PDF）をアップロードしてください
               </p>
+
               <p v-else class="text-green-600 font-medium">
-                選択済み: {{ form.mail_address_certificate.name }}
+                選択済み:
+                {{
+                  form.mail_address_certificate
+                    ? form.mail_address_certificate.name
+                    : form.mail_address_certificate_path
+                      ? 'アップロード済み'
+                      : ''
+                }}
               </p>
 
               <input
@@ -759,7 +775,7 @@
           </div>
 
         </div>
-        <div class="flex items-center mt-6">
+        <div class="6">
           <!-- 左：データ送信 -->
            <!--
           <PrimaryButton type="submit">
@@ -823,6 +839,12 @@ watch(
 )
 
 console.log(page.props) // ← ここで form が見える
+const history_certificate_name =
+  page.props.files?.history_certificate?.name ?? null
+
+const mail_address_certificate_name =
+  page.props.files?.mail_address_certificate?.name ?? null
+
 
 const form = useForm({
   type: page.props.form?.type ?? 'corporation',
@@ -834,7 +856,7 @@ const form = useForm({
   company_type_suffix: page.props.form?.company_type_suffix ?? '',
   rep_last_name: page.props.form?.rep_last_name ?? '雲田',
   rep_first_name: page.props.form?.rep_first_name ?? '敏広',
-  same_as_corp: page.props.form?.same_as_corp??false,
+  same_as_corp: Boolean(Number(page.props.form?.same_as_corp)),
   is_agent: page.props.form?.is_agent,
 
   corp: {
@@ -891,8 +913,15 @@ const form = useForm({
   account_no: page.props.form?.account_no ?? '1234567',
   account_kana: page.props.form?.account_kana ?? 'クーネット',
   account_name: page.props.form?.account_name ?? 'クーネット',
-  history_certificate: page.props.form?.history_certificate??null,
-  mail_address_certificate: page.props.form?.mail_address_certificate??null,   
+
+  history_certificate: null,
+  mail_address_certificate: null,
+  // ===== 表示用（sessionから戻る）=====
+  history_certificate_path: page.props.form?.history_certificate_path ?? null,
+  history_certificate_thumbnail: page.props.form?.history_certificate_thumbnail ?? null,
+
+  mail_address_certificate_path: page.props.form?.mail_address_certificate_path ?? null,
+  mail_address_certificate_thumbnail: page.props.form?.mail_address_certificate_thumbnail ?? null,
 });
 
 // エラー
@@ -905,18 +934,25 @@ const errors = ref({})
 //}
 
 function getError(key) {
-  // ① 今まで通り：ネスト構造（フロント独自 errors）
+  // ① Laravel array
+  if (errors.value?.[key]) {
+    const v = errors.value[key]
+    return Array.isArray(v) ? v[0] : v
+  }
+
+  // ② フロント独自ネスト
   const keys = key.split('.')
   const nestedError = keys.reduce(
     (acc, k) => (acc ? acc[k] : undefined),
     errors.value
   )
-
   if (nestedError) return nestedError
 
-  // ② 追加：Laravel / Inertia errors（ドット文字列キー）
-  return page.props.errors?.[key]
+  // ③ Inertia props（string）
+  const pe = page.props.errors?.[key]
+  return Array.isArray(pe) ? pe[0] : pe
 }
+
 
 
 const validateRequired = () => {
@@ -1125,8 +1161,42 @@ const extraParams = computed(() => {
   return selectedBank.value ? { bank_code: selectedBank.value.bank_code } : {}
 })
 
+if (page.props.files?.history_certificate) {
+  form.history_certificate_name = page.props.files.history_certificate_name ?? 'アップロード済みファイル';
+  form.history_certificate = null; // File オブジェクトは再取得できないので null
+}
+
+if (page.props.files?.mail_address_certificate) {
+  form.mail_address_certificate_name = page.props.files.mail_address_certificate_name ?? 'アップロード済みファイル';
+  form.mail_address_certificate = null; // File オブジェクトは再取得できないので null
+}
+
+
 const pdfUrl = ref(null)
 
+const submitPDF = () => {
+  console.log(form.history_certificate)
+  form.post(route('members.pdfgenerate', { token: page.props.token }), {
+    forceFormData: true,   // File を送る場合は必須
+    preserveScroll: true,
+    onError: (errors) => {
+      // errors は自動で form.errors に入る
+      console.log(errors)
+      alert('PDFの作成に失敗しました。もう一度入力フォームを全て確認してください。')
+    },
+  })
+}
+/*
+const submitPDF = () => {
+  form.post(
+    route('members.pdfgenerate', { token: page.props.token }),
+    {
+      forceFormData: true,   // ← 必須
+      preserveScroll: true,
+    }
+  )
+}
+/*
 const submitPDF = async () => {
   console.log('click')
 
@@ -1143,10 +1213,16 @@ const submitPDF = async () => {
       )
     }
   } catch (e) {
-    console.error(e)
-    alert('PDFの作成に失敗しました。入力内容をご確認ください。')
+    if (e.response?.status === 422) {
+      errors.value = e.response.data.errors
+      console.log(errors.value)
+      return
+    }
+
+    alert('PDFの作成に失敗しました。')
   }
 }
+*/
 const normalizePhone = (value) => {
   if (!value) return ''
 

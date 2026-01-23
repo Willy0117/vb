@@ -121,8 +121,12 @@ Route::prefix('members')->group(function () {
     Route::get('pdfcreate', [MemberRegController::class, 'pdfCreate'])
         ->name('members.pdfcreate');
 
+    Route::post('pdfgenerate/{token}', [MemberRegController::class, 'pdfGenerate']
+        )->name('members.pdfgenerate');
+/*
     Route::post('pdfgenerate', [MemberRegController::class, 'pdfGenerate'])
-        ->name('members.pdfgenerate');    
+        ->name('members.pdfgenerate');   
+*/
     Route::get('pdf-preview/{token}', 
         [MemberRegController::class, 'pdfPreview']
     )->name('members.pdf.preview');

@@ -13,6 +13,7 @@ use App\Models\Member;
 use App\Models\PreUser;
 use Imagick;
 use Illuminate\Validation\Rule;
+use Illuminate\Http\UploadedFile;
 
 class MemberController extends Controller
 {
@@ -50,16 +51,19 @@ class MemberController extends Controller
                 ->route('members.resend');
         }
 
-        // PDF 戻り（最優先）
+        $form = [];
+
         if (session()->has('member_form')) {
             $form = array_replace_recursive($form, session('member_form'));
         }
+        $files = session('member_files', []);
 
-        $form['is_agent'] = $request->has('agent');
+        $form['is_agent'] = (bool) $preUser->agent;
         
         return Inertia::render('Members/Register', [
             'token'    => $token,
             'form'     => $form,
+            'files'    => $files,
         ]);
     }
 
@@ -115,7 +119,8 @@ class MemberController extends Controller
             'mail.email'       => 'nullable|email',
             'mail.position'    => 'nullable|string',
             'mail.last_name'   => 'nullable|string',
-            'mail.first_name'  => 'nullable|string',            
+            'mail.first_name'  => 'nullable|string',
+
         ]);
 
         $member = null;
@@ -313,16 +318,163 @@ class MemberController extends Controller
         ]);
     }
     // Apuls Pdf Generate
-    public function pdfGenerate(Request $request)
+    public function pdfGenerate(Request $request, string $token)
     {
+        $rules = [
+
+            // ===== 基本情報 =====
+            'type' => 'required|string',
+            'company_kana' => 'required|string',
+            'rep_last_kana' => 'required|string',
+            'rep_first_kana' => 'required|string',
+            'company_type_prefix' => 'required|string',
+            'company_name' => 'required|string',
+            'company_type_suffix' => 'nullable|string',
+            'rep_last_name' => 'required|string',
+            'rep_first_name' => 'required|string',
+            'same_as_corp' => 'boolean',
+            'is_agent' => 'boolean',
+
+            // ===== 法人（corp）=====
+            'corp' => 'required|array',
+            'corp.type' => 'required|integer',
+            'corp.postal_code' => 'required|string',
+            'corp.address1' => 'required|string',
+            'corp.address2' => 'required|string',
+            'corp.address3' => 'nullable|string',
+            'corp.tel' => 'required|string',
+            'corp.fax' => 'nullable|string',
+            'corp.mobile' => 'nullable|string',
+            'corp.position' => 'required|string',
+            'corp.last_name' => 'required|string',
+            'corp.first_name' => 'required|string',
+
+            // ===== 郵送先（mail）=====
+            'mail' => 'required|array',
+            'mail.type' => 'required|integer',
+            'mail.postal_code' => 'nullable|string',
+            'mail.address1' => 'nullable|string',
+            'mail.address2' => 'nullable|string',
+            'mail.address3' => 'nullable|string',
+            'mail.tel' => 'nullable|string',
+            'mail.fax' => 'nullable|string',
+            'mail.mobile' => 'nullable|string',
+            'mail.email' => 'nullable|email',
+            'mail.position' => 'nullable|string',
+            'mail.last_name' => 'nullable|string',
+            'mail.first_name' => 'nullable|string',
+
+            // ===== 銀行 =====
+            'bank_type' => 'required|string',
+            'bank_name' => 'required|string',
+            'bank_code' => 'required|string',
+            'branch_code' => 'required|string',
+            'account_type' => 'required|string',
+            'account_no' => 'required|string',
+            'account_kana' => 'required|string',
+            'account_name' => 'required|string',
+        ];
+
+        if ($request->bank_code !== '9900') {
+            $rules['branch_name'] = 'required|string';
+        }
+        if ($request->boolean('is_agent')) {
+            $rules = array_merge($rules, [
+                'corp.email' => 'required|email',
+                'agent' => 'required|array',
+                'agent.type' => 'required|integer',
+                'agent.company_name' => 'required|string',
+                'agent.postal_code' => 'required|string',
+                'agent.address1' => 'required|string',
+                'agent.address2' => 'nullable|string',
+                'agent.address3' => 'nullable|string',
+                'agent.tel' => 'required|string',
+                'agent.fax' => 'nullable|string',
+                'agent.mobile' => 'nullable|string',
+                'agent.position' => 'required|string',
+                'agent.last_name' => 'required|string',
+                'agent.first_name' => 'required|string',
+            ]);
+        }
+        // 法人：履歴事項全部証明書
+        $rules = array_merge($rules, [
+            'history_certificate' => [
+                'nullable',
+                'file',
+                'mimes:pdf',
+                function ($attr, $value, $fail) use ($request) {
+                    if (
+                        $request->input('type') === 'corporation'
+                        && !$request->file('history_certificate')
+                        && !$request->input('history_certificate_path')
+                    ) {
+                    }
+                },
+            ],
+        ]);
+
+
+        // 郵送先が別：郵送先確認資料
+        $rules = array_merge($rules, [
+            'mail_address_certificate' => [
+                'nullable',
+                'file',
+                'mimes:pdf',
+                function ($attr, $value, $fail) use ($request) {
+                    if (
+                        !$request->boolean('same_as_corp')
+                        && !$request->file('mail_address_certificate')
+                        && !$request->input('mail_address_certificate_path')
+                    ) {
+                    }
+                },
+            ],
+        ]);     
+
+        $request->validate($rules);
+// ---- validation ここまで　ーーーー//
         // 仮登録ユーザー取得（email 用）
         $preUser = PreUser::where('token', $token)->firstOrFail();
 
-        // フォーム全体を取得
-        $form = $request->all();
+        $files = session('member_files', []);
+
+        $form = $request->except([
+            'history_certificate',
+            'mail_address_certificate',
+        ]);
+        if ($request->hasFile('history_certificate')) {
+            [$historyPath, $historyThumb] =
+                $this->storePdfWithThumbnail(
+                    $request->file('history_certificate'),
+                    'members/history_certificates'
+                );
+        } else {
+            $historyPath  = $form['history_certificate_path'] ?? null;
+            $historyThumb = $form['history_certificate_thumbnail'] ?? null;
+        }
+
+        $form['history_certificate_path'] = $historyPath;
+        $form['history_certificate_thumbnail'] = $historyThumb;
+
+        if ($request->hasFile('mail_address_certificate')) {
+            [$mailPath, $mailThumb] =
+                $this->storePdfWithThumbnail(
+                    $request->file('mail_address_certificate'),
+                    'members/mail_address_certificates'
+                );
+        } else {
+            $mailPath  = $form['mail_address_certificate_path'] ?? null;
+            $mailThumb = $form['mail_address_certificate_thumbnail'] ?? null;
+        }
+
+        $form['mail_address_certificate_path'] = $mailPath;
+        $form['mail_address_certificate_thumbnail'] = $mailThumb;
+
 
         // session に保存
-        session(['member_form' => $form]);
+        session([
+            'member_form' => $form,
+        ]);
 
                 // FPDI + TCPDF
         $pdf = new Fpdi();
@@ -582,6 +734,32 @@ class MemberController extends Controller
                 throw new \RuntimeException('PDF file not created');
             }
 
+            return \Inertia\Inertia::location(
+                route('members.pdf.preview', [
+                    'token'  => $token,
+                    'pdfUrl' => Storage::url($output),
+                ])
+            );
+
+        } catch (\Throwable $e) {
+            \Log::error('PDF生成エラー', [
+                'message' => $e->getMessage(),
+                'path'    => $file_path,
+            ]);
+
+            // Inertia の validation / error 用
+            return back()->withErrors([
+                'pdf' => 'PDFの作成に失敗しました',
+            ]);
+        }
+ /*
+        try {
+            $pdf->Output($file_path, 'F');
+
+            if (!file_exists($file_path)) {
+                throw new \RuntimeException('PDF file not created');
+            }
+
             return response()->json([
                 'url' => Storage::url($output),
             ]);
@@ -724,5 +902,43 @@ return response()->file($file_path, [
 ]);
     }
 
+    // pdf upload＋thumbnail(png)作成関数    
+    private function storePdfWithThumbnail(
+        ?UploadedFile $file,
+        string $baseDir
+    ): array {
+
+
+        if (!$file) {
+            return [null, null];
+        }
+
+        // PDF 保存（public）
+        $pdfRelativePath = $file->store($baseDir, 'public');
+        $pdfFullPath = storage_path('app/public/' . $pdfRelativePath);
+
+        // thumbnail 保存先
+        $thumbDir = $baseDir . '/thumbnails';
+        if (!Storage::disk('public')->exists($thumbDir)) {
+            Storage::disk('public')->makeDirectory($thumbDir);
+        }
+
+        $thumbnailRelativePath =
+            $thumbDir . '/' . pathinfo($pdfRelativePath, PATHINFO_FILENAME) . '.png';
+        $thumbnailFullPath = storage_path('app/public/' . $thumbnailRelativePath);
+
+        // thumbnail 生成
+        $imagick = new \Imagick();
+        $imagick->setResolution(150, 150);
+        $imagick->readImage($pdfFullPath . '[0]');
+        $imagick->setImageFormat('png');
+        $imagick->writeImage($thumbnailFullPath);
+        $imagick->clear();
+        $imagick->destroy();
+
+        return [$pdfRelativePath, $thumbnailRelativePath];
+    }
+  
 }
+
 
