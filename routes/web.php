@@ -83,16 +83,11 @@ Route::prefix('pre-register')->name('pre-register.')->group(function () {
 
 
 Route::prefix('members')->group(function () {
-/*
-    Route::get('pdf', [MemberRegController::class, 'pdf']);
-*/
+
     Route::get('register/{token}', 
         [MemberRegController::class, 'showRegistrationForm']
     )->name('members.register');
-/*
-    Route::post('members/agree/{token}', [MemberRegController::class, 'agreeNext'])
-    ->name('members.register.agree');
-*/
+
     Route::get('register/{token}/register', 
         [MemberRegController::class, 'showRegisterForm']
     )->name('members.register.register');
@@ -101,13 +96,18 @@ Route::prefix('members')->group(function () {
         'register/{token}/register',
         [MemberRegController::class, 'register']
     )->name('members.register.register');
-    // 完了画面GET
+
+    // DB登録・完了処理（POST データなしでも session から処理）
+    Route::get('register/{token}/complete-registration', [MemberRegController::class, 'completeRegistration'])
+        ->name('members.completeRegistration');
+
+    // 完了画面
     Route::get('register/complete', function () {
         return Inertia::render('Members/Complete', [
-            'success' => session('success'),
-            'member_id' => session('member_id'), // 必要なら
+            'success' => session('success'), // flash メッセージ受け渡し
         ]);
     })->name('members.complete');
+
     // 加盟団体加入で拒否された場合のメッセージ画面
     Route::get('register/{token}/rejected', [MemberRegController::class, 'showRejectedMessage'])
         ->name('members.register.rejected');

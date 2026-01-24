@@ -73,119 +73,57 @@ class MemberController extends Controller
         // 仮登録ユーザー取得（email 用）
         $preUser = PreUser::where('token', $token)->firstOrFail();
 
-        $validated = $request->validate([
-            // member
-            'company_name' => 'required|string',
-            'company_kana' => 'required|string',
-            'rep_last_kana'  => 'required|string',
-            'rep_first_kana'  => 'required|string',
-            'company_type_prefix' => 'nullable|string',
-            'company_type_suffix' => 'nullable|string',
-            'rep_last_name'  => 'required|string',
-            'rep_first_name'  => 'required|string',
-            'same_as_corp' => 'required|integer',
-            // bank
-            'bank_type' => 'required|integer',
-            'bank_name' => 'required|string',
-            'bank_code' => 'nullable|string',
-            'branch_name' => 'required|string',
-            'branch_code' => 'nullable|string',
-            'account_type' => 'required|string',
-            'account_no' => 'required|string',
-            'account_kana' => 'required|string',
-            'account_name' => 'required|string',
-            // pdf
-            'history_certificate' => 'required|file|mimes:pdf',
-            'mail_address_certificate' => 'nullable|file|mimes:pdf',
-            // corp
-            'corp.postal_code' => 'required|string',
-            'corp.address1'    => 'required|string',
-            'corp.address2'    => 'nullable|string',
-            'corp.address3'    => 'nullable|string',
-            'corp.tel'         => 'required|string',
-            'corp.fax'         => 'nullable|string',
-            'corp.mobile'      => 'nullable|string',
-            'corp.position'    => 'nullable|string',
-            'corp.last_name'   => 'nullable|string',
-            'corp.first_name'  => 'nullable|string',
-            // mail
-            'mail.postal_code' => 'required|string',
-            'mail.address1'    => 'required|string',
-            'mail.address2'    => 'nullable|string',
-            'mail.address3'    => 'nullable|string',
-            'mail.tel'         => 'required|string',
-            'mail.fax'         => 'nullable|string',
-            'mail.mobile'      => 'nullable|string',
-            'mail.email'       => 'nullable|email',
-            'mail.position'    => 'nullable|string',
-            'mail.last_name'   => 'nullable|string',
-            'mail.first_name'  => 'nullable|string',
-
-        ]);
-
-        $member = null;
-
+        $form = session('member_form');
+        
+        if (!$form) {
+            return redirect()
+                ->route('members.register', ['token' => $request->token])
+                ->with('error', '通信状態の影響により処理を続行できませんでした。お手数ですが、メールのリンクからもう一度お手続きをお願いいたします。');
+        }
+  
         try {
-            DB::transaction(function () use ($validated, $request, $preUser, &$member) {
-
-                // PDF保存（public）
-                $pdfRelativePath = $request->file('history_certificate')
-                    ->store('members/history_certificates', 'public');
-
-                $pdfFullPath = storage_path('app/public/' . $pdfRelativePath);
-
-                // サムネイル保存先
-                $thumbnailRelativePath =
-                    'members/history_certificates/thumbnails/' . basename($pdfRelativePath, '.pdf') . '.png';
-
-                $thumbnailFullPath = storage_path('app/public/' . $thumbnailRelativePath);
-
-                if (!Storage::disk('public')->exists('members/history_certificates/thumbnails')) {
-                    Storage::disk('public')->makeDirectory('members/history_certificates/thumbnails');
-                }
-
-                // thumbnail 生成
-                $imagick = new \Imagick();
-                $imagick->setResolution(150, 150);
-                $imagick->readImage($pdfFullPath . '[0]');
-                $imagick->setImageFormat('png');
-                $imagick->writeImage($thumbnailFullPath);
-                $imagick->clear();
-                $imagick->destroy();
+            DB::transaction(function () use ($form, $request, $preUser, &$member) {
+      
+                $isAgent = (bool) ($preUser->agent ?? false);
 
                 // members
                 $member = Member::create([
-                    'last_name'  => $validated['rep_last_name'],
-                    'first_name' => $validated['rep_first_name'],
-                    'last_name_kana'  => $validated['rep_last_kana'],
-                    'first_name_kana' => $validated['rep_first_kana'],
+                    'last_name'  => $form['rep_last_name'],
+                    'first_name' => $form['rep_first_name'],
+                    'last_name_kana'  => $form['rep_last_kana'],
+                    'first_name_kana' => $form['rep_first_kana'],
                     'agree' => 1,
                     'affiliate' => 1,
                     'agreed_at' => now(),
                     'status' => 1,
                     'progress' => 1,
+                    'agent' => $isAgent,
+                    'type' => $form['type'],
                 ]);
                 // bank_accounts
                 $member->bankAccount()->create([
-                    'bank_type' => $validated['bank_type'],
-                    'bank_name' => $validated['bank_name'],
-                    'bank_code' => $validated['bank_code'] ?? null,
-                    'branch_name' => $validated['branch_name'],
-                    'branch_code' => $validated['branch_code'] ?? null,
-                    'account_type' => $validated['account_type'],
-                    'account_no' => $validated['account_no'],
-                    'account_kana' => $validated['account_kana'],
-                    'account_name' => $validated['account_name'],
+                    'bank_type' => $form['bank_type'],
+                    'bank_name' => $form['bank_name'],
+                    'bank_code' => $form['bank_code'] ?? null,
+                    'branch_name' => $form['branch_name'],
+                    'branch_code' => $form['branch_code'] ?? null,
+                    'account_type' => $form['account_type'],
+                    'account_no' => $form['account_no'],
+                    'account_kana' => $form['account_kana'],
+                    'account_name' => $form['account_name'],
                 ]);
 
-                $corp = $validated['corp'];
+                $corp = $form['corp'];
+
+                $email = $preUser->email;
+                if ($isAgent) $email = $corp['email'];
 
                 $corpOrg = $member->organization()->create([    
                     'type' => 1,
-                    'name' => $validated['company_name'],
-                    'name_kana' => $validated['company_kana'],
-                    'name_prefix' => $validated['company_type_prefix'],
-                    'name_suffix' => $validated['company_type_suffix'],
+                    'name' => $form['company_name'],
+                    'name_kana' => $form['company_kana'],
+                    'name_prefix' => $form['company_type_prefix'],
+                    'name_suffix' => $form['company_type_suffix'],
                     'postal_code' => $corp['postal_code'],
                     'address1' => $corp['address1'],
                     'address2' => $corp['address2'],
@@ -193,20 +131,20 @@ class MemberController extends Controller
                     'tel' => $corp['tel'],
                     'fax' => $corp['fax'],
                     'mobile' => $corp['mobile'],
-                    'email' => $preUser->email,
+                    'email' => $email,
                     'position'  => $corp['position'],
                     'last_name' => $corp['last_name'],
                     'first_name' => $corp['first_name'],
                 ]);
 
-                $mail = $validated['mail'];
+                $mail = $form['mail'];
 
                 $mailOrg = $member->organization()->create([    
                     'type' => 2,
-                    'name' => $validated['company_name'],
-                    'name_kana' => $validated['company_kana'],
-                    'name_prefix' => $validated['company_type_prefix'],
-                    'name_suffix' => $validated['company_type_suffix'],
+                    'name' => $form['company_name'],
+                    'name_kana' => $form['company_kana'],
+                    'name_prefix' => $form['company_type_prefix'],
+                    'name_suffix' => $form['company_type_suffix'],
                     'postal_code' => $mail['postal_code'],
                     'address1' => $mail['address1'],
                     'address2' => $mail['address2'],
@@ -219,38 +157,44 @@ class MemberController extends Controller
                     'last_name' => $mail['last_name'],
                     'first_name' => $mail['first_name'],
                 ]);
+
+                if ($isAgent) {
+
+                    $agent = $form['agent'];
+
+                    $agentOrg = $member->organization()->create([    
+                        'type' => 3,
+                        'name' => $agent['company_name'],
+                        'name_kana' => '',
+                        'postal_code' => $agent['postal_code'],
+                        'address1' => $agent['address1'],
+                        'address2' => $agent['address2'],
+                        'address3' => $agent['address3'],
+                        'tel' => $agent['tel'],
+                        'fax' => $agent['fax'],
+                        'mobile' => $agent['mobile'],
+                        'email' => $preUser->email,
+                        'position'  => $agent['position'],
+                        'last_name' => $agent['last_name'],
+                        'first_name' => $agent['first_name'],
+                    ]); 
+                }               
                     //1:履歴事項全部証明書
                 $corpOrg->documents()->create([  
                     'type' => 1,
-                    'file_path' => $pdfRelativePath,
-                    'thumbnail_path' => $thumbnailRelativePath,
+                    'file_path' => $form['history_certificate_path'],
+                    'thumbnail_path' => $form['history_certificate_thumbnail'],
                 ]);
  
-                if ($validated['same_as_corp'] != 1 && $request->hasFile('mail_address_certificate')) {
-                    // PDF保存（public）
-                    $pdfRelativePath = $request->file('mail_address_certificate')
-                        ->store('members/mail_address_certificates', 'public');
-
-                    $pdfFullPath = storage_path('app/public/' . $pdfRelativePath);
-
-                    // サムネイル保存先
-                    $thumbnailRelativePath =
-                        'members/mail_address_certificates/thumbnails/' . basename($pdfRelativePath, '.pdf') . '.png';
-
-                    $thumbnailFullPath = storage_path('app/public/' . $thumbnailRelativePath);
-
-                    if (!Storage::disk('public')->exists('members/mail_address_certificates/thumbnails')) {
-                        Storage::disk('public')->makeDirectory('members/mail_address_certificates/thumbnails');
-                    }
+                if ($form['same_as_corp'] != 1 && $form['mail_address_certificate_path'] ) {
                     //2:郵送先確認書類
                     $corpOrg->documents()->create([  
                         'type' => 2,
-                        'file_path' => $pdfRelativePath,
-                        'thumbnail_path' => $thumbnailRelativePath,
-                    ]);
-             }
+                        'file_path' => $form['mail_address_certificate_path'],
+                        'thumbnail_path' => $form['mail_address_certificate_thumbnail'],
 
-                session()->forget(['agree', 'affiliate', 'agree_at']);
+                    ]);
+                }
 
                 $preUser->update([
                     'verified_at' => now(),
@@ -258,41 +202,16 @@ class MemberController extends Controller
             });
         } catch (\Exception $e) {
             throw $e;
-            //return back()->withErrors(['error' => '登録処理に失敗しました: ' . $e->getMessage()]);
-        }            
+                    // DB登録失敗 → 拒否画面に飛ばす
+            return Inertia::render('Members/Reject', [
+                'message' => '登録処理に失敗しました。もう一度メールに記載のURLから登録し直してください。',
+            ]);
+        }           
 
-        // 成功時のみ member_id を渡す
-        if (!$member) {
-            return back()->withErrors(['error' => '登録に失敗しました。']);
-        }
         return redirect()->route('members.complete')
             ->with('success', 'ご登録ありがとうございました');
     }
 
-
-    private function generatePdfThumbnail(string $pdfPath): string
-    {
-        $pdfFullPath = Storage::disk('public')->path($pdfPath);
-
-        $imagick = new Imagick();
-        $imagick->setResolution(150, 150);
-        $imagick->readImage($pdfFullPath . '[0]'); // 1ページ目
-        $imagick->setImageFormat('jpg');
-        $imagick->thumbnailImage(300, 0);
-
-        $thumbnailName = pathinfo($pdfPath, PATHINFO_FILENAME) . '.jpg';
-        $thumbnailPath = 'certificates/thumbnail/' . $thumbnailName;
-
-        Storage::disk('public')->put(
-            $thumbnailPath,
-            $imagick->getImageBlob()
-        );
-
-        $imagick->clear();
-        $imagick->destroy();
-
-        return $thumbnailPath;
-    }
  
     // Apuls Pdf Create
     public function pdfCreate()

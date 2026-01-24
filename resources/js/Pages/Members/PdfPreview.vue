@@ -23,9 +23,10 @@
         </label>
       </div>
 
-      <div class="flex gap-4">
+      <div class="flex gap-4 items-center">
         <PrimaryButton
-          class="mt-6"
+          type="button"
+          class="mt-6 h-10 px-4 flex items-center justify-center"
           :disabled="!canSubmit"
           @click="submitRegister"
         >
@@ -35,28 +36,29 @@
         <a
           :href="confirmed ? pdfUrl : null"
           download
-          :class="[
-            'px-4 py-2 rounded text-white',
-            confirmed ? 'bg-blue-600 cursor-pointer' : 'bg-gray-400 cursor-not-allowed'
-          ]"
+          class="mt-6 h-10 px-4 flex items-center justify-center rounded text-white"
+          :class="confirmed
+            ? 'bg-blue-600 cursor-pointer'
+            : 'bg-gray-400 cursor-not-allowed pointer-events-none'
+          "
         >
           {{ t('download') }}
         </a>
 
-
         <button
           @click="goBack"
-          class="bg-gray-300 px-4 py-2 rounded"
+          class="mt-6 h-10 px-4 flex items-center justify-center rounded bg-gray-300"
         >
-        {{ t('revise') }} 
+          {{ t('revise') }}
         </button>
       </div>
+
     </div>
   </GuestLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
 import RegisterStep from '@/Components/RegisterStep.vue'    
@@ -68,8 +70,13 @@ const { t } = useI18n();
 const canvas = ref(null)
 const page = usePage()
 const pdfUrl = usePage().props.pdfUrl
-const confirmed = ref(false)
 
+const confirmed = ref(false)
+const downloaded = ref(false)
+
+const canSubmit = computed(() => {
+  return confirmed.value && downloaded.value
+})
 
 onMounted(async () => {
   const pdfjsLib = window.pdfjsLib
@@ -106,6 +113,14 @@ onMounted(async () => {
     }).promise
   }
 })
+
+const submitRegister = () => {
+  router.get(
+    route('members.completeRegistration', {
+      token: page.props.token,
+    })
+  )
+}
 
 const goBack = () => {
   router.get(
