@@ -71,7 +71,8 @@ class MemberController extends Controller
 
                 return [
                     'id' => $member->id,
-
+                    'type' => $member->type_label,
+                    'agent' => $member->agent_label,
                     // ステータス
                     'status'   => $member->status,
                     'progress' => $member->progress,
@@ -90,6 +91,15 @@ class MemberController extends Controller
 
                     // 履歴事項全部証明書
                     'history_certificate' => $doc ? [
+                        'path' => $doc->path
+                            ? Storage::url($doc->path)
+                            : null,
+                        'thumbnail_path' => $doc->thumbnail_path
+                            ? Storage::url($doc->thumbnail_path)
+                            : null,
+                    ] : null,
+
+                    'mail_address_certificate' => $doc ? [
                         'path' => $doc->path
                             ? Storage::url($doc->path)
                             : null,

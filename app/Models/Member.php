@@ -15,9 +15,16 @@ class Member extends Model
         'agree',
         'affiliate',
         'agreed_at',
-        'verified_at',
         'status_id',
         'progress_id',
+        'agent', 
+    ];
+
+    protected $casts = [
+        'agent' => 'boolean',
+        'agree' => 'boolean',
+        'affiliate' => 'boolean',
+        'agreed_at' => 'datetime',
     ];
 
     public function status()
@@ -48,5 +55,26 @@ class Member extends Model
     public function bankAccount()
     {
         return $this->hasOne(BankAccount::class);
-    }    
+    }
+
+    /* =====================
+     |  表示用ラベル
+     * ===================== */
+
+    // 法人 / 個人事業主
+    public function getTypeLabelAttribute(): string
+    {
+        return match ($this->type) {
+            'corporation' => '法人',
+            'solo' => '個人事業主',
+            default => '-',
+        };
+    }
+
+    // 代理人申請 / 本人申請
+    public function getAgentLabelAttribute(): string
+    {
+        return $this->agent ? '代理人申請' : '本人申請';
+    }
+
 }

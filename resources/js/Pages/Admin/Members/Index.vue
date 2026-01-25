@@ -99,7 +99,15 @@
             <th class="px-3 py-2">
               <input type="checkbox" :checked="selectAll" @change="toggleSelectAll($event.target.checked)" />
             </th>
-            <th v-if="isSuperAdmin">{{ t('tenant') }}</th>            
+            <th v-if="isSuperAdmin">{{ t('tenant') }}</th>
+            <th class="px-3 py-2 cursor-pointer" @click="sortBy('type')">
+              {{ t('members.type') }}
+              <span v-if="form.sort==='type'">{{ form.direction==='asc'?'▲':'▼' }}</span>
+            </th>            
+            <th class="px-3 py-2 cursor-pointer" @click="sortBy('agent')">
+              {{ t('members.agent') }}
+              <span v-if="form.sort==='agent'">{{ form.direction==='asc'?'▲':'▼' }}</span>
+            </th>            
             <th class="px-3 py-2 cursor-pointer" @click="sortBy('company_name')">
               {{ t('members.company_name') }}
               <span v-if="form.sort==='company_name'">{{ form.direction==='asc'?'▲':'▼' }}</span>
@@ -126,6 +134,7 @@
               <span v-if="form.sort==='progress'">{{ form.direction==='asc'?'▲':'▼' }}</span>
             </th>
             <th class="px-3 py-2 text-center">{{ t('history_certificate') }}</th>
+            <th class="px-3 py-2 text-center">{{ t('mail_address_certificate') }}</th>
             <th class="px-3 py-2 text-center">{{ t('actions') }}</th>
           </tr>
         </thead>
@@ -138,6 +147,8 @@
             <td v-if="isSuperAdmin">
               {{ tenants.find(t => t.id === member.tenant_id)?.name || '-' }}
             </td>            
+            <td class="px-3 py-2">{{ member.type ?? '-' }}</td>
+            <td class="px-3 py-2">{{ member.agent ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.organization?.name ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.name ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.tel ?? '-' }}</td>
@@ -153,7 +164,16 @@
                 @click="openPdf(member.history_certificate_path)"
               />
               <span v-else class="text-gray-400 text-xs">-</span>
-            </td>            
+            </td>
+            <td class="px-3 py-2 text-center">
+              <img
+                v-if="member.mail_address_certificate.thumbnail_path"
+                :src="member.mail_address_certificate.thumbnail_path"
+                class="w-10 h-10 object-contain border rounded cursor-pointer hover:opacity-80"
+                @click="openPdf(member.mail_address_certificate_path)"
+              />
+              <span v-else class="text-gray-400 text-xs">-</span>
+            </td>
             <td class="px-3 py-2 text-center flex justify-center space-x-1">
               <Link :href="route('admin.member.show', { member: member.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
                 <PencilIcon class="w-4 h-4"/>

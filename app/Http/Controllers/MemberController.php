@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+
 use TCPDF_FONTS;
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Carbon\Carbon;
@@ -14,6 +17,9 @@ use App\Models\PreUser;
 use Imagick;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
+use App\Mail\MemberRegistrationCompleted;
+use App\Mail\AgentRegistrationCompleted;
+use App\Mail\PreRegisterMail;
 
 class MemberController extends Controller
 {
@@ -37,7 +43,7 @@ class MemberController extends Controller
             'token' => $token,
             'agree' => false,
             'affiliate' => 0,
-            'is_agent' => $request->has('agent'),
+            'is_agent' => (bool) $preUser->agent,
         ]);
     }
 
@@ -80,9 +86,13 @@ class MemberController extends Controller
                 ->route('members.register', ['token' => $request->token])
                 ->with('error', '通信状態の影響により処理を続行できませんでした。お手数ですが、メールのリンクからもう一度お手続きをお願いいたします。');
         }
-  
+
+        $member = null;
+        $corp = null;
+        $agent = null;
+
         try {
-            DB::transaction(function () use ($form, $request, $preUser, &$member) {
+            DB::transaction(function () use ($form, $request, $preUser, &$member, &$corp, &$agent) {
       
                 $isAgent = (bool) ($preUser->agent ?? false);
 
@@ -199,6 +209,14 @@ class MemberController extends Controller
                 $preUser->update([
                     'verified_at' => now(),
                 ]);
+
+                // member 登録
+                $member->verified_at = now();
+                $member->save();
+
+                $corp = $corpOrg;
+                $agent = $agentOrg;
+ 
             });
         } catch (\Exception $e) {
             throw $e;
@@ -206,10 +224,71 @@ class MemberController extends Controller
             return Inertia::render('Members/Reject', [
                 'message' => '登録処理に失敗しました。もう一度メールに記載のURLから登録し直してください。',
             ]);
-        }           
+        }
+        // 完了メール送信
+        $this->sendCompletedMails($member, $preUser, $corp, $agent);
 
         return redirect()->route('members.complete')
             ->with('success', 'ご登録ありがとうございました');
+    }
+
+    public function showComplete()
+    {
+        // 完了画面に入る直前で後始末
+        // session()->forget(['agree', 'affiliate', 'agree_at']);
+
+        return Inertia::render('Members/Complete', [
+            'success' => session('success'),
+        ]);
+    }
+    
+    protected function sendCompletedMails(Member $member, $preUser, $corp, $agent = null): void
+    {
+
+        $toUser = filter_var($preUser->email, FILTER_VALIDATE_EMAIL)
+            ? $preUser->email
+            : null;
+
+        $toCorp = filter_var($corp['email'] ?? null, FILTER_VALIDATE_EMAIL)
+            ? $corp['email']
+            : null;
+
+        // 本人／代理人宛
+        if ($toUser) {
+            try {
+                $data = $agent ?? $corp; // 代理人がいれば agent、それ以外は member
+                Mail::to($toUser)
+                    ->send(new MemberRegistrationCompleted($data));
+
+                $member->user_mail_sent_at = now();
+
+            } catch (\Throwable $e) {
+                Log::error('SES user mail send failed', [
+                    'member_id' => $member->id ?? null,
+                    'to' => $toUser,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // corp 宛（agent の場合のみ or mail がある場合）
+        if ($toCorp) {
+            try {
+                Mail::to($toCorp)
+                    ->send(new AgentRegistrationCompleted($corp));
+
+                $member->corp_mail_sent_at = now();
+
+            } catch (\Throwable $e) {
+                Log::error('SES corp mail send failed', [
+                    'member_id' => $member->id ?? null,
+                    'to' => $toCorp,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+        //メール送信結果をDBへ保存    
+        $member->save();
     }
 
  

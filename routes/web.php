@@ -92,21 +92,14 @@ Route::prefix('members')->group(function () {
         [MemberRegController::class, 'showRegisterForm']
     )->name('members.register.register');
 
-    Route::post(
-        'register/{token}/register',
-        [MemberRegController::class, 'register']
-    )->name('members.register.register');
+    Route::post('register/{token}/register',[MemberRegController::class, 'register'])->name('members.register.register');
 
     // DB登録・完了処理（POST データなしでも session から処理）
     Route::get('register/{token}/complete-registration', [MemberRegController::class, 'completeRegistration'])
         ->name('members.completeRegistration');
 
     // 完了画面
-    Route::get('register/complete', function () {
-        return Inertia::render('Members/Complete', [
-            'success' => session('success'), // flash メッセージ受け渡し
-        ]);
-    })->name('members.complete');
+    Route::get('complete',[MemberRegController::class, 'showComplete'])->name('members.complete');
 
     // 加盟団体加入で拒否された場合のメッセージ画面
     Route::get('register/{token}/rejected', [MemberRegController::class, 'showRejectedMessage'])
