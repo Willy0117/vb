@@ -9,7 +9,7 @@
         <h2 class="font-bold mb-2">申請者</h2>
         <p>{{ t('members.name')}} ： {{ props.member.name }}</p>
         <p>{{ t('status') }} ： {{ props.member.status.name }}</p>
-        <p>{{ t('progress') }} : {{ props.member.progress?.name ?? '-' }}</p>
+        <p>{{ t('members.progress') }} : {{ props.member.progress?.name ?? '-' }}</p>
       </section>
 
       <!-- 法人 -->
@@ -69,10 +69,42 @@
         </Link>
     </div>
     </div>
+    
+    <div>
+      <DialogModal
+        :show="!!previewPdf"
+        maxWidth="7xl"
+        @close="previewPdf = null"
+      >
+        <template #title>
+          PDF プレビュー
+        </template>
+
+        <template #content>
+          <div class="w-[90vw] h-[80vh]">
+            <iframe
+              v-if="previewPdf"
+              :src="previewPdf"
+              class="w-full h-full border"
+            />
+          </div>
+        </template>
+
+        <template #footer>
+          <SecondaryButton @click="previewPdf = null">
+            閉じる
+          </SecondaryButton>
+        </template>
+      </DialogModal>
+    </div>
   </AppLayout>
 </template>
 <script setup>
 import AppLayout from '@/Layouts/Admin/AppLayout.vue'
+import DialogModal from '@/Components/DialogModal.vue'
+import SecondaryButton from '@/Components/SecondaryButton.vue'
+import PrimaryButton from '@/Components/PrimaryButton.vue'
+
 import Pagination from '@/Components/Pagination.vue'
 import { Link, router } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch} from 'vue'
@@ -97,6 +129,18 @@ console.log(props.member)
 // persistQueryに各検索項目を追加
 const persistQuery = () => {
   return { ...props.filters }
+}
+
+const previewPdf = ref(null)
+
+const openPdf = (pdfPath) => {
+  console.log('PDF PATH:', pdfPath)
+  if (!pdfPath) return
+
+  // 例：フルパス化
+  previewPdf.value = pdfPath
+
+  // 例：ここで loading true
 }
 
 </script>

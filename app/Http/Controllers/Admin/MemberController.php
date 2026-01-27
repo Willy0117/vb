@@ -177,7 +177,7 @@ class MemberController extends Controller
             ->flatMap(fn ($org) => $org->documents)
             ->map(fn ($doc) => [
                 'type'           => $doc->type,
-                'path'           => $doc->path ? Storage::url($doc->path) : null,
+                'path'           => $doc->file_path ? Storage::url($doc->file_path) : null,
                 'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
             ]);
 
@@ -415,12 +415,13 @@ class MemberController extends Controller
         ?UploadedFile $file,
         string $baseDir
     ): array {
+/* debug用
 logger()->error('BASE DIR DEBUG', [
     'file' => $file,
     'baseDir' => $baseDir,
     'length' => strlen($baseDir),
 ]);
-
+*/
         if (!$file) {
             return [null, null];
         }

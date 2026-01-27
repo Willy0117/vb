@@ -1,21 +1,31 @@
 <template>
+  <!-- ハンバーガー（モバイルのみ表示） -->
+  <div class="lg:hidden p-2">
+    <button @click="mobileOpen = !mobileOpen" class="text-gray-600 text-xl">
+      ☰
+    </button>
+  </div>
+
+  <!-- ナビ -->
   <aside
-    v-if="!isMobile"
     :class="[
-      'bg-gray-50 text-gray-800 h-screen flex flex-col overflow-auto transition-all duration-300 z-50',
-      collapsed ? 'w-16' : 'w-64'
+      'bg-gray-100 h-screen transition-all duration-300 flex flex-col z-50',
+      collapsed ? 'w-16' : 'w-64',          // PC折りたたみ
+      mobileOpen ? 'left-0' : '-left-full', // モバイル開閉
+      'lg:flex lg:left-0 lg:relative',      // PC表示では固定
+      'fixed top-0'                          // モバイルでは画面上に固定
     ]"
   >
-    <!-- 折りたたみボタン -->
-    <div class="flex justify-end p-2 flex-none">
-      <button @click="toggleCollapse" class="text-gray-500 hover:text-gray-700">
+    <!-- PC折りたたみボタン -->
+    <div class="flex justify-end p-2 flex-none lg:flex">
+      <button @click="toggleCollapse">
         <span v-if="collapsed">➡</span>
         <span v-else>⬅</span>
       </button>
     </div>
 
     <!-- メニュー -->
-    <nav class="flex-1 px-2 py-4 text-sm">
+    <nav class="flex-1 overflow-y-auto px-2 py-4 text-sm">
       <!-- Dashboard -->
       <Link
         :href="route('admin.dashboard')"
@@ -127,6 +137,13 @@
 
     </nav>
   </aside>
+    <!-- モバイルオーバーレイ -->
+  <div
+    v-if="mobileOpen"
+    class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+    @click="mobileOpen = false"
+  ></div>
+  
 </template>
 
 <script setup>
@@ -144,8 +161,11 @@ import {
 
 const page = usePage()
 
+const mobileOpen = ref(false)       // モバイル用の開閉状態
+
 const collapsed = ref(false)
 const openSubMenu = ref(null)
+
 const toggleCollapse = () => (collapsed.value = !collapsed.value)
 const toggleSubMenu = (menu) => (openSubMenu.value = openSubMenu.value === menu ? null : menu)
 

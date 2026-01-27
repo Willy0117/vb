@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen bg-gray-100">
+  <div class="flex min-h-screen bg-gray-100 w-full">
     <!-- 左メニュー -->
     <Navigation />
 
@@ -60,11 +60,6 @@
               <span>{{ t('logout') }}</span>
             </button>
           </form>
-
-          <!-- スマホ用ハンバーガーメニュー -->
-          <button @click="toggleMenu" class="lg:hidden text-gray-600 text-xl">
-            ☰
-          </button>
         </div>
       </header>
 
@@ -74,6 +69,10 @@
       </main>
     </div>
   </div>
+      <!-- footer -->
+    <footer class="border-t text-center text-xs text-gray-400 py-4">
+      &copy {{ t('copyright') }}
+    </footer>
 </template>
 
 <script setup>
