@@ -20,6 +20,13 @@
   "download": "ダウンロード",
   "return": "戻る",
   "revise": "訂正する",
+  "delete_selected": "選択削除",
+  "action": "操 作",
+  "save": "保 存",
+  "edit": "編 集",
+  "update": "更 新",
+  "cancel": "キャンセル",
+  "deleted": "削 除",
   "actions": {
     "action": "操 作",
     "save": "保 存",
@@ -32,6 +39,11 @@
     "please_select": "選択してください",
     "delete_selected": "選択削除"
   },
+  "navigations": {
+    "tenants" : "テナント",
+    "roles" : "権限",
+    "permissions" : "パーミッション"
+  },  
   "tenants" : {
     "tenant": "テナント",
     "tenant_id": "テナント",
@@ -87,7 +99,7 @@
     "branch_name": "支店名",
     "bank_code": "銀行コード",
     "branch_code": "支店コード"
-  },  
+  },
   "roles": {
     "role": "権限",
     "role_list": "権限一覧",
@@ -127,11 +139,13 @@
   "attachments": "添付ファイル",
   "recommendation": "推薦状",
   "history_certificate": "履歴事項",
+  "mail_address_certificates": "郵送先",
 
   "submitted": "申込済み",
   "approved": "承認済み",
   "no_applications": "申込はまだありません",
   "members": {
+    "name": "申請者名",
     "member": "会員",
     "detail": "会員情報",
     "member_list": "会員一覧",
@@ -169,7 +183,9 @@
     "next": "次へ",
     "action": "操作",
     "members.detail": "会員情報",
-    "staff": "担当者"
+    "staff": "担当者",
+    "history_certificate": "履歴",
+    "mail_address_certificate": "郵送先"
   }, 
   "billing_name": "請求先名",
   "billing_postal": "請求先郵便番号",

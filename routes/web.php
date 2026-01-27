@@ -60,6 +60,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/{member}', [AdminMemberController::class, 'show'])->name('show');
             Route::get('/{member}/edit', [AdminMemberController::class, 'edit'])->name('edit');
             Route::put('/{member}', [AdminMemberController::class, 'update'])->name('update');
+            // routes/admin.php
+            Route::get('{member}/status/edit', [AdminMemberController::class, 'editStatus'])
+                ->name('editStatus');
+
+            Route::put('{member}/status', [AdminMemberController::class, 'updateStatus'])
+                ->name('updateStatus');
+
+            Route::get('/{member}/progress/edit', [AdminMemberController::class, 'editProgress'])
+                ->name('editProgress');
+            Route::put('/{member}/progress', [AdminMemberController::class, 'updateProgress'])
+                ->name('updateProgress');
+            Route::post('/{member}/upload-document', [AdminMemberController::class, 'uploadDocument'])
+                ->name('uploadDocument');
+              
         });
     });
 });

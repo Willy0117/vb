@@ -5,8 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Imagick;
 use Illuminate\Validation\Rule;
+use Illuminate\Http\UploadedFile;
+
 use App\Models\Member;
+use App\Models\Status;
+use App\Models\Progress;
+use App\Models\OrganizationDocument;
+
 use App\Http\Resources\MemberResource;
 use Illuminate\Support\Facades\Storage;
 
@@ -73,10 +80,11 @@ class MemberController extends Controller
                     'id' => $member->id,
                     'type' => $member->type_label,
                     'agent' => $member->agent_label,
-                    // ステータス
+
+                    'status_id'   => $member->status_id,
+                    'progress_id' => $member->progress_id,
                     'status'   => $member->status,
                     'progress' => $member->progress,
-
                     // 法人
                     'organization' => [
                         'name' => $org?->full_name,
@@ -91,8 +99,8 @@ class MemberController extends Controller
 
                     // 履歴事項全部証明書
                     'history_certificate' => $doc ? [
-                        'path' => $doc->path
-                            ? Storage::url($doc->path)
+                        'path' => $doc->file_path
+                            ? Storage::url($doc->file_path)
                             : null,
                         'thumbnail_path' => $doc->thumbnail_path
                             ? Storage::url($doc->thumbnail_path)
@@ -100,8 +108,8 @@ class MemberController extends Controller
                     ] : null,
 
                     'mail_address_certificate' => $doc ? [
-                        'path' => $doc->path
-                            ? Storage::url($doc->path)
+                        'path' => $doc->file_path
+                            ? Storage::url($doc->file_path)
                             : null,
                         'thumbnail_path' => $doc->thumbnail_path
                             ? Storage::url($doc->thumbnail_path)
@@ -114,13 +122,15 @@ class MemberController extends Controller
 
         return Inertia::render('Admin/Members/Index', [
             'members' => $members,
-            'filters' => $request->only([
-                'company_name',
-                'name',
-                'per_page',
-                'sort_by',
-                'sort_dir',
-            ]),
+            'filters' => [
+                'company_name' => $request->company_name ?? '',
+                'name'         => $request->name ?? '',
+                'status'       => $request->status ?? '',
+                'progress'     => $request->progress ?? '',
+                'per_page'     => $request->per_page ?? 20,
+                'sort_by'      => $request->sort_by ?? 'created_at',  // ← 初期値
+                'sort_dir'     => $request->sort_dir ?? 'desc',       // ← 初期値
+            ],
         ]);
     }
 
@@ -296,5 +306,161 @@ class MemberController extends Controller
 
         return response()->json($members);
     }
+    // AdminMemberController.php
+    public function editStatus(Member $member)
+    {
+        return response()->json([
+            'member' => [
+                'status_id' => $member->status_id,
+            ],
+            'statuses' => Status::select('id', 'name')->orderBy('id')->get(),
+        ]);
+    }
 
+    public function updateStatus(Request $request, Member $member)
+    {
+        $request->validate([
+            'status_id' => ['required', 'exists:statuses,id'],
+        ]);
+
+        $member->update([
+            'status_id' => $request->status_id,
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function editProgress(Member $member)
+    {
+        return response()->json([
+            'member' => [
+                'id' => $member->id,
+                'progress_id' => $member->progress_id,
+            ],
+            'progresses' => Progress::select('id', 'name')
+                ->orderBy('id')
+                ->get(),
+        ]);
+    }
+
+    public function updateProgress(Request $request, Member $member)
+    {
+        $request->validate([
+            'progress_id' => ['required', 'exists:progresses,id'],
+        ]);
+
+        $member->update([
+            'progress_id' => $request->progress_id,
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function uploadDocument(Request $request, Member $member)
+    {
+        $request->validate([
+            'type_id' => 'required|integer|in:1,2,3,4',
+            'document' => 'required|file|mimes:pdf|max:10240',
+        ]);
+        // member → organizations（法人）
+        $organization = $member->organizations()
+            ->where('type', 1)
+            ->first();
+
+        if (!$organization) {
+            abort(404, '法人organizationが見つかりません');
+        }
+
+        $organizationId = $organization->id;
+
+        // type_id によってアップロード先フォルダを振り分け
+        $folderMap = [
+            1 => 'members/history_certificates',
+            2 => 'members/address_certificates',
+            3 => 'members/bank_transfer_forms',
+            4 => 'members/power_of_attorney',
+        ];
+
+        $folder = $folderMap[$request->type_id] ?? 'members/others';
+
+        // PDFアップロード＋サムネイル生成
+        [$filePath, $thumbPath] = $this->storePdfWithThumbnail(
+            $request->file('document'),
+            $folder
+        );
+
+        // DB保存（organization_documents）
+        OrganizationDocument::updateOrCreate(
+            [
+                'organization_id' => $organizationId,
+                'type' => $request->type_id,
+            ],
+            [
+                'file_path' => $filePath,
+                'thumbnail_path' => $thumbPath,
+                'verified_at' => null,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'file_url' => Storage::url($filePath),
+            'thumbnail_url' => $thumbPath ? Storage::url($thumbPath) : null,
+        ]);
+    }
+
+
+    // pdf upload＋thumbnail(png)作成関数    
+    private function storePdfWithThumbnail(
+        ?UploadedFile $file,
+        string $baseDir
+    ): array {
+logger()->error('BASE DIR DEBUG', [
+    'file' => $file,
+    'baseDir' => $baseDir,
+    'length' => strlen($baseDir),
+]);
+
+        if (!$file) {
+            return [null, null];
+        }
+
+        if (!$file->isValid()) {
+            throw new \RuntimeException('Upload is not valid');
+        }
+
+        // PDF 保存（public）
+        $pdfRelativePath = $file->store($baseDir, 'public');
+
+        if (!$pdfRelativePath) {
+            throw new \RuntimeException('PDF store failed');
+        }
+
+        $pdfFullPath = storage_path('app/public/' . $pdfRelativePath);
+
+        if (!is_file($pdfFullPath)) {
+            throw new \RuntimeException('PDF not found: ' . $pdfFullPath);
+        }
+
+        // thumbnail 保存先
+        $thumbDir = $baseDir . '/thumbnails';
+        if (!Storage::disk('public')->exists($thumbDir)) {
+            Storage::disk('public')->makeDirectory($thumbDir);
+        }
+
+        $thumbnailRelativePath =
+            $thumbDir . '/' . pathinfo($pdfRelativePath, PATHINFO_FILENAME) . '.png';
+        $thumbnailFullPath = storage_path('app/public/' . $thumbnailRelativePath);
+
+        // thumbnail 生成
+        $imagick = new \Imagick();
+        $imagick->setResolution(150, 150);
+        $imagick->readImage($pdfFullPath . '[0]');
+        $imagick->setImageFormat('png');
+        $imagick->writeImage($thumbnailFullPath);
+        $imagick->clear();
+        $imagick->destroy();
+
+        return [$pdfRelativePath, $thumbnailRelativePath];
+    }    
 }

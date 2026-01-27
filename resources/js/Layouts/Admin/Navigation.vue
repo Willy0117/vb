@@ -130,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import {
   HomeIcon,
@@ -141,6 +141,8 @@ import {
   ServerIcon,
   TicketIcon,
 } from '@heroicons/vue/24/outline'
+
+const page = usePage()
 
 const collapsed = ref(false)
 const openSubMenu = ref(null)
@@ -158,6 +160,20 @@ const isActive = (routeName) => false
 const hasApiFeatures = true
 const showAccessControl = true
 const can = (permission) => true
+
+// ページURLに応じて初期サブメニューを決定
+onMounted(() => {
+  if (page.url.startsWith('/admin/tenants') ||
+      page.url.startsWith('/admin/roles') ||
+      page.url.startsWith('/admin/permissions')) {
+    openSubMenu.value = 'access'
+  }
+  if (page.url.startsWith('/admin/users') ) {
+    openSubMenu.value = 'users'
+  }
+})
+
+
 </script>
 
 <style>
