@@ -1,28 +1,41 @@
 <template>
-  <!-- ハンバーガー（モバイルのみ表示） -->
-  <div class="lg:hidden p-2">
-    <button @click="mobileOpen = !mobileOpen" class="text-gray-600 text-xl">
-      ☰
+  <div class="flex">
+    <!-- モバイル用ハンバーガー -->
+    <button
+      @click="mobileOpen = !mobileOpen"
+      class="lg:hidden p-2 rounded-full hover:bg-gray-200"
+    >
+      <template v-if="mobileOpen">
+        <XMarkIcon class="w-5 h-5 text-gray-600" />
+      </template>
+      <template v-else>
+        <Bars3Icon class="w-5 h-5 text-gray-600" />
+      </template>
     </button>
-  </div>
 
-  <!-- ナビ -->
-  <aside
-    :class="[
-      'bg-gray-100 h-screen transition-all duration-300 flex flex-col z-50',
-      collapsed ? 'w-16' : 'w-64',          // PC折りたたみ
-      mobileOpen ? 'left-0' : '-left-full', // モバイル開閉
-      'lg:flex lg:left-0 lg:relative',      // PC表示では固定
-      'fixed top-0'                          // モバイルでは画面上に固定
-    ]"
-  >
-    <!-- PC折りたたみボタン -->
-    <div class="flex justify-end p-2 flex-none lg:flex">
-      <button @click="toggleCollapse">
-        <span v-if="collapsed">➡</span>
-        <span v-else>⬅</span>
-      </button>
-    </div>
+    <!-- サイドバー -->
+    <aside
+      :class="[
+        'bg-gray-100 h-screen flex flex-col transition-all duration-300 z-50',
+        collapsed ? 'w-16' : 'w-64',
+        mobileOpen ? 'left-0' : '-left-full',
+        'fixed top-0 lg:relative lg:left-0 h-screen'
+      ]"
+    >
+      <!-- PC折りたたみボタン -->
+      <div class="flex justify-end p-2 flex-none lg:flex">
+        <button
+          @click="toggleCollapse"
+          class="p-2 rounded-full hover:bg-gray-200"
+        >
+          <template v-if="collapsed">
+            <Bars3Icon class="w-5 h-5 text-gray-600" />
+          </template>
+          <template v-else>
+            <XMarkIcon class="w-5 h-5 text-gray-600" />
+          </template>
+        </button>
+      </div>
 
     <!-- メニュー -->
     <nav class="flex-1 overflow-y-auto px-2 py-4 text-sm">
@@ -143,7 +156,7 @@
     class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
     @click="mobileOpen = false"
   ></div>
-  
+ </div>
 </template>
 
 <script setup>
@@ -155,8 +168,8 @@ import {
   UserIcon,
   ShieldCheckIcon,
   BuildingOfficeIcon,
-  ServerIcon,
-  TicketIcon,
+  ServerIcon,Bars3Icon, XMarkIcon,
+  TicketIcon,ArrowLeftIcon, ArrowRightIcon
 } from '@heroicons/vue/24/outline'
 
 const page = usePage()

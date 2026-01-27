@@ -848,6 +848,85 @@ const mail_address_certificate_name =
 
 const form = useForm({
   type: page.props.form?.type ?? 'corporation',
+  company_kana: page.props.form?.company_kana ?? '',
+  rep_last_kana: page.props.form?.rep_last_kana ?? '',
+  rep_first_kana: page.props.form?.rep_first_kana ?? '',
+  company_type_prefix: page.props.form?.company_type_prefix ?? '株式会社',
+  company_name: page.props.form?.company_name ?? '',
+  company_type_suffix: page.props.form?.company_type_suffix ?? '',
+  rep_last_name: page.props.form?.rep_last_name ?? '',
+  rep_first_name: page.props.form?.rep_first_name ?? '',
+  same_as_corp: Boolean(Number(page.props.form?.same_as_corp)),
+  is_agent: page.props.form?.is_agent,
+
+  corp: {
+    type: 1,
+    postal_code: page.props.form?.corp?.postal_code ?? '',
+    address1: page.props.form?.corp?.address1 ?? '',
+    address2: page.props.form?.corp?.address2 ?? '',
+    address3: page.props.form?.corp?.address3 ?? '',
+    tel: page.props.form?.corp?.tel ?? '',
+    fax: page.props.form?.corp?.fax ?? '',
+    mobile: page.props.form?.mail?.mobile ?? '',
+    email: page.props.form?.corp?.email ?? '',
+    position: page.props.form?.corp?.position ?? '代表取締役',
+    last_name: page.props.form?.corp?.last_name ?? '',
+    first_name: page.props.form?.corp?.first_name ?? '',
+  },
+
+  mail: {
+    type: 2,
+    postal_code: page.props.form?.mail?.postal_code ?? '',
+    address1: page.props.form?.mail?.address1 ?? '',
+    address2: page.props.form?.mail?.address2 ?? '',
+    address3: page.props.form?.mail?.address3 ?? '',
+    tel: page.props.form?.mail?.tel ?? '',
+    fax: page.props.form?.mail?.fax ?? '',
+    mobile: page.props.form?.mail?.mobile ?? '',
+    email: page.props.form?.mail?.email ?? '',
+    position: page.props.form?.mail?.position ?? '',
+    last_name: page.props.form?.mail?.last_name ?? '',
+    first_name: page.props.form?.mail?.first_name ?? '',
+  },
+
+  agent: {
+    type: 4,
+    company_name: page.props.form?.agent?.company_name ?? '',
+    postal_code: page.props.form?.agent?.postal_code ?? '',
+    address1: page.props.form?.agent?.address1 ?? '',
+    address2: page.props.form?.agent?.address2 ?? '',
+    address3: page.props.form?.agent?.address3 ?? '',
+    tel: page.props.form?.agent?.tel ?? '',
+    fax: page.props.form?.agent?.fax ?? '',
+    mobile: page.props.form?.agent?.mobile ?? '',
+    position: page.props.form?.agent?.position ?? '',
+    last_name: page.props.form?.agent?.last_name ?? '',
+    first_name: page.props.form?.agent?.first_name ?? '',
+  },
+
+  bank_type: page.props.form?.bank_type ?? '',
+  bank_name: page.props.form?.bank_name ?? '',
+  bank_code: page.props.form?.bank_code ?? '',
+  branch_name: page.props.form?.branch_name ?? '',
+  branch_code: page.props.form?.branch_code ?? '',  
+  account_type: page.props.form?.account_type ?? '普通',
+  account_no: page.props.form?.account_no ?? '',
+  account_kana: page.props.form?.account_kana ?? '',
+  account_name: page.props.form?.account_name ?? '',
+
+  history_certificate: null,
+  mail_address_certificate: null,
+  // ===== 表示用（sessionから戻る）=====
+  history_certificate_path: page.props.form?.history_certificate_path ?? null,
+  history_certificate_thumbnail: page.props.form?.history_certificate_thumbnail ?? null,
+
+  mail_address_certificate_path: page.props.form?.mail_address_certificate_path ?? null,
+  mail_address_certificate_thumbnail: page.props.form?.mail_address_certificate_thumbnail ?? null,
+});
+
+/* debug用
+const form = useForm({
+  type: page.props.form?.type ?? 'corporation',
   company_kana: page.props.form?.company_kana ?? 'クーネット',
   rep_last_kana: page.props.form?.rep_last_kana ?? 'クモダ',
   rep_first_kana: page.props.form?.rep_first_kana ?? 'トシヒロ',
@@ -923,8 +1002,7 @@ const form = useForm({
   mail_address_certificate_path: page.props.form?.mail_address_certificate_path ?? null,
   mail_address_certificate_thumbnail: page.props.form?.mail_address_certificate_thumbnail ?? null,
 });
-
-// エラー
+*/
 //const errors = page.props.errors || {}
 const errors = ref({})
 

@@ -193,7 +193,7 @@
               <span v-else class="text-gray-400 text-xs">-</span>
             </td>
             <td class="px-3 py-2 text-center flex justify-center space-x-1">
-              <Link :href="route('admin.member.show', { member: member.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
+              <Link :href="route('admin.member.edit', { member: member.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
                 <PencilIcon class="w-4 h-4"/>
               </Link -->
               <button

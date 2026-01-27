@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <Head title="会員登録（情報入力）" />
+    <template #header>{{ t('members.edit') }}</template>
 
     <div class="max-w-5xl mx-auto bg-white p-8 rounded shadow">
       <h2 class="text-2xl font-bold mb-6">{{ t('registers.members') }}</h2>
@@ -153,7 +153,6 @@
         <h3></h3>
         <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.corp') }}</h3>
-          <p class="text-sm text-blue-700 mt-1">法人の場合は、履歴事項全部証明書(謄本)に記載してある住所を入力してください</p>
         </div>        
         <div>
           <InputLabel :value="t('registers.zip_code')" />
@@ -303,7 +302,6 @@
         </div>
         <div class="p-4 bg-green-50 border-l-4 border-green-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.mail') }}</h3>
-          <p class="text-sm text-blue-700 mt-1">郵送先と現住所が違う場合は、こちらを入力してください</p>
         </div>                
         <!--     -->                  
         <div class="mb-4">
@@ -438,7 +436,6 @@
 
         <div class="p-4 bg-orange-50 border-l-4 border-orange-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.agent') }}</h3>
-          <p class="text-sm text-blue-700 mt-1">代理人として申請する場合はこちらを入力してください</p>
         </div>                
 
         <div class="">
@@ -564,23 +561,29 @@
             </div>
           </div>
         </div>
-        </div>
-        <!-- ここまでが代理人--> 
-         <!-- 右カラム -->
+      </div>
+      <!-- ここまでが代理人-->
+      <section class="bg-white rounded shadow p-4">
+          <h2 class="font-bold mb-2">提出書類</h2>
+          <div class="flex gap-4">
+              <div v-for="d in form.documents" :key="d.type + d.path">
+              <img
+                  v-if="d.thumbnail_path"
+                  :src="d.thumbnail_path"
+                  class="w-24 cursor-pointer"
+                  @click="openPdf(d.path)"
+              />
+              </div>
+          </div>
+      </section>  
+        <!-- 右カラム -->
         <div class="6">
-          <!-- 左：データ送信 -->
-           <!--
-          <PrimaryButton type="submit">
-            データ送信
-          </PrimaryButton>
-          -->
-
           <PrimaryButton
             type="button"
             class="ml-auto bg-blue-600 hover:bg-blue-700"
-            @click="submitPDF"
+            @click="submitForm"
           >
-          {{ t('members.next') }}
+          {{ t('update') }}
           </PrimaryButton>
         </div>
         <!--
@@ -597,6 +600,34 @@
         </button>
         -->
       </form>
+
+    </div>
+    <div>
+      <DialogModal
+        :show="!!previewPdf"
+        maxWidth="7xl"
+        @close="previewPdf = null"
+      >
+        <template #title>
+          PDF プレビュー
+        </template>
+
+        <template #content>
+          <div class="w-[90vw] h-[80vh]">
+            <iframe
+              v-if="previewPdf"
+              :src="previewPdf"
+              class="w-full h-full border"
+            />
+          </div>
+        </template>
+
+        <template #footer>
+          <SecondaryButton @click="previewPdf = null">
+            閉じる
+          </SecondaryButton>
+        </template>
+      </DialogModal>
     </div>
   </AppLayout>
 </template>
@@ -607,6 +638,8 @@ import { Link, router, useForm,usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
 
 import AppLayout from '@/Layouts/Admin/AppLayout.vue';
+import DialogModal from '@/Components/DialogModal.vue'
+import SecondaryButton from '@/Components/SecondaryButton.vue'
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
@@ -630,12 +663,6 @@ watch(
 )
 
 console.log(page.props) // ← ここで form が見える
-const history_certificate_name =
-  page.props.files?.history_certificate?.name ?? null
-
-const mail_address_certificate_name =
-  page.props.files?.mail_address_certificate?.name ?? null
-
 
 const form = useForm({
   type: page.props.form?.type ?? 'corporation',
@@ -694,6 +721,8 @@ const form = useForm({
     last_name: page.props.form?.agent?.last_name ?? '',
     first_name: page.props.form?.agent?.first_name ?? '',
   },
+  documents: page.props.form?.documents,
+
 });
 
 // エラー
@@ -782,7 +811,17 @@ const submitForm = () => {
     }
   })
 }
+const previewPdf = ref(null)
 
+const openPdf = (pdfPath) => {
+  console.log('PDF PATH:', pdfPath)
+  if (!pdfPath) return
+
+  // 例：フルパス化
+  previewPdf.value = pdfPath
+
+  // 例：ここで loading true
+}
 
 const normalizePhone = (value) => {
   if (!value) return ''

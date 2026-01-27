@@ -226,33 +226,92 @@ class MemberController extends Controller
         $member->load([
             'status',
             'progress',
-            'organization',
+            'organizations', // 複数
         ]);
 
-        $org = $member->organization;
+        $orgs = $member->organizations->keyBy('type');
+        // 書類は type ごとに全部取得
+        $documents = $member->organizations
+            ->flatMap(fn ($org) => $org->documents)
+            ->map(fn ($doc) => [
+                'type'           => $doc->type,
+                'path'           => $doc->file_path ? Storage::url($doc->file_path) : null,
+                'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
+            ]);
 
+        // typeごとに変数に直接代入
+        $corp  = $orgs[1] ? [
+            'name'         => $orgs[1]->name,
+            'name_kana'    => $orgs[1]->name_kana,
+            'prefix'       => $orgs[1]->name_prefix,
+            'suffix'       => $orgs[1]->name_suffix,
+            'postal_code'  => $orgs[1]->postal_code,
+            'address1'     => $orgs[1]->address1,
+            'address2'     => $orgs[1]->address2,
+            'address3'     => $orgs[1]->address3,
+            'tel'          => $orgs[1]->tel,
+            'fax'          => $orgs[1]->fax,
+            'mobile'       => $orgs[1]->mobile,
+            'email'        => $orgs[1]->email,
+            'position'     => $orgs[1]->position,
+            'contact_name' => $orgs[1]->contact_name,
+        ] : null;
+
+        $mail  = $orgs[2] ? [
+            'name'         => $orgs[2]->name,
+            'prefix'       => $orgs[2]->name_prefix,
+            'suffix'       => $orgs[2]->name_suffix,
+            'postal_code'  => $orgs[2]->postal_code,
+            'address1'     => $orgs[2]->address1,
+            'address2'     => $orgs[2]->address2,
+            'address3'     => $orgs[2]->address3,
+            'tel'          => $orgs[2]->tel,
+            'fax'          => $orgs[2]->fax,
+            'mobile'       => $orgs[2]->mobile,
+            'email'        => $orgs[2]->email,
+            'position'     => $orgs[2]->position,
+            'last_name'    => $orgs[2]->last_name,
+            'first_name'   => $orgs[2]->first_name,
+        ] : null;
+
+        $agent = $orgs[3] ? [
+            'company_name'         => $orgs[3]->name,
+            'prefix'       => $orgs[3]->prefix,
+            'suffix'       => $orgs[3]->suffix,
+            'postal_code'  => $orgs[3]->postal_code,
+            'address1'     => $orgs[3]->address1,
+            'address2'     => $orgs[3]->address2,
+            'address3'     => $orgs[3]->address3,
+            'tel'          => $orgs[3]->tel,
+            'fax'          => $orgs[3]->fax,
+            'mobile'       => $orgs[3]->mobile,
+            'email'        => $orgs[3]->email,
+            'position'     => $orgs[3]->position,
+            'last_name'    => $orgs[3]->last_name,
+            'first_name'   => $orgs[3]->first_name,
+        ] : null;
+
+        // Inertia に渡す
         return Inertia::render('Admin/Members/Edit', [
-            'member' => [
-                'id'         => $member->id,
-                'last_name'  => $member->last_name,
-                'first_name' => $member->first_name,
-                'status_id'  => $member->status_id,
-                'progress_id'=> $member->progress_id,
-                // 法人情報も分割して渡す
-                'organization' => $org ? [
-                    'name'         => $org->name,
-                    'prefix'       => $org->prefix,
-                    'suffix'       => $org->suffix,
-                    'postal_code'  => $org->postal_code,
-                    'address1'     => $org->address1,
-                    'address2'     => $org->address2,
-                    'address3'     => $org->address3,
-                    'tel'          => $org->tel,
-                    'fax'          => $org->fax,
-                    'mobile'       => $org->mobile,
-                    'email'        => $org->email,
-                    'contact_name' => $org->contact_name,
-                ] : null,
+            'form' => [
+                'id'          => $member->id,
+                'rep_last_name'   => $member->last_name,
+                'rep_first_name'  => $member->first_name,
+                'status_id'   => $member->status_id,
+                'progress_id' => $member->progress_id,
+                'is_agent'    => $member->agent,
+                'type'        => $member->type ?? 'corporation',
+                'company_kana'=> $corp['name_kana'],
+                'rep_last_kana' => $member->last_name_kana,
+                'rep_first_kana' => $member->first_name_kana,
+                'company_type_prefix' => $corp['prefix'],
+                'company_name'=> $corp['name'],
+                'company_type_suffix' => $corp['suffix'],
+                'corp'        => $corp,
+                'mail'        => $mail,
+                'agent'       => $agent,
+                // 書類は独立
+                'documents'   => $documents,
             ],
             'filters' => $request->only(['company_name', 'name', 'tel', 'per_page', 'sort_by', 'sort_dir']),
         ]);

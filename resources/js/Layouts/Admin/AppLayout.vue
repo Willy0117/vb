@@ -1,7 +1,8 @@
 <template>
-  <div class="flex min-h-screen bg-gray-100 w-full">
-    <!-- 左メニュー -->
-    <Navigation />
+  <div class="flex flex-col h-screen bg-white">
+    <div class="flex flex-1">
+      <!-- 左メニュー -->
+    <Navigation class="flex flex-col h-full bg-gray-100" />
 
     <!-- メインエリア -->
     <div class="flex-1 flex flex-col">
@@ -64,15 +65,16 @@
       </header>
 
       <!-- コンテンツ -->
-      <main class="flex-1 p-6">
+      <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
         <slot />
       </main>
     </div>
-  </div>
-      <!-- footer -->
+    </div>
+    <!-- footer -->
     <footer class="border-t text-center text-xs text-gray-400 py-4">
       &copy {{ t('copyright') }}
     </footer>
+  </div>    
 </template>
 
 <script setup>
