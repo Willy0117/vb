@@ -147,6 +147,25 @@ class MemberController extends Controller
                     'first_name' => $corp['first_name'],
                 ]);
 
+                $appCorpOrg = $member->applicationOrganization()->create([
+                    'type' => 1,
+                    'name' => $form['company_name'],
+                    'name_kana' => $form['company_kana'],
+                    'name_prefix' => $form['company_type_prefix'],
+                    'name_suffix' => $form['company_type_suffix'],
+                    'postal_code' => $corp['postal_code'],
+                    'address1' => $corp['address1'],
+                    'address2' => $corp['address2'],
+                    'address3' => $corp['address3'],
+                    'tel' => $corp['tel'],
+                    'fax' => $corp['fax'],
+                    'mobile' => $corp['mobile'],
+                    'email' => $email,
+                    'position'  => $corp['position'],
+                    'last_name' => $corp['last_name'],
+                    'first_name' => $corp['first_name'],
+                ]);
+
                 $mail = $form['mail'];
 
                 $mailOrg = $member->organization()->create([    
@@ -168,6 +187,24 @@ class MemberController extends Controller
                     'first_name' => $mail['first_name'],
                 ]);
 
+                $appMailOrg = $member->applicationOrganization()->create([    
+                    'type' => 2,
+                    'name' => $form['company_name'],
+                    'name_kana' => $form['company_kana'],
+                    'name_prefix' => $form['company_type_prefix'],
+                    'name_suffix' => $form['company_type_suffix'],
+                    'postal_code' => $mail['postal_code'],
+                    'address1' => $mail['address1'],
+                    'address2' => $mail['address2'],
+                    'address3' => $mail['address3'],
+                    'tel' => $mail['tel'],
+                    'fax' => $mail['fax'],
+                    'mobile' => $mail['mobile'],
+                    'email' => $mail['email'],
+                    'position'  => $mail['position'],
+                    'last_name' => $mail['last_name'],
+                    'first_name' => $mail['first_name'],
+                ]);
                 if ($isAgent) {
 
                     $agent = $form['agent'];

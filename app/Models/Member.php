@@ -47,6 +47,16 @@ class Member extends Model
         return $this->hasMany(Organization::class);
     }
 
+    public function applicationOrganization()
+    {
+        return $this->hasOne(ApplicationOrganization::class);
+    }
+
+    public function applicationOrganizations()
+    {
+        return $this->hasMany(ApplicationOrganization::class);
+    }
+
     public function getFullNameAttribute()
     {
         return trim($this->last_name . ' ' . $this->first_name);
