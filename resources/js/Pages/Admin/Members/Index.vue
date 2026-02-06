@@ -115,10 +115,10 @@
               {{ t('members.applicant') }}
               <span v-if="form.sort_by==='representative'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
             </th>
-            <th class="px-3 py-2 cursor-pointer" @click="sortBy('tel')">
+            <!-- 02.06 TEL 不要　th class="px-3 py-2 cursor-pointer" @click="sortBy('tel')">
               {{ t('members.tel') }}
               <span v-if="form.sort_by==='tel'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
-            </th>
+            </th -->
             <th class="px-3 py-2 cursor-pointer" @click="sortBy('address')">
               {{ t('members.address') }}
               <span v-if="form.sort_by==='address'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
@@ -127,13 +127,13 @@
               {{ t('updated_at') }}
               <span v-if="form.sort_by==='created_at'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
             </th>
-            <th class="px-3 py-2 text-center cursor-pointer" @click="sortBy('status')">
+            <th class="px-3 py-2 text-center cursor-pointer" @click="sortBy('status_id')">
               {{ t('members.status') }}
-              <span v-if="form.sort_by==='status'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+              <span v-if="form.sort_by==='status_id'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
             </th>  
-            <th class="px-3 py-2 text-center cursor-pointer" @click="sortBy('progress')">
+            <th v-if="props.filters?.status_id == 1" class="px-3 py-2 text-center cursor-pointer" @click="sortBy('progress_id')">
               {{ t('members.progress') }}
-              <span v-if="form.sort_by==='progress'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+              <span v-if="form.sort_by==='progress_id'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
             </th>
             <th class="px-3 py-2 text-center">{{ t('members.history_certificate') }}</th>
             <th class="px-3 py-2 text-center">{{ t('members.mail_address_certificate') }}</th>
@@ -153,7 +153,7 @@
             <td class="px-3 py-2">{{ member.agent ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.organization?.name ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.name ?? '-' }}</td>
-            <td class="px-3 py-2">{{ member.tel ?? '-' }}</td>
+            <!-- td class="px-3 py-2">{{ member.tel ?? '-' }}</td -->
             <td class="px-3 py-2">{{ member.address ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.created_at ? dayjs(member.created_at).format('YYYY/MM/DD') : '' }}</td>
             <td class="px-3 py-2">
@@ -164,7 +164,7 @@
                 {{ member.status.name }}
               </span>
             </td>
-            <td class="px-3 py-2">
+            <td v-if="props.filters?.status_id == 1" class="px-3 py-2">
               <span
                 class="cursor-pointer text-blue-600 hover:underline"
                 @click="openProgress(member)"
@@ -378,7 +378,7 @@ const props = defineProps({
   filters: {
     type: Object,
     default: () => ({
-      company_name: '', representative: '', tel: '', tenant_id: '',
+      company_name: '', representative: '', tel: '', tenant_id: '', status_id: 1,
       per_page: 20, sort_by: 'created_at', sort_dir: 'desc', page: 1
     })
   }
@@ -396,6 +396,7 @@ const openDrawer = ref(false)
 // 複数検索用に reactive 拡張
 const form = reactive({
   name: props.filters.name,
+  status_id: props.filters.status_id,
   tenant_id: props.filters.tenant_id,
   per_page: props.filters.per_page || 20,
   sort_by: props.filters.sort_by,   // ← 初期値を必ずセット
@@ -428,7 +429,7 @@ const persistQuery = () => ({
   tenant_id: form.tenant_id,
   company_name: form.company_name,
   name: form.name,
-  tel: form.tel,
+  status_id: form.status_id,
   per_page: form.per_page,
   sort_by: form.sort_by,
   sort_dir: form.sort_dir,

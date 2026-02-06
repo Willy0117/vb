@@ -58,6 +58,60 @@
         <UsersIcon class="w-5 h-5"/>
         <span v-if="!collapsed" class="ml-2">{{ t('members.member') }}</span>
       </Link>
+      <div class="mt-2">
+        <button
+          @click="toggleSubMenu('member')"
+          class="flex items-center justify-between w-full py-2 px-2 rounded hover:bg-gray-200 transition-colors"
+        >
+          <div class="flex items-center">
+            <UsersIcon class="w-5 h-5"/>
+            <span v-if="!collapsed" class="ml-2">{{ t('members.member') }}</span>
+          </div>
+          <svg
+            v-if="!collapsed"
+            :class="{ 'rotate-90': openSubMenu === 'member' }"
+            class="w-4 h-4 transform transition-transform duration-200"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+        <transition name="slide-fade">
+          <div v-show="openSubMenu === 'member' && !collapsed" class="pl-6 mt-1 space-y-1">
+            <Link
+              :href="route('admin.member.index', { status_id: 1 })"
+              class="flex items-center py-2 px-2 rounded hover:bg-gray-100"
+            >
+              <UserPlusIcon class="w-4 h-4 mr-1"/>
+              {{ t('members.under') }}
+            </Link>
+            <Link
+              :href="route('admin.member.index', { status_id: 2 })"
+              class="flex items-center py-2 px-2 rounded hover:bg-gray-100"
+            >
+              <UsersIcon class="w-4 h-4 mr-1"/>
+              {{ t('members.joined') }}
+            </Link>
+            <Link
+              :href="route('admin.member.index', { status_id: 3 })"
+              class="flex items-center py-2 px-2 rounded hover:bg-gray-100"
+            >
+              <UserMinusIcon class="w-4 h-4 mr-1"/>
+              {{ t('members.withdrawn') }}
+            </Link>
+            <Link
+              :href="route('admin.member.index', { status_id: 4 })"
+              class="flex items-center py-2 px-2 rounded hover:bg-gray-100"
+            >
+              <ArrowUturnLeftIcon class="w-4 h-4 mr-1"/>
+              {{ t('members.cancel') }}
+            </Link>
+          </div>
+        </transition>
+      </div>          
       <!-- Access Control -->
       <div v-if="showAccessControl" class="mt-2">
         <button
@@ -164,12 +218,11 @@ import { ref, onMounted } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import {
   HomeIcon,
-  UsersIcon,
-  UserIcon,
+  UsersIcon, UserIcon,
   ShieldCheckIcon,
   BuildingOfficeIcon,
-  ServerIcon,Bars3Icon, XMarkIcon,
-  TicketIcon,ArrowLeftIcon, ArrowRightIcon
+  ServerIcon,Bars3Icon, XMarkIcon, ArrowUturnLeftIcon,
+  TicketIcon,UserPlusIcon, UserMinusIcon, ArrowRightIcon
 } from '@heroicons/vue/24/outline'
 
 const page = usePage()
@@ -196,6 +249,9 @@ const can = (permission) => true
 
 // ページURLに応じて初期サブメニューを決定
 onMounted(() => {
+  if (page.url.startsWith('/admin/member') ) {
+    openSubMenu.value = 'member'
+  }
   if (page.url.startsWith('/admin/tenants') ||
       page.url.startsWith('/admin/roles') ||
       page.url.startsWith('/admin/permissions')) {

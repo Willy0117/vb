@@ -185,7 +185,11 @@
     "members.detail": "会員情報",
     "staff": "担当者",
     "history_certificate": "履歴",
-    "mail_address_certificate": "郵送先"
+    "mail_address_certificate": "郵送先",
+    "under": "申請中",
+    "joined": "入会",
+    "cancel": "キャンセル",
+    "withdrawn": "退会"
   }, 
   "billing_name": "請求先名",
   "billing_postal": "請求先郵便番号",

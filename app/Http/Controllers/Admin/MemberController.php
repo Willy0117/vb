@@ -26,10 +26,12 @@ class MemberController extends Controller
             ->with([
                 'status',
                 'progress',
-                'organization',
+                'organization' => fn ($q) => $q->where('type', 1),
                 'organization.documents' => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
-            ]);
-
+            ])
+            ->when(request('status_id'), function ($q, $status_id) {
+                $q->where('status_id', $status_id);
+            });
         // =====================
         // 検索
         // =====================
@@ -41,7 +43,7 @@ class MemberController extends Controller
         }
 
         if ($name = $request->input('name')) {
-            $query->whereHas('organization.contacts', function ($q) use ($name) {
+            $query->whereHas('organization', function ($q) use ($name) {
                 $q->where(function ($qq) use ($name) {
                     $qq->where('last_name', 'like', "%{$name}%")
                        ->orWhere('first_name', 'like', "%{$name}%");
@@ -56,17 +58,86 @@ class MemberController extends Controller
         $sortBy  = $request->input('sort_by', 'created_at');
         $sortDir = $request->input('sort_dir', 'desc');
 
-        if (! in_array($sortBy, ['id', 'created_at'])) {
+        $allowedSorts = [
+            'id',
+            'status_id',
+            'progress_id',
+            'address',
+            'company_name',
+            'representative',            
+            'created_at',
+        ];
+
+        if (! in_array($sortBy, $allowedSorts)) {
             $sortBy = 'created_at';
         }
 
-        $query->orderBy($sortBy, $sortDir);
+        /*
+        |--------------------------------------------------------------------------
+        | JOIN が必要なソート
+        |--------------------------------------------------------------------------
+        */
+        if (in_array($sortBy, ['address', 'company_name'])) {
+
+            $query
+                ->leftJoin('organizations as org', function ($join) {
+                    $join->on('org.member_id', '=', 'members.id')
+                        ->where('org.type', 1); // 法人のみ
+                })
+                ->select('members.*');
+
+            if ($sortBy === 'address') {
+
+                $query->orderByRaw("
+                    CONCAT(
+                        IFNULL(org.address1, ''),
+                        IFNULL(org.address2, ''),
+                        IFNULL(org.address3, '')
+                    ) {$sortDir}
+                ");
+
+            } elseif ($sortBy === 'company_name') {
+
+               $query->orderByRaw("
+                        CONCAT(
+                            IFNULL(org.name_prefix, ''),
+                            IFNULL(org.name, ''),
+                            IFNULL(org.name_suffix, '')
+                        ) {$sortDir}
+                    ");
+            }
+
+        /*
+        |--------------------------------------------------------------------------
+        | member 名（full_name 相当）
+        |--------------------------------------------------------------------------
+        */
+        } elseif ($sortBy === 'representative') {
+
+            $query
+                ->orderBy('members.last_name', $sortDir)
+                ->orderBy('members.first_name', $sortDir);
+
+        /*
+        |--------------------------------------------------------------------------
+        | members 単体で完結するソート
+        |--------------------------------------------------------------------------
+        */
+        } else {
+
+            $query->orderBy("members.{$sortBy}", $sortDir);
+        }
+
 
         // =====================
         // ページング + 整形
         // =====================
 
         $perPage = (int) $request->input('per_page', 20);
+
+        $statuses = Status::select('id', 'name')
+            ->orderBy('id')
+            ->get();
 
         $members = $query
             ->paginate($perPage)
@@ -125,12 +196,13 @@ class MemberController extends Controller
             'filters' => [
                 'company_name' => $request->company_name ?? '',
                 'name'         => $request->name ?? '',
-                'status'       => $request->status ?? '',
+                'status_id'    => $request->status_id ?? '',
                 'progress'     => $request->progress ?? '',
                 'per_page'     => $request->per_page ?? 20,
                 'sort_by'      => $request->sort_by ?? 'created_at',  // ← 初期値
                 'sort_dir'     => $request->sort_dir ?? 'desc',       // ← 初期値
             ],
+            'statuses' => $statuses,
         ]);
     }
 
