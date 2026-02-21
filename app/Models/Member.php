@@ -17,7 +17,11 @@ class Member extends Model
         'agreed_at',
         'status_id',
         'progress_id',
-        'agent', 
+        'agent',
+        'joined_at',
+        'canceled_at',
+        'withdrawn_at',
+        'number', 
     ];
 
     protected $casts = [
@@ -25,6 +29,9 @@ class Member extends Model
         'agree' => 'boolean',
         'affiliate' => 'boolean',
         'agreed_at' => 'datetime',
+        'joined_at' => 'datetime',
+        'canceled_at' => 'datetime',
+        'withdrawn_at' => 'datetime',
     ];
 
     public function status()

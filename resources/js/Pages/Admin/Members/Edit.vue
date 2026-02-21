@@ -576,29 +576,25 @@
               </div>
           </div>
       </section>  
-        <!-- 右カラム -->
-        <div class="6">
-          <PrimaryButton
-            type="button"
-            class="ml-auto bg-blue-600 hover:bg-blue-700"
-            @click="submitForm"
-          >
+      <div class="flex space-x-3 items-center mt-6">
+        <!-- 更新ボタン -->
+        <PrimaryButton
+          type="button"
+          class="bg-blue-600 hover:bg-blue-700"
+          @click="submitForm"
+        >
           {{ t('update') }}
-          </PrimaryButton>
-        </div>
-        <!--
-        <PrimaryButton class="mt-6" type="submit">
-          データ送信
         </PrimaryButton>
 
-        <button
-          type="button"
-          class="bg-blue-600 text-white px-4 py-2 rounded"
-          @click="submitPDF"
-        >
-          PDF作成
-        </button>
-        -->
+        <!-- キャンセルボタン -->
+        <SecondaryButton>
+          <Link :href="route('admin.member.index', persistQuery())" class="inline-flex items-center">
+            <ArrowLeftIcon class="w-4 h-4 mr-2"/>
+            {{ t('actions.cancel') }}
+          </Link>
+        </SecondaryButton>
+      </div>
+
       </form>
 
     </div>
@@ -639,16 +635,17 @@ import { Inertia } from '@inertiajs/inertia';
 
 import AppLayout from '@/Layouts/Admin/AppLayout.vue';
 import DialogModal from '@/Components/DialogModal.vue'
-import SecondaryButton from '@/Components/SecondaryButton.vue'
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue'
 import Autocomplete from '@/Components/Autocomplete.vue'
-import RegisterStep from '@/Components/RegisterStep.vue'    
 import axios from 'axios'
 import { useZipcode } from '@/composables/useZipcode'
 import { useI18n } from 'vue-i18n'
+import { ArrowLeftIcon} from '@heroicons/vue/24/outline'
+
 
 const { t } = useI18n()
 
@@ -664,6 +661,9 @@ watch(
 
 console.log(page.props) // ← ここで form が見える
 
+const persistQuery = () => {
+  return { ...page.props.filters }
+}
 const form = useForm({
   type: page.props.form?.type ?? 'corporation',
   company_kana: page.props.form?.company_kana ?? '',

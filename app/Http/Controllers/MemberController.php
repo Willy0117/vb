@@ -677,80 +677,38 @@ class MemberController extends Controller
             $tpl2 = $pdf->importPage(1);
             $pdf->useTemplate($tpl2);
 
-            // ---- 1) 契約者名（フリガナ）
-            $pdf->SetXY(50, 76);
-            $pdf->Write(8, $form['company_kana']??'');
-
-            // ---- 2) 契約者名（漢字）
-            $pdf->SetXY(50, 88);
-            $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
-            $pdf->SetXY(125, 210);
-            $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
-            $pdf->SetXY(125, 215);
-            $pdf->Write(8, $form['corp']['position'] ?? '');
-            $pdf->SetXY(150, 215);
-            $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
-
-    //        $pdf->SetXY(50, 80);
-    //        $pdf->Write(8, $form['corp']['position'] ?? '');
-            $pdf->SetXY(150, 76);
-            $pdf->Write(8, ($form['rep_last_kana']??'') . ($form['rep_first_kana']??''));
-            $pdf->SetXY(150, 88);
-            $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
-
-            // ---- 3) zip code
-            $pdf->SetXY(50, 102);
-            $pdf->Write(7, $form['corp']['postal_code'] ?? null);
-
-            $address = ($form['corp']['address1']??'') . ($form['corp']['address2']??'') . ($form['corp']['address3']??'');
-            // ---- 3) 住所
-            $pdf->SetXY(50, 113);
-            $pdf->Write(8, $address);
-            // ここから郵送先
-            // ---- 3) zip code
-            $pdf->SetXY(50, 123);
-            $pdf->Write(7, $form['mail']['postal_code'] ?? null);
-
-            $address = ($form['mail']['address1']??'') . ($form['mail']['address2']??'') . ($form['mail']['address3']??'');
-            // ---- 3) 住所
-            $pdf->SetXY(50, 133);
-            $pdf->Write(8, $address);
-
-            // ---- 4) 電話番号
-            $tel = $form['mail']['tel'] ?? ''; // 例: 03-1234-5678
-            $pdf->SetXY(50, 145);
-            $pdf->Write(8, $tel);
-            // ---- 4) 電話番号
-            $fax = $form['mail']['fax'] ?? ''; // 例: 03-1234-5678
-            $pdf->SetXY(130, 145);
-            $pdf->Write(8, $fax);
-
-            $pdf->SetXY(50, 157);
-            $pdf->Write(8, ($form['mail']['last_name']??'') . ($form['mail']['first_name']??''));
-            $pdf->SetXY(130, 159);
-            $pdf->Write(8, ($form['mail']['mobile']??'') );
             // Agent部
-            $pdf->SetXY(45, 202);
+            $pdf->SetXY(65, 93);
             $pdf->Write(3, $form['agent']['company_name'] ?? '');
-            $pdf->SetFontSize(7); 
-            $pdf->SetXY(45, 206);
+            $pdf->SetFontSize(8); 
+            $pdf->SetXY(53, 85);
             $pdf->Write(7, $form['agent']['postal_code'] ?? '');
             $pdf->SetFontSize(10); 
-            $address = ($form['agent']['address1']??'') . ($form['agent']['address2']??'');
+            $address = ($form['agent']['address1']??'') . ($form['agent']['address2']??'') . ($form['agent']['address3']??'');
             // ---- 3) 住所
-            $pdf->SetXY(45, 208);
+            $pdf->SetXY(70, 84);
             $pdf->Write(10, $address);
-            // ---- 3) 住所
-            $pdf->SetXY(45, 212);
-            $pdf->Write(10, $form['agent']['address3']??'');
-            // ---- 4) 電話番号
-            $pdf->SetFontSize(8); 
-            $tel = ($form['agent']['tel'] ?? '') . '・' . ($form['agent']['fax'] ?? ''); // 例: 03-1234-5678
-            $pdf->SetXY(45, 223);
+            $tel = $form['agent']['tel'] ?? ''; // 例: 03-1234-5678
+            $pdf->SetXY(65, 108);
             $pdf->Write(7, $tel);
 
-            $pdf->SetXY(45, 218);
-            $pdf->Write(7, ($form['agent']['last_name']??'') . ($form['agent']['first_name']??''));
+            $pdf->SetXY(65, 100);
+            $pdf->Write(7, ($form['agent']['last_name']??'') . ' ' . ($form['agent']['first_name']??''));
+
+            $pdf->SetXY(65, 236);
+            $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
+            $pdf->SetXY(65, 243);
+            $pdf->Write(8, ($form['rep_last_name']??'') . ' ' . ($form['rep_first_name']??''));
+
+            // ---- 3) zip code
+            $pdf->SetXY(55, 228);
+            $pdf->SetFontSize(8); 
+            $pdf->Write(7, $form['corp']['postal_code'] ?? null);
+            $pdf->SetFontSize(10); 
+            $address = ($form['corp']['address1']??'') . ($form['corp']['address2']??'') . ($form['corp']['address3']??'');
+            // ---- 3) 住所
+            $pdf->SetXY(70, 228);
+            $pdf->Write(8, $address);
         }
 
         // 保存先ファイル名

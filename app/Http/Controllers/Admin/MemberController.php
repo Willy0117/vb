@@ -16,118 +16,15 @@ use App\Models\OrganizationDocument;
 
 use App\Http\Resources\MemberResource;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Helpers\DateHelper;
 
 class MemberController extends Controller
 {
     // 一覧ページ
     public function index(Request $request)
     {
-        $query = Member::query()
-            ->with([
-                'status',
-                'progress',
-                'organization' => fn ($q) => $q->where('type', 1),
-                'organization.documents' => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
-            ])
-            ->when(request('status_id'), function ($q, $status_id) {
-                $q->where('status_id', $status_id);
-            });
-        // =====================
-        // 検索
-        // =====================
-
-        if ($companyName = $request->input('company_name')) {
-            $query->whereHas('organization', function ($q) use ($companyName) {
-                $q->where('name', 'like', "%{$companyName}%");
-            });
-        }
-
-        if ($name = $request->input('name')) {
-            $query->whereHas('organization', function ($q) use ($name) {
-                $q->where(function ($qq) use ($name) {
-                    $qq->where('last_name', 'like', "%{$name}%")
-                       ->orWhere('first_name', 'like', "%{$name}%");
-                });
-            });
-        }
-
-        // =====================
-        // ソート（membersのみ）
-        // =====================
-
-        $sortBy  = $request->input('sort_by', 'created_at');
-        $sortDir = $request->input('sort_dir', 'desc');
-
-        $allowedSorts = [
-            'id',
-            'status_id',
-            'progress_id',
-            'address',
-            'company_name',
-            'representative',            
-            'created_at',
-        ];
-
-        if (! in_array($sortBy, $allowedSorts)) {
-            $sortBy = 'created_at';
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | JOIN が必要なソート
-        |--------------------------------------------------------------------------
-        */
-        if (in_array($sortBy, ['address', 'company_name'])) {
-
-            $query
-                ->leftJoin('organizations as org', function ($join) {
-                    $join->on('org.member_id', '=', 'members.id')
-                        ->where('org.type', 1); // 法人のみ
-                })
-                ->select('members.*');
-
-            if ($sortBy === 'address') {
-
-                $query->orderByRaw("
-                    CONCAT(
-                        IFNULL(org.address1, ''),
-                        IFNULL(org.address2, ''),
-                        IFNULL(org.address3, '')
-                    ) {$sortDir}
-                ");
-
-            } elseif ($sortBy === 'company_name') {
-
-               $query->orderByRaw("
-                        CONCAT(
-                            IFNULL(org.name_prefix, ''),
-                            IFNULL(org.name, ''),
-                            IFNULL(org.name_suffix, '')
-                        ) {$sortDir}
-                    ");
-            }
-
-        /*
-        |--------------------------------------------------------------------------
-        | member 名（full_name 相当）
-        |--------------------------------------------------------------------------
-        */
-        } elseif ($sortBy === 'representative') {
-
-            $query
-                ->orderBy('members.last_name', $sortDir)
-                ->orderBy('members.first_name', $sortDir);
-
-        /*
-        |--------------------------------------------------------------------------
-        | members 単体で完結するソート
-        |--------------------------------------------------------------------------
-        */
-        } else {
-
-            $query->orderBy("members.{$sortBy}", $sortDir);
-        }
-
+         $query = $this->buildMemberQuery($request);
 
         // =====================
         // ページング + 整形
@@ -142,10 +39,19 @@ class MemberController extends Controller
         $members = $query
             ->paginate($perPage)
             ->withQueryString()
-            ->through(function ($member) {
+            ->through(function ($member) use ($request) {
 
                 $org = $member->organization;
                 $doc = $org?->documents?->first(); // type=1 は with 側で絞る前提
+
+                $statusId = (int) $request->status_id ?? '1';
+
+                $date = match ($statusId) {
+                    2 => $member->joined_at,
+                    3 => $member->withdrawn_at,
+                    4 => $member->canceled_at,
+                    default => $member->created_at,
+                };
 
                 return [
                     'id' => $member->id,
@@ -188,6 +94,9 @@ class MemberController extends Controller
                     ] : null,
 
                     'created_at' => $member->created_at,
+                    'display_date' => $date
+                        ? DateHelper::withWareki($date)
+                         : null,
                 ];
             });
 
@@ -196,7 +105,7 @@ class MemberController extends Controller
             'filters' => [
                 'company_name' => $request->company_name ?? '',
                 'name'         => $request->name ?? '',
-                'status_id'    => $request->status_id ?? '',
+                'status_id'    => $request->status_id ?? '1',
                 'progress'     => $request->progress ?? '',
                 'per_page'     => $request->per_page ?? 20,
                 'sort_by'      => $request->sort_by ?? 'created_at',  // ← 初期値
@@ -440,14 +349,66 @@ class MemberController extends Controller
     // AdminMemberController.php
     public function editStatus(Member $member)
     {
+        $allowedMap = [
+            1 => [1,2,4],
+            2 => [2,3],
+            3 => [],
+            4 => [],
+        ];
+
+        $allowedIds = $allowedMap[$member->status_id] ?? [];
+
         return response()->json([
             'member' => [
                 'status_id' => $member->status_id,
             ],
-            'statuses' => Status::select('id', 'name')->orderBy('id')->get(),
+            'statuses' => Status::select('id', 'name')
+                ->whereIn('id', $allowedIds)
+                ->orderBy('id')
+                ->get(),
         ]);
     }
 
+    public function updateStatus(Request $request, Member $member)
+    {
+        $request->validate([
+            'status_id' => ['required', 'exists:statuses,id'],
+            'date'      => ['required', 'date'],
+        ]);
+
+        $statusId = (int) $request->status_id;
+        $dt = \Carbon\Carbon::parse($request->date)->second(0);
+
+        $data = [
+            'status_id' => $statusId,
+        ];
+
+        switch ($statusId) {
+            case 2: // 入会
+                $data['joined_at']   = $dt;
+                $data['canceled_at'] = null;
+                $data['withdrawn_at'] = null;
+                break;
+
+            case 3: // 退会
+                $data['withdrawn_at'] = $dt;
+                break;
+
+            case 4: // 申込キャンセル
+                $data['canceled_at'] = $dt;
+                break;
+
+            case 1: // 申請中
+            default:
+                // 日時は触らない
+                break;
+        }
+
+        $member->update($data);
+
+        return response()->json(['ok' => true]);
+    }
+/*
     public function updateStatus(Request $request, Member $member)
     {
         $request->validate([
@@ -460,7 +421,7 @@ class MemberController extends Controller
 
         return response()->json(['ok' => true]);
     }
-
+*/
     public function editProgress(Member $member)
     {
         return response()->json([
@@ -594,5 +555,175 @@ logger()->error('BASE DIR DEBUG', [
         $imagick->destroy();
 
         return [$pdfRelativePath, $thumbnailRelativePath];
-    }    
+    }
+
+
+    public function csv(Request $request): StreamedResponse
+    {
+        // 一覧と同じ Query を組み立てる
+        $query = $this->buildMemberQuery($request);
+
+        $members = $query->get();
+
+        $response = new StreamedResponse(function () use ($members) {
+            $handle = fopen('php://output', 'w');
+
+            // =====================
+            // ヘッダ行
+            // =====================
+            fputcsv($handle, [
+                '会員ID',
+                'ステータス',
+                '進捗',
+                '法人名',
+                '代表者名',
+                '電話番号',
+                '住所',
+                '登録日',
+            ]);
+
+            // =====================
+            // データ行
+            // =====================
+            foreach ($members as $member) {
+                $org = $member->organization;
+
+                fputcsv($handle, [
+                    $member->id,
+                    $member->status?->name,
+                    $member->progress?->name,
+                    $org?->full_name,
+                    $member->full_name,
+                    $org?->tel,
+                    $org?->full_address,
+                    optional($member->created_at)->format('Y-m-d'),
+                ]);
+            }
+
+            fclose($handle);
+        });
+
+        $filename = 'members_' . now()->format('Ymd_His') . '.csv';
+
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set(
+            'Content-Disposition',
+            "attachment; filename=\"{$filename}\""
+        );
+
+        return $response;
+    } 
+
+    private function buildMemberQuery(Request $request)
+    {
+       $query = Member::query()
+            ->with([
+                'status',
+                'progress',
+                'organization' => fn ($q) => $q->where('type', 1),
+                'organization.documents' => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
+            ])
+            ->when(request('status_id'), function ($q, $status_id) {
+                $q->where('status_id', $status_id);
+            });
+        // =====================
+        // 検索
+        // =====================
+
+        if ($companyName = $request->input('company_name')) {
+            $query->whereHas('organization', function ($q) use ($companyName) {
+                $q->where('name', 'like', "%{$companyName}%");
+            });
+        }
+
+        if ($name = $request->input('name')) {
+            $query->whereHas('organization', function ($q) use ($name) {
+                $q->where(function ($qq) use ($name) {
+                    $qq->where('last_name', 'like', "%{$name}%")
+                       ->orWhere('first_name', 'like', "%{$name}%");
+                });
+            });
+        }
+
+        // =====================
+        // ソート（membersのみ）
+        // =====================
+
+        $sortBy  = $request->input('sort_by', 'created_at');
+        $sortDir = $request->input('sort_dir', 'desc');
+
+        $allowedSorts = [
+            'id',
+            'status_id',
+            'progress_id',
+            'address',
+            'company_name',
+            'representative',            
+            'created_at',
+        ];
+
+        if (! in_array($sortBy, $allowedSorts)) {
+            $sortBy = 'created_at';
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | JOIN が必要なソート
+        |--------------------------------------------------------------------------
+        */
+        if (in_array($sortBy, ['address', 'company_name'])) {
+
+            $query
+                ->leftJoin('organizations as org', function ($join) {
+                    $join->on('org.member_id', '=', 'members.id')
+                        ->where('org.type', 1); // 法人のみ
+                })
+                ->select('members.*');
+
+            if ($sortBy === 'address') {
+
+                $query->orderByRaw("
+                    CONCAT(
+                        IFNULL(org.address1, ''),
+                        IFNULL(org.address2, ''),
+                        IFNULL(org.address3, '')
+                    ) {$sortDir}
+                ");
+
+            } elseif ($sortBy === 'company_name') {
+
+               $query->orderByRaw("
+                        CONCAT(
+                            IFNULL(org.name_prefix, ''),
+                            IFNULL(org.name, ''),
+                            IFNULL(org.name_suffix, '')
+                        ) {$sortDir}
+                    ");
+            }
+
+        /*
+        |--------------------------------------------------------------------------
+        | member 名（full_name 相当）
+        |--------------------------------------------------------------------------
+        */
+        } elseif ($sortBy === 'representative') {
+
+            $query
+                ->orderBy('members.last_name', $sortDir)
+                ->orderBy('members.first_name', $sortDir);
+
+        /*
+        |--------------------------------------------------------------------------
+        | members 単体で完結するソート
+        |--------------------------------------------------------------------------
+        */
+        } else {
+
+            $query->orderBy("members.{$sortBy}", $sortDir);
+        }
+
+        return $query;
+    }
+
+
 }

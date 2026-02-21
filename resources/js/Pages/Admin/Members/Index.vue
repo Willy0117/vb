@@ -65,30 +65,43 @@
           </div>
         </aside>
       </div>       
-
-      <div class="flex flex-wrap md:flex-nowrap md:justify-between mb-4 items-center gap-2">
-
-        <!-- per_page + add -->
-        <div class="flex items-center gap-2">
+      <div class="grid grid-cols-1 md:grid-cols-6 items-center gap-2 mb-4 text-sm">
+        <div>
           <select
             v-model.number="form.per_page"
             @change="submitSearch"
-            class="border rounded px-3 py-2 w-16 h-10"
+            class="border rounded px-3 py-2 h-10 w-24"
           >
             <option v-for="n in [10,20,30,50]" :key="n" :value="n">{{ n }}</option>
           </select>
+        </div>
+        <div></div>
+        <div></div>
+        <div>
+          <SecondaryButton
+            type="button"
+            class="flex items-center gap-2 h-10"
+            @click="exportCsv"
+          >
+            <ArrowDownTrayIcon class="w-4 h-4" />
+            CSV
+          </SecondaryButton> 
+        </div>
+        <div>
+          <!-- 複数削除ボタン -->
+          <!-- button
+            @click="bulkDelete"
+            :disabled="selectedIds.length === 0"
+            class="px-4 h-10 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 flex items-center space-x-1"
+          >
+            <TrashIcon class="w-4 h-4"/>
+            <span>{{ t('delete_selected') }}</span>
+          </button -->
 
         </div>
-
-        <!-- 複数削除ボタン -->
-        <!-- button
-          @click="bulkDelete"
-          :disabled="selectedIds.length === 0"
-          class="px-4 h-10 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 flex items-center space-x-1"
-        >
-          <TrashIcon class="w-4 h-4"/>
-          <span>{{ t('delete_selected') }}</span>
-        </button -->
+        <div class="md:text-right whitespace-nowrap">
+          {{ t('total') }} : {{ props.members.total }}
+        </div>
       </div>
 
       <!-- 会員一覧テーブル -->
@@ -155,14 +168,19 @@
             <td class="px-3 py-2">{{ member.name ?? '-' }}</td>
             <!-- td class="px-3 py-2">{{ member.tel ?? '-' }}</td -->
             <td class="px-3 py-2">{{ member.address ?? '-' }}</td>
-            <td class="px-3 py-2">{{ member.created_at ? dayjs(member.created_at).format('YYYY/MM/DD') : '' }}</td>
+            <td class="px-3 py-2">{{ member.display_date }}</td>
             <td class="px-3 py-2">
               <span
-                class="cursor-pointer text-blue-600 hover:underline"
+                :class="[
+                  [1,2].includes(member.status_id)
+                    ? 'cursor-pointer text-blue-600 hover:underline'
+                    : 'text-gray-400 cursor-not-allowed'
+                ]"
                 @click="openStatus(member)"
               >
                 {{ member.status.name }}
               </span>
+
             </td>
             <td v-if="props.filters?.status_id == 1" class="px-3 py-2">
               <span
@@ -246,7 +264,7 @@
         <template #content>
           <select
             v-model="statusForm.status_id"
-            class="w-full border rounded px-3 py-2"
+            class="w-full border rounded px-3 py-2 mb-4"
           >
             <option
               v-for="s in statuses"
@@ -256,6 +274,12 @@
               {{ s.name }}
             </option>
           </select>
+          <!-- 日付入力 -->
+          <input
+            type="datetime-local"
+            v-model="statusForm.date"
+            class="w-full border rounded px-3 py-2 mb-4"
+          />
         </template>
         <template #footer>
           <SecondaryButton @click="closeModal">
@@ -346,8 +370,8 @@
         </template>
 
         <template #footer>
-          <SecondaryButton @click="closeModal">キャンセル</SecondaryButton>
-          <PrimaryButton @click="submitUpload">アップロード</PrimaryButton>
+          <SecondaryButton @click="closeModal">{{ t('cancel') }}</SecondaryButton>
+          <PrimaryButton @click="submitUpload">{{ t('upload') }}</PrimaryButton>
         </template>
       </DialogModal>      
     </div>
@@ -367,7 +391,7 @@ import { Link, router } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch} from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
-import { PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon, DocumentPlusIcon} from '@heroicons/vue/24/outline'
+import { ArrowDownTrayIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon, DocumentPlusIcon} from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   members: Object,
@@ -402,6 +426,7 @@ const form = reactive({
   sort_by: props.filters.sort_by,   // ← 初期値を必ずセット
   sort_dir: props.filters.sort_dir,    // ← 初期値を必ずセット
 })
+
 // 選択削除
 const selectedIds = ref([])
 
@@ -423,6 +448,9 @@ watch(() => props.members.current_page, () => {
   selectedIds.value = []
 })
 
+const exportCsv = () => {
+  window.location.href = route('admin.member.csv', persistQuery())
+}
 
 // persistQueryに各検索項目を追加
 const persistQuery = () => ({
@@ -547,15 +575,29 @@ const submitProgress = async () => {
 }
 
 const showStatusModal = ref(false)
+// 日付+時間
+const now = () => {
+  const d = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 const statusForm = ref({
   member_id: null,
   status_id: null,
+  date: now(),
 })
 
 const statuses = ref([])
 
 const openStatus = async (member) => {
+
+  // ここでブロック
+  if (![1,2].includes(member.status_id)) {
+    return
+  }
+
   const res = await axios.get(
     `/admin/member/${member.id}/status/edit`
   )
@@ -572,6 +614,7 @@ const submitStatus = async () => {
     `/admin/member/${statusForm.value.member_id}/status`,
     { 
       status_id: statusForm.value.status_id,
+      date: statusForm.value.date || new Date().toISOString().slice(0, 10),
     }
   )
 
