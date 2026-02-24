@@ -15,6 +15,7 @@ use App\Models\Progress;
 use App\Models\OrganizationDocument;
 
 use App\Http\Resources\MemberResource;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Helpers\DateHelper;
@@ -42,6 +43,7 @@ class MemberController extends Controller
             ->through(function ($member) use ($request) {
 
                 $org = $member->organization;
+
                 $doc = $org?->documents?->first(); // type=1 は with 側で絞る前提
 
                 $statusId = (int) $request->status_id ?? '1';
@@ -74,24 +76,13 @@ class MemberController extends Controller
                     'tel' => $org?->tel,
                     'address' => $org?->full_address,
 
-                    // 履歴事項全部証明書
-                    'history_certificate' => $doc ? [
-                        'path' => $doc->file_path
-                            ? Storage::url($doc->file_path)
-                            : null,
-                        'thumbnail_path' => $doc->thumbnail_path
-                            ? Storage::url($doc->thumbnail_path)
-                            : null,
-                    ] : null,
-
-                    'mail_address_certificate' => $doc ? [
-                        'path' => $doc->file_path
-                            ? Storage::url($doc->file_path)
-                            : null,
-                        'thumbnail_path' => $doc->thumbnail_path
-                            ? Storage::url($doc->thumbnail_path)
-                            : null,
-                    ] : null,
+                    'documents' => $org?->documents->map(function ($doc) {
+                        return [
+                            'type' => $doc->type,
+                            'path' => $doc->file_path ? Storage::url($doc->file_path) : null,
+                            'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
+                        ];
+                    }),
 
                     'created_at' => $member->created_at,
                     'display_date' => $date
@@ -142,6 +133,7 @@ class MemberController extends Controller
             'progress',
             'organizations',
             'organizations.documents', // documents はここで取得するだけ
+            'applicationOrganization',
         ]);
         // persistQuery() 用に現在のクエリを保持
         $queryParams = $request->only([
@@ -188,7 +180,19 @@ class MemberController extends Controller
                     'email'        => $o->email,
                     'contact_name' => $o->contact_name,
                 ]),
-
+                // organization（typeごとに整理）
+                'applications' => $member->applicationorganizations->map(fn ($o) => [
+                    'id'           => $o->id,
+                    'type'         => $o->type,
+                    'name'         => $o->full_name,
+                    'postal_code'  => $o->postal_code,
+                    'address'      => $o->full_address,
+                    'tel'          => $o->tel,
+                    'fax'          => $o->fax,
+                    'mobile'       => $o->mobile,
+                    'email'        => $o->email,
+                    'contact_name' => $o->contact_name,
+                ]),
                 // 書類は独立
                 'documents' => $documents,
 
@@ -208,6 +212,7 @@ class MemberController extends Controller
             'status',
             'progress',
             'organizations', // 複数
+            'bankAccount',
         ]);
 
         $orgs = $member->organizations->keyBy('type');
@@ -272,10 +277,13 @@ class MemberController extends Controller
             'first_name'   => $orgs[3]->first_name,
         ] : null;
 
+        $regions = DB::table('regions')->select('id', 'name')->orderBy('sort_order')->get();
         // Inertia に渡す
         return Inertia::render('Admin/Members/Edit', [
             'form' => [
                 'id'          => $member->id,
+                'region_id'   => $member->region_id,
+                'number'      => $member->number,
                 'rep_last_name'   => $member->last_name,
                 'rep_first_name'  => $member->first_name,
                 'status_id'   => $member->status_id,
@@ -291,9 +299,11 @@ class MemberController extends Controller
                 'corp'        => $corp,
                 'mail'        => $mail,
                 'agent'       => $agent,
+                'bank_account'=> $member->bankAccount,                
                 // 書類は独立
                 'documents'   => $documents,
             ],
+            'regions' => $regions,
             'filters' => $request->only(['company_name', 'name', 'tel', 'per_page', 'sort_by', 'sort_dir']),
         ]);
     }
@@ -408,20 +418,8 @@ class MemberController extends Controller
 
         return response()->json(['ok' => true]);
     }
-/*
-    public function updateStatus(Request $request, Member $member)
-    {
-        $request->validate([
-            'status_id' => ['required', 'exists:statuses,id'],
-        ]);
 
-        $member->update([
-            'status_id' => $request->status_id,
-        ]);
-
-        return response()->json(['ok' => true]);
-    }
-*/
+    
     public function editProgress(Member $member)
     {
         return response()->json([
@@ -621,7 +619,7 @@ logger()->error('BASE DIR DEBUG', [
                 'status',
                 'progress',
                 'organization' => fn ($q) => $q->where('type', 1),
-                'organization.documents' => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
+                'organization.documents',// => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
             ])
             ->when(request('status_id'), function ($q, $status_id) {
                 $q->where('status_id', $status_id);

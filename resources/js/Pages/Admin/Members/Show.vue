@@ -14,26 +14,114 @@
 
       <!-- 法人 -->
     <section class="bg-white rounded shadow p-4">
-        <h2 class="font-bold mb-2">法人情報</h2>
+      <div class="space-y-6">
 
-        <div v-for="org in props.member.organizations" :key="org.id" class="mb-4">
-            <p>法人名：{{ org.name }}</p>
+        <div
+          v-for="type in [1,2,3]"
+          :key="type"
+          class="border rounded shadow p-4"
+        >
+          <h3 class="font-bold mb-4">{{ typeLabels[type] }}</h3>
 
-            <div class="mt-2">
-            <h3 class="font-semibold">住所</h3>
-            <ul>
-                <li>
-                {{ org.postal_code }}  {{ org.address }}
-                </li>
-            </ul>
+          <div class="grid grid-cols-2 gap-6">
 
-            <p>{{ t('members.tel') }}: {{ org.tel }} {{ t('members.fax') }} : {{ org.fax }}</p>
-            <p v-if="org.mobile">{{ t('members.mobile') }} : {{ org.mobile }}</p>
-            <p v-if="org.email">{{ t('members.email') }} : {{ org.email }}</p>
-            <p v-if="org.contact_name">{{ t('members.staff') }}: {{ org.contact_name }}</p>
+            <!-- 左：現状 -->
+            <div class="bg-gray-50 p-4 rounded">
+              <h4 class="font-semibold mb-2">現状</h4>
+
+              <template v-if="getCurrentByType(type)">
+                <p
+                  :class="{
+                    'text-red-600 font-semibold':
+                      isDifferent(getCurrentByType(type), getAppByType(type), 'name')
+                  }"
+                >
+                  法人名：{{ getCurrentByType(type).name || '-' }}
+                </p>
+
+                <p
+                  :class="{
+                    'text-red-600 font-semibold':
+                      isDifferent(getCurrentByType(type), getAppByType(type), 'postal_code')
+                      || isDifferent(getCurrentByType(type), getAppByType(type), 'address')
+                  }"
+                >
+                  {{ getCurrentByType(type).postal_code || '-' }}
+                  {{ getCurrentByType(type).address || '-' }}
+                </p>
+
+                <p
+                  :class="{
+                    'text-red-600 font-semibold':
+                      isDifferent(getCurrentByType(type), getAppByType(type), 'tel')
+                      || isDifferent(getCurrentByType(type), getAppByType(type), 'fax')
+                  }"
+                >
+                  TEL: {{ getCurrentByType(type).tel || '-' }}
+                  FAX: {{ getCurrentByType(type).fax || '-' }}
+                </p>
+
+                <p
+                  :class="{
+                    'text-red-600 font-semibold':
+                      isDifferent(getCurrentByType(type), getAppByType(type), 'mobile')
+                  }"
+                >
+                  Mobile: {{ getCurrentByType(type).mobile || '-' }}
+                </p>
+
+                <p
+                  :class="{
+                    'text-red-600 font-semibold':
+                      isDifferent(getCurrentByType(type), getAppByType(type), 'email')
+                  }"
+                >
+                  Email: {{ getCurrentByType(type).email || '-' }}
+                </p>
+
+                <p
+                  :class="{
+                    'text-red-600 font-semibold':
+                      isDifferent(getCurrentByType(type), getAppByType(type), 'contact_name')
+                  }"
+                >
+                  担当者: {{ getCurrentByType(type).contact_name || '-' }}
+                </p>
+              </template>
+
+              <p v-else class="text-gray-400">データなし</p>
             </div>
+
+            <!-- 右：申込時 -->
+            <div class="bg-blue-50 p-4 rounded">
+              <h4 class="font-semibold mb-2">申込時</h4>
+
+              <template v-if="getAppByType(type)">
+                <p>法人名：{{ getAppByType(type).name || '-' }}</p>
+                <p>
+                  {{ getAppByType(type).postal_code || '-' }}
+                  {{ getAppByType(type).address || '-' }}
+                </p>
+                <p>
+                  TEL: {{ getAppByType(type).tel || '-' }}
+                  FAX: {{ getAppByType(type).fax || '-' }}
+                </p>
+                <p>Mobile: {{ getAppByType(type).mobile || '-' }}</p>
+                <p>Email: {{ getAppByType(type).email || '-' }}</p>
+                <p>担当者: {{ getAppByType(type).contact_name || '-' }}</p>
+              </template>
+
+              <p v-else class="text-gray-400">データなし</p>
+            </div>
+
+          </div>
         </div>
+
+      </div>
     </section>
+
+
+
 
     <!-- 書類 -->
     <section class="bg-white rounded shadow p-4">
@@ -142,5 +230,24 @@ const openPdf = (pdfPath) => {
 
   // 例：ここで loading true
 }
+
+const typeLabels = {
+  1: '会社情報',
+  2: '郵送先情報',
+  3: '代理店情報'
+}
+
+// typeごとに現状データ取得
+const getCurrentByType = (type) => {
+  return props.member.organizations?.find(o => o.type === type)
+}
+
+// typeごとに申込時データ取得
+const getAppByType = (type) => {
+  return props.member.applications?.find(a => a.type === type)
+}
+
+const isDifferent = (current, app, field) =>
+  (current?.[field] ?? '') !== (app?.[field] ?? '')
 
 </script>

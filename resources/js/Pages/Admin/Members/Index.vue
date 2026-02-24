@@ -148,9 +148,8 @@
               {{ t('members.progress') }}
               <span v-if="form.sort_by==='progress_id'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
             </th>
-            <th class="px-3 py-2 text-center">{{ t('members.history_certificate') }}</th>
-            <th class="px-3 py-2 text-center">{{ t('members.mail_address_certificate') }}</th>
-            <th class="px-3 py-2 text-center">{{ t('actions') }}</th>
+            <th class="px-3 py-2 text-center">{{ t('members.documents') }}</th>
+            <th class="px-3 py-2 text-center">{{ t('actions.action') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -192,25 +191,50 @@
             </td>
 
             <td class="px-3 py-2 text-center">
-              <img
-                v-if="member.history_certificate?.thumbnail_path"
-                :src="member.history_certificate.thumbnail_path"
-                class="w-10 h-10 object-contain border rounded cursor-pointer hover:opacity-80"
-                @click="openPdf(member.history_certificate.path)"
-              />
-              <span v-else class="text-gray-400 text-xs">-</span>
+              <div class="flex justify-center gap-4">
+                <template v-for="docType in documentTypes" :key="docType.id">
+                  <div class="w-16 text-center">
+
+                    <!-- 書類あり -->
+                    <div
+                      v-if="getCertificate(member, docType.id)"
+                      :class="['w-16 h-16 border rounded mx-auto flex items-center justify-center',
+                              typeBgClass(docType.id),
+                              'cursor-pointer hover:opacity-80']"
+                      @click="handleClick(member, docType.id)"
+                    >
+                      <img
+                        :src="getCertificate(member, docType.id).thumbnail_path"
+                        class="w-12 h-12 object-contain"
+                      />
+                    </div>
+
+                    <!-- 未提出 -->
+                    <div
+                      v-else
+                      :class="['w-16 h-16 border rounded mx-auto flex items-center justify-center',
+                              typeBgClass(docType.id)]"
+                    >
+                      <span class="text-xs text-red-500">
+                        {{ t('members.not_submitted') }}
+                      </span>
+                    </div>
+
+                    <!-- 書類名 -->
+                    <div class="text-xs mt-1 text-gray-600 truncate">
+                      {{ shortName(docType.name) }}
+                    </div>
+
+                  </div>
+                </template>
+              </div>
             </td>
 
-            <td class="px-3 py-2 text-center">
-              <img
-                v-if="member.mail_address_certificate?.thumbnail_path"
-                :src="member.mail_address_certificate.thumbnail_path"
-                class="w-10 h-10 object-contain border rounded cursor-pointer hover:opacity-80"
-                @click="openPdf(member.mail_address_certificate.path)"
-              />
-              <span v-else class="text-gray-400 text-xs">-</span>
-            </td>
+
             <td class="px-3 py-2 text-center flex justify-center space-x-1">
+              <Link :href="route('admin.member.show', { member: member.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
+                <EyeIcon class="w-4 h-4"/>
+              </Link -->
               <Link :href="route('admin.member.edit', { member: member.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
                 <PencilIcon class="w-4 h-4"/>
               </Link -->
@@ -251,14 +275,14 @@
 
         <template #footer>
           <SecondaryButton @click="previewPdf = null">
-            閉じる
+            {{ t('closed') }}
           </SecondaryButton>
         </template>
       </DialogModal>
 
       <DialogModal :show="showStatusModal" @close="closeModal">
         <template #title>
-          ステータス変更
+            {{ t('members.status_change') }}
         </template>
 
         <template #content>
@@ -294,7 +318,7 @@
 
       <DialogModal :show="showProgressModal" @close="closeModal">
         <template #title>
-              進捗訂正
+          {{ t('members.progress_change') }}
         </template>
         <template #content>
             <select
@@ -322,20 +346,20 @@
       </DialogModal>
 
       <DialogModal :show="showUploadModal" @close="closeModal">
-        <template #title>書類アップロード</template>
+        <template #title>{{ t('members.documents') }}</template>
 
         <template #content>
           <!-- 書類種別 -->
           <div class="mt-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              書類種別
+              {{ t('members.documents') }}
             </label>
 
             <select
               v-model="uploadForm.type_id"
               class="w-full border rounded px-3 py-2"
             >
-              <option value="">選択してください</option>
+              <option value="">{{ t('selected') }}</option>
 
               <option
                 v-for="d in documentTypes"
@@ -349,14 +373,14 @@
 
           <!-- ドラッグ＆ドロップ領域 -->
           <div
-            class="mt-4 p-4 border-2 border-dashed border-gray-300 rounded text-center cursor-pointer hover:border-gray-500"
+            class="mt-4 min-h-40 p-4 bg-[#e7dfc8] border-2 border-dashed border-gray-300 rounded text-center cursor-pointer hover:border-gray-500"
             @dragover.prevent
             @dragenter.prevent
             @drop.prevent="handleDrop"
             @click="fileInput.click()"
           >
-            <p v-if="!file">ここに PDF をドラッグするかクリックして選択</p>
-            <p v-else class="text-sm text-gray-700">選択中: {{ file.name }}</p>
+            <p v-if="!file">{{ t('pdf_uploads') }}</p>
+            <p v-else class="text-sm text-gray-700">{{ t('selected') }} {{ file.name }}</p>
 
             <!-- hidden file input -->
             <input
@@ -370,8 +394,15 @@
         </template>
 
         <template #footer>
-          <SecondaryButton @click="closeModal">{{ t('cancel') }}</SecondaryButton>
-          <PrimaryButton @click="submitUpload">{{ t('upload') }}</PrimaryButton>
+          <div class="flex justify-end gap-3">
+            <SecondaryButton @click="closeModal">
+              {{ t('cancel') }}
+            </SecondaryButton>
+
+            <PrimaryButton @click="submitUpload">
+              {{ t('upload') }}
+            </PrimaryButton>
+          </div>
         </template>
       </DialogModal>      
     </div>
@@ -391,7 +422,7 @@ import { Link, router } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch} from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
-import { ArrowDownTrayIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon, DocumentPlusIcon} from '@heroicons/vue/24/outline'
+import { ArrowDownTrayIcon, PencilIcon, EyeIcon, MagnifyingGlassIcon, DocumentPlusIcon} from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   members: Object,
@@ -407,7 +438,7 @@ const props = defineProps({
     })
   }
 })
-console.log(props.filters)
+console.log(props.members)
 const { t } = useI18n()
 
 const isSuperAdmin = computed(() =>
@@ -645,6 +676,25 @@ const documentTypes = [
   { id: 4, name: '委任状' },
 ]
 
+const shortName = (name) => {
+  const map = {
+    '履歴事項全部証明書': '履歴',
+    '郵送先確認書': '郵送',
+    '口座振替依頼書': '口振',
+    '委任状': '委任',
+  }
+  return map[name] ?? name
+}
+
+const typeBgClass = (typeId) => {
+  const map = {
+    1: 'bg-blue-50 border-blue-200',
+    2: 'bg-green-50 border-green-200',
+    3: 'bg-yellow-50 border-yellow-200',
+    4: 'bg-purple-50 border-purple-200',
+  }
+  return map[typeId] ?? 'bg-gray-50 border-gray-200'
+}
 /**
  * モーダルを開く（status / progress と同型）
  */
@@ -706,6 +756,22 @@ const submitUpload = async () => {
     console.error(err)
     alert('アップロード失敗')
   }
+}
+/**
+ * type に一致する最初の書類を返す
+ */
+const getCertificate = (member, typeId) => {
+  if (!member.documents || !Array.isArray(member.documents)) return null
+  return member.documents.find(d => d.type === typeId) ?? null
+}
+
+/**
+ * クリック制御
+ */
+const handleClick = (member, typeId) => {
+  const cert = getCertificate(member, typeId)
+  if (!cert?.path) return
+  openPdf(cert.path)
 }
 
 </script>

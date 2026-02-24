@@ -21,6 +21,7 @@ class Member extends Model
         'joined_at',
         'canceled_at',
         'withdrawn_at',
+        'region_id',
         'number', 
     ];
 
@@ -64,6 +65,11 @@ class Member extends Model
         return $this->hasMany(ApplicationOrganization::class);
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+    
     public function getFullNameAttribute()
     {
         return trim($this->last_name . ' ' . $this->first_name);

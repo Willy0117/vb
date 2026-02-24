@@ -6,35 +6,76 @@
       <h2 class="text-2xl font-bold mb-6">{{ t('registers.members') }}</h2>
 
       <form @submit.prevent="submitForm" class="space-y-8">
-        <div class="mt-4">
-          <InputLabel :value="t('registers.applicant')" class="mb-2" />
+        <div class="mt-4 grid grid-cols-6 gap-4 items-end">
 
-          <div class="flex flex-col sm:flex-row gap-4">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="corporation"
-                v-model="form.type"
-                class="text-blue-600 focus:ring-blue-500"
-              />
-              <span>{{ t('registers.corporation') }}</span>
-            </label>
+          <!-- 会社種類（2W） -->
+          <div class="col-span-2">
+            <InputLabel :value="t('registers.applicant')" class="mb-2" />
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value="corporation"
+                  v-model="form.type"
+                  class="text-blue-600 focus:ring-blue-500"
+                />
+                <span>{{ t('registers.corporation') }}</span>
+              </label>
 
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="sole"
-                v-model="form.type"
-                class="text-blue-600 focus:ring-blue-500"
-              />
-              <span>{{ t('registers.sole') }}</span>
-            </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value="sole"
+                  v-model="form.type"
+                  class="text-blue-600 focus:ring-blue-500"
+                />
+                <span>{{ t('registers.sole') }}</span>
+              </label>
+            </div>
+            <p v-if="errors.type" class="text-red-500 text-sm mt-1">{{ errors.type }}</p>
           </div>
 
-          <p v-if="errors.type" class="text-red-500 text-sm mt-1">
-            {{ errors.business_type }}
-          </p>
+          <!-- Region（1W） -->
+          <div class="col-span-1">
+            <InputLabel :value="t('members.region')" class="mb-1" />
+            <select v-model="form.region_id" class="border rounded px-3 py-2 w-full">
+              <option value="">{{ t('select region') }}</option>
+              <option v-for="region in regions" :key="region.id" :value="region.id">
+                {{ region.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- 4桁番号（1W） -->
+          <div class="col-span-1">
+            <InputLabel :value="t('members.number')" class="mb-1" />
+            <TextInput
+              v-model="form.number"
+              maxlength="4"
+              placeholder="0000"
+              :class="{
+                'border-red-500': getError('number'),
+                'border-gray-300': !getError('number')
+              }"
+              class="w-full"
+            />
+            <p v-if="getError('number')" class="text-red-500 text-sm mt-1">{{ getError('number') }}</p>
+          </div>
+
+          <!-- 入会日（1W） -->
+          <div class="col-span-1">
+            <InputLabel :value="t('members.joined_at')" class="mb-1" />
+            <TextInput type="date" v-model="form.joined_at" class="w-full" />
+          </div>
+
+          <!-- 退会日（1W） -->
+          <div class="col-span-1">
+            <InputLabel :value="t('members.withdrawn_at')" class="mb-1" />
+            <TextInput type="date" v-model="form.withdrawn_at" class="w-full" />
+          </div>
+
         </div>
+
         <!-- 2カラム -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!--  ここから会社情報　-->
@@ -103,7 +144,6 @@
 
          <!-- 右カラム：代表者/担当者 -->
           <div class="space-y-4">
-            <h3 class="text-lg font-semibold mb-2">代表者</h3>
             <div>
               <InputLabel value="代表者名（フリガナ）" />
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -463,7 +503,7 @@
           </div>
           <div class="flex-[2]">
                <!-- 会社名 -->
-              <InputLabel :value="t('registers.company_name')" /> 
+              <InputLabel :value="t('registers.agent')" /> 
               <TextInput
                 v-model="form.agent.company_name"
                 :class="{
@@ -564,6 +604,148 @@
       </div>
       <!-- ここまでが代理人-->
       <section class="bg-white rounded shadow p-4">
+        <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.bank') }}</h3>
+        <!-- 2カラム -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- 左カラム -->
+          <div class="space-y-4 max-w-xl mx-auto p-2">
+
+            <!-- 銀行選択 -->
+            <InputLabel :value="bankCategories.select_bank" />
+            <div class="grid grid-cols-4 gap-2 mb-3">
+              <button
+                v-for="c in bankCategories"
+                :key="c.id"
+                type="button"
+                @click="selectCategory(c)"
+                :class="[
+                  'px-4 py-1 rounded border text-sm',
+                  selectedCategory === c.value
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                ]"
+              >
+                {{ c.label }}
+              </button>
+            </div>
+
+            <!-- 銀行名 + 銀行コード -->
+            <div class="grid grid-cols-2 gap-4 mb-2">
+              <div>
+                <Autocomplete
+                  :key="bankKey"
+                  v-model="selectedBank"
+                  label="銀行名"
+                  fetch-url="/api/banks"
+                  :extra-params="form.bank.bank_type ? { category: form.bank.bank_type } : {}"
+                  :initial="form.bank.bank_name"
+                  @selected="handleBankSelected"
+                />
+                <p v-if="errors.bank_name" class="text-red-500 text-sm mt-1">
+                  {{ errors.bank_name }}
+                </p>
+              </div>
+              <div>
+                <InputLabel :value="t('banks.bank_code')" />
+                <TextInput v-model="form.bank.bank_code" class="w-full" />
+              </div>
+            </div>
+
+            <!-- 支店名 + 支店コード -->
+            <div class="grid grid-cols-2 gap-4">
+
+              <!-- 支店名（通常銀行のみ） -->
+              <div>
+                <template v-if="form.bank.bank_code !== '9900'">
+                  <Autocomplete
+                    v-if="form.bank.bank_code"
+                    :model-value="selectedBranch"
+                    :label="t('banks.branch_name')"
+                    fetch-url="/api/branches"
+                    :extra-params="{ bank_code: form.bank.bank_code }"
+                    :initial="form.bank.branch_name"
+                    @selected="handleBranchSelected"
+                  />
+                  <p v-if="errors.branch_name" class="text-red-500 text-sm mt-1">
+                    {{ errors.branch_name }}
+                  </p>
+                </template>
+
+                <!-- ゆうちょ時のダミー表示（任意） -->
+                <template v-else>
+                  <InputLabel :value="t('banks.branch_name')" />
+                  <p class="text-gray-400 text-sm mt-2">なし</p>
+                </template>
+              </div>
+
+              <!-- 支店コード（常に入力可） -->
+              <div>
+                <InputLabel
+                  :value="form.bank.bank_code === '9900'
+                    ? '記号'
+                    : t('banks.branch_code')"
+                />
+
+                <TextInput
+                  v-model="form.bank.branch_code"
+                  class="w-full"
+                  :maxlength="form.bank.bank_code === '9900' ? 5 : 3"
+                  :placeholder="form.bank.bank_code === '9900'
+                    ? '記号（5桁）'
+                    : '支店コード（3桁）'"
+                />
+
+                <p v-if="errors.branch_code" class="text-red-500 text-sm mt-1">
+                  {{ errors.branch_code }}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- 右カラム -->
+          <div class="space-y-4">
+
+            <div>
+            <InputLabel value="口座種別（普通 / 当座）" />
+            <select v-model="form.bank.account_type" class="border p-2 w-full rounded">
+                <option value="普通">普通</option>
+                <option value="当座">当座</option>
+            </select>
+            </div>
+
+            <div>
+              <InputLabel value="口座番号" />
+              <TextInput
+                v-model="form.bank.account_no"
+                :maxlength="bankAccountMaxLength"
+                @input="validateAccountNo"
+                class="w-full"
+              />
+              <p v-if="accountNoError" class="text-red-500 text-sm mt-1">{{ accountNoError }}</p>
+            </div>
+
+            <div>
+                <InputLabel value="口座名義（フリガナ）" />
+                <TextInput v-model="form.bank.account_kana" class="w-full" />
+                <InputError :message="form.errors.account_kana" />
+            </div>
+            <div>
+                <InputLabel value="口座名義" />
+                <TextInput v-model="form.bank.account_name" class="w-full" />
+                <InputError :message="form.errors.account_name" />
+            </div>
+                <!-- 注意文言 -->
+            <p class="text-xs text-gray-500 mt-2">
+                肩書を忘れないように！
+            </p>
+          </div>  
+        </div>
+      </section>
+
+      <section class="bg-white rounded shadow p-4">
           <h2 class="font-bold mb-2">提出書類</h2>
           <div class="flex gap-4">
               <div v-for="d in form.documents" :key="d.type + d.path">
@@ -660,6 +842,7 @@ watch(
 )
 
 console.log(page.props) // ← ここで form が見える
+const regions = page.props.regions || []
 
 const persistQuery = () => {
   return { ...page.props.filters }
@@ -721,8 +904,19 @@ const form = useForm({
     last_name: page.props.form?.agent?.last_name ?? '',
     first_name: page.props.form?.agent?.first_name ?? '',
   },
-  documents: page.props.form?.documents,
+  bank:{
+    bank_type: page.props.form?.bank_account?.bank_type ?? '',
+    bank_name: page.props.form?.bank_account?.bank_name ?? '',
+    bank_code: page.props.form?.bank_account?.bank_code ?? '',
+    branch_name: page.props.form?.bank_account?.branch_name ?? '',
+    branch_code: page.props.form?.bank_account?.branch_code ?? '',  
+    account_type: page.props.form?.bank_account?.account_type ?? '普通',
+    account_no: page.props.form?.bank_account?.account_no ?? '',
+    account_kana: page.props.form?.bank_account?.account_kana ?? '',
+    account_name: page.props.form?.bank_account?.account_name ?? '',
+  },
 
+  documents: page.props.form?.documents,
 });
 
 // エラー
@@ -750,67 +944,6 @@ function getError(key) {
 }
 
 
-
-const validateRequired = () => {
-  errors.value = {}
-
-  const isYuucho = form.bank_code === '9900'
-
-  // ===== フラット必須 =====
-  const requiredFlat = [
-    'company_kana',
-    'rep_last_kana',
-    'rep_first_kana',
-    'company_name',
-    'rep_last_name',
-    'rep_first_name',
-    'bank_type',
-    'bank_name',
-    'account_type',
-    'account_no',
-    'account_kana',
-    'account_name',
-  ]
-
-  requiredFlat.forEach(key => {
-    if (!form[key] || form[key].toString().trim() === '') {
-      console.log(key)
-      errors.value[key] = '必須項目です'
-    }
-  })
-
-  // ===== corp 必須（address3/ fax / mobile/ email 除外）=====
-  if (form.corp) {
-    Object.entries(form.corp).forEach(([key, value]) => {
-      // address3 / fax / mobile / email は除外
-      if (['address3', 'fax', 'mobile', 'email'].includes(key)) return
-
-      if (value === null || value === undefined || value === '') {
-        // errors.value.corp を作る
-        if (!errors.value.corp) errors.value.corp = {}
-        errors.value.corp[key] = '必須項目です'
-      }
-    })
-  }
-
-  return Object.keys(errors.value).length === 0
-}
-
-// 送信処理
-const submitForm = () => {
-  if (!validateRequired()) return
-
-  // そのまま form を送信
-  form.post(route('members.register.complete', { token: page.props.token }), {
-    preserveScroll: true,
-    onError: (errors) => {
-      console.log('Validation errors:', errors)
-    },
-    onSuccess: () => {
-      console.log('Submission succeeded')
-    }
-  })
-}
 const previewPdf = ref(null)
 
 const openPdf = (pdfPath) => {
@@ -1076,13 +1209,136 @@ const toHalfWidthNumber = (value) => {
     .replace(/[^0-9]/g, '')
 }
 
-watch(() => form.bank_code, (val) => {
-  form.bank_code = toHalfWidthNumber(val)
+
+
+watch(() => form.bank.bank_code, (val) => {
+  form.bank.bank_code = toHalfWidthNumber(val)
 })
 
-watch(() => form.branch_code, (val) => {
-  form.branch_code = toHalfWidthNumber(val)
+watch(() => form.bank.branch_code, (val) => {
+  form.bank.branch_code = toHalfWidthNumber(val)
 })
 
+const bankCategories = ref([])
+const selectedCategory = ref(form.bank.bank_type) 
+
+/* 銀行 */
+const selectedBank = ref(null)
+
+/* 支店 */
+const selectedBranch = ref(null)
+
+// mounted 時に session の値で初期化
+onMounted(() => {
+  if (form.bank_name) {
+  }
+})
+
+onMounted(async () => {
+  const res = await axios.get('/api/bank-categories')
+
+  bankCategories.value = res.data.map(c => ({
+    value: c.id,
+    label: c.bank_name
+  }))
+})
+
+const bankCategory = ref('')
+const bankKey = ref(0)
+
+const selectCategory = async (category) => {
+    console.log(category.value)
+  // カテゴリ確定
+  selectedCategory.value = category.value
+  form.bank.bank_type = category.value
+
+  selectedBank.value = null
+  form.bank.bank_name = ''
+  form.bank.bank_code = ''
+  form.bank.branch_name = ''
+  form.bank.branch_code = ''
+
+  if (category.value === 7) {
+    selectedBank.value = {
+        bank_code: '9900',
+        label: 'ゆうちょ銀行',
+        bank_category: 7,
+    }
+    form.bank.bank_code = '9900'
+    form.bank.bank_name = 'ゆうちょ銀行'
+
+  } else {
+    form.bank.bank = null
+  }
+
+  bankKey.value += 1
+
+}
+
+const handleBankSelected = (item) => {
+  console.log(item)
+  selectedBank.value = item            // v-model にオブジェクトを入れる
+  form.bank.bank_name = item.label          // form に銀行名を反映
+  form.bank.bank_id = item.id               // form に銀行 id を反映
+  form.bank.bank_code = item.bank_code
+  // 支店は必ずリセット
+  selectedBranch.value = null
+  form.bank.branch_name = ''
+  form.bank.branch_code = ''
+}
+
+
+const handleBranchSelected = (branch) => {
+  selectedBranch.value = branch
+
+  form.bank.branch_name = branch.label
+  form.bank.branch_code = branch.branch_code
+//  console.log(branch,form.branch_name);
+}
+
+const fetchParams = computed(() => {
+  console.log(selectedCategory.value ? { category: selectedCategory.value } : {})  
+  return selectedCategory.value ? { category: selectedCategory.value } : {}
+})
+
+const extraParams = computed(() => {
+    console.log(selectedBank.value);
+  console.log(selectedBank.value ? { bank_code: selectedBank.value.bank_code } : {})
+
+  return selectedBank.value ? { bank_code: selectedBank.value.bank_code } : {}
+})
+// 口座番号エラー表示用
+const accountNoError = ref(null)
+
+// 銀行コードに応じて maxlength を切り替え
+const bankAccountMaxLength = computed(() => {
+  if (form.bank.bank_code === '9900') {
+    return 8 // ゆうちょ銀行は8桁
+  }
+  return 7 // それ以外は7桁
+})
+
+// 入力チェック（桁数超過や数字以外の入力防止）
+function validateAccountNo() {
+  accountNoError.value = null
+
+  if (!/^\d*$/.test(form.bank.account_no)) {
+    accountNoError.value = '数字のみ入力してください'
+    // 数字以外は削除
+    form.bank.account_no = form.bank.account_no.replace(/\D/g, '')
+  }
+
+  if (form.bank.account_no.length > bankAccountMaxLength.value) {
+    accountNoError.value = `口座番号は${bankAccountMaxLength.value}桁で入力してください`
+    // 超過分は切り捨て
+    form.bank.account_no = form.bank.account_no.slice(0, bankAccountMaxLength.value)
+  }
+}
+
+// 銀行コードが変わったら口座番号もリセットする場合
+watch(() => form.bank.bank_code, () => {
+  form.bank.account_no = ''
+  accountNoError.value = null
+})
 
 </script>
