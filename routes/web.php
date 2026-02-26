@@ -75,6 +75,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 ->name('updateProgress');
             Route::post('/{member}/upload-document', [AdminMemberController::class, 'uploadDocument'])
                 ->name('uploadDocument');
+            Route::post('{member}/save-basic',[AdminMemberController::class, 'saveBasic']);    
+            Route::post('{member}/save-mail',[AdminMemberController::class, 'saveMail']);    
+            Route::post('{member}/save-agent',[AdminMemberController::class, 'saveAgent']);    
+            Route::post('{member}/save-bank',[AdminMemberController::class, 'saveBank']);    
               
         });
     });

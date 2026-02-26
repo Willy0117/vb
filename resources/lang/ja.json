@@ -248,7 +248,8 @@
     "address1": "市町村区名",
     "address2": "番地",
     "address3": "建物名",
-    "staff": "担当者"
+    "staff": "担当者",
+    "note": "備　考"
   },
   "enter_reject_reason": "却下理由を入力してください",
   "mail.verify.subject": "一般社団法人 全国中小建設工事業団体連合会メールアドレス確認",

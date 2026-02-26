@@ -226,55 +226,62 @@ class MemberController extends Controller
             ]);
 
         // typeごとに変数に直接代入
-        $corp  = $orgs[1] ? [
-            'name'         => $orgs[1]->name,
-            'name_kana'    => $orgs[1]->name_kana,
-            'prefix'       => $orgs[1]->name_prefix,
-            'suffix'       => $orgs[1]->name_suffix,
-            'postal_code'  => $orgs[1]->postal_code,
-            'address1'     => $orgs[1]->address1,
-            'address2'     => $orgs[1]->address2,
-            'address3'     => $orgs[1]->address3,
-            'tel'          => $orgs[1]->tel,
-            'fax'          => $orgs[1]->fax,
-            'mobile'       => $orgs[1]->mobile,
-            'email'        => $orgs[1]->email,
-            'position'     => $orgs[1]->position,
-            'contact_name' => $orgs[1]->contact_name,
-        ] : null;
+        $corpOrg = $orgs->get(1);
 
-        $mail  = $orgs[2] ? [
-            'name'         => $orgs[2]->name,
-            'prefix'       => $orgs[2]->name_prefix,
-            'suffix'       => $orgs[2]->name_suffix,
-            'postal_code'  => $orgs[2]->postal_code,
-            'address1'     => $orgs[2]->address1,
-            'address2'     => $orgs[2]->address2,
-            'address3'     => $orgs[2]->address3,
-            'tel'          => $orgs[2]->tel,
-            'fax'          => $orgs[2]->fax,
-            'mobile'       => $orgs[2]->mobile,
-            'email'        => $orgs[2]->email,
-            'position'     => $orgs[2]->position,
-            'last_name'    => $orgs[2]->last_name,
-            'first_name'   => $orgs[2]->first_name,
+        $corp  = $corpOrg ? [
+            'name'         => $corpOrg->name,
+            'name_kana'    => $corpOrg->name_kana,
+            'prefix'       => $corpOrg->name_prefix,
+            'suffix'       => $corpOrg->name_suffix,
+            'postal_code'  => $corpOrg->postal_code,
+            'address1'     => $corpOrg->address1,
+            'address2'     => $corpOrg->address2,
+            'address3'     => $corpOrg->address3,
+            'tel'          => $corpOrg->tel,
+            'fax'          => $corpOrg->fax,
+            'mobile'       => $corpOrg->mobile,
+            'email'        => $corpOrg->email,
+            'position'     => $corpOrg->position,
+            'contact_name' => $corpOrg->contact_name,
+            'note'         => $corpOrg->note,
         ] : null;
+        // 郵送先
+        $mailOrg = $orgs->get(2);
 
-        $agent = $orgs[3] ? [
-            'company_name'         => $orgs[3]->name,
-            'prefix'       => $orgs[3]->prefix,
-            'suffix'       => $orgs[3]->suffix,
-            'postal_code'  => $orgs[3]->postal_code,
-            'address1'     => $orgs[3]->address1,
-            'address2'     => $orgs[3]->address2,
-            'address3'     => $orgs[3]->address3,
-            'tel'          => $orgs[3]->tel,
-            'fax'          => $orgs[3]->fax,
-            'mobile'       => $orgs[3]->mobile,
-            'email'        => $orgs[3]->email,
-            'position'     => $orgs[3]->position,
-            'last_name'    => $orgs[3]->last_name,
-            'first_name'   => $orgs[3]->first_name,
+        $mail  = $mailOrg ? [
+            'name'         => $mailOrg->name,
+            'prefix'       => $mailOrg->name_prefix,
+            'suffix'       => $mailOrg->name_suffix,
+            'postal_code'  => $mailOrg->postal_code,
+            'address1'     => $mailOrg->address1,
+            'address2'     => $mailOrg->address2,
+            'address3'     => $mailOrg->address3,
+            'tel'          => $mailOrg->tel,
+            'fax'          => $mailOrg->fax,
+            'mobile'       => $mailOrg->mobile,
+            'email'        => $mailOrg->email,
+            'position'     => $mailOrg->position,
+            'last_name'    => $mailOrg->last_name,
+            'first_name'   => $mailOrg->first_name,
+        ] : null;
+        
+        $agentOrg = $orgs->get(3);
+
+        $agent = $agentOrg ? [
+            'company_name'         => $agentOrg->name,
+            'prefix'       => $agentOrg->prefix,
+            'suffix'       => $agentOrg->suffix,
+            'postal_code'  => $agentOrg->postal_code,
+            'address1'     => $agentOrg->address1,
+            'address2'     => $agentOrg->address2,
+            'address3'     => $agentOrg->address3,
+            'tel'          => $agentOrg->tel,
+            'fax'          => $agentOrg->fax,
+            'mobile'       => $agentOrg->mobile,
+            'email'        => $agentOrg->email,
+            'position'     => $agentOrg->position,
+            'last_name'    => $agentOrg->last_name,
+            'first_name'   => $agentOrg->first_name,
         ] : null;
 
         $regions = DB::table('regions')->select('id', 'name')->orderBy('sort_order')->get();
@@ -293,6 +300,8 @@ class MemberController extends Controller
                 'company_kana'=> $corp['name_kana'],
                 'rep_last_kana' => $member->last_name_kana,
                 'rep_first_kana' => $member->first_name_kana,
+                'joined_at'   => $member->joined_at,
+                'withdrawn_at'=> $member->withdrawn_at,
                 'company_type_prefix' => $corp['prefix'],
                 'company_name'=> $corp['name'],
                 'company_type_suffix' => $corp['suffix'],
@@ -497,6 +506,226 @@ class MemberController extends Controller
             'file_url' => Storage::url($filePath),
             'thumbnail_url' => $thumbPath ? Storage::url($thumbPath) : null,
         ]);
+    }
+
+    public function saveBasic(Request $request, Member $member)
+    {
+        $rules = [
+            // ===== 基本情報 =====
+            'type'          => 'required|string',
+            'region_id'     => 'nullable|integer',
+            'number'        => 'nullable|string',
+            'company_kana'  => 'required|string',
+            'rep_last_kana' => 'required|string',
+            'rep_first_kana'=> 'required|string',
+            'company_type_prefix' => 'required|string',
+            'company_name'  => 'required|string',
+            'company_type_suffix' => 'nullable|string',
+            'rep_last_name' => 'required|string',
+            'rep_first_name'=> 'required|string',
+            'joined_at'     => 'nullable|date',
+            'withdrawn_at'  => 'nullable|date',
+            'same_as_corp'  => 'boolean',
+            // ===== 法人（corp）=====
+            'corp' => 'required|array',
+            'corp.type' => 'required|integer',
+            'corp.postal_code' => 'required|string',
+            'corp.address1' => 'required|string',
+            'corp.address2' => 'required|string',
+            'corp.address3' => 'nullable|string',
+            'corp.tel'      => 'required|string',
+            'corp.fax'      => 'nullable|string',
+            'corp.mobile'   => 'nullable|string',
+            'corp.email'     => 'nullable|string',
+            'corp.position' => 'required|string',
+            'corp.last_name'=> 'required|string',
+            'corp.first_name' => 'required|string',
+            'corp.note'     => 'nullable|string',
+
+
+        ];
+
+        $validated = $request->validate($rules);
+
+        $form = $validated;
+        $corp = $validated['corp'];
+
+        $member->update([
+            'type'        => $form['type'],
+            'region_id'   => $form['region_id'],
+            'last_name'   => $form['rep_last_name'],
+            'first_name'  => $form['rep_first_name'],
+            'last_name_kana'   => $form['rep_last_kana'],
+            'first_name_kana'  => $form['rep_first_kana'],
+            'number'      => $form['number'] ?? null,
+            'joined_at'   => $form['joined_at'] ?? null,
+            'withdrawn_at'=> $form['withdrawn_at'] ?? null,
+        ]);
+
+        $member->organizations()->updateOrCreate(
+            ['type' => 1],
+            [
+                'name'        => $form['company_name'],
+                'name_kana'   => $form['company_kana'],
+                'name_prefix' => $form['company_type_prefix'],
+                'name_suffix' => $form['company_type_suffix'],
+                'postal_code' => $corp['postal_code'] ?? null,
+                'address1'    => $corp['address1'] ?? null,
+                'address2'    => $corp['address2'] ?? null,
+                'address3'    => $corp['address3'] ?? null,
+                'tel'         => $corp['tel'] ?? null,
+                'fax'         => $corp['fax'] ?? null,
+                'mobile'      => $corp['mobile'] ?? null,
+                'email'       => $corp['email'] ?? null,
+                'position'    => $corp['position'] ?? null,
+                'last_name'   => $corp['last_name'] ?? null,
+                'first_name'  => $corp['first_name'] ?? null,
+                'note'        => $corp['note'] ?? null,
+            ]
+        );
+
+        return back();
+
+
+    }
+    /*
+        郵送先をupdate無ければ新規作成
+        */
+    public function saveMail(Request $request, Member $member)
+    {
+       $rules = [
+            'company_kana' => 'required|string',
+            'company_type_prefix' => 'required|string',
+            'company_name' => 'required|string',
+            'company_type_suffix' => 'nullable|string',
+            // ===== 郵送先（mail）=====
+            'mail' => 'required|array',
+            'mail.type' => 'required|integer',
+            'mail.postal_code' => 'nullable|string',
+            'mail.address1' => 'nullable|string',
+            'mail.address2' => 'nullable|string',
+            'mail.address3' => 'nullable|string',
+            'mail.tel' => 'nullable|string',
+            'mail.fax' => 'nullable|string',
+            'mail.mobile' => 'nullable|string',
+            'mail.email' => 'nullable|email',
+            'mail.position' => 'nullable|string',
+            'mail.last_name' => 'nullable|string',
+            'mail.first_name' => 'nullable|string',
+        ];
+
+        $validated = $request->validate($rules);
+
+        $form = $validated;
+        $mail = $validated['mail'];
+
+        $member->organizations()->updateOrCreate(
+            ['type' => 2],
+            [
+                'name'        => $form['company_name'],
+                'name_kana'   => $form['company_kana'],
+                'name_prefix' => $form['company_type_prefix'],
+                'name_suffix' => $form['company_type_suffix'],
+                'postal_code' => $mail['postal_code'] ?? null,
+                'address1'    => $mail['address1'] ?? null,
+                'address2'    => $mail['address2'] ?? null,
+                'address3'    => $mail['address3'] ?? null,
+                'tel'         => $mail['tel'] ?? null,
+                'fax'         => $mail['fax'] ?? null,
+                'mobile'      => $mail['mobile'] ?? null,
+                'email'       => $mail['email'] ?? null,
+                'position'    => $mail['position'] ?? null,
+                'last_name'   => $mail['last_name'] ?? null,
+                'first_name'  => $mail['first_name'] ?? null,
+            ]
+        );
+
+        return back();
+    }
+    /*
+        代理店をupdate無ければ新規作成
+    */
+    public function saveAgent(Request $request, Member $member)
+    {
+       $rules = [
+            'agent.company_name' => 'required|string',
+            'agent.email' => 'required|email',
+            'agent' => 'required|array',
+            'agent.type' => 'required|integer',
+            'agent.company_name' => 'required|string',
+            'agent.postal_code' => 'required|string',
+            'agent.address1' => 'required|string',
+            'agent.address2' => 'nullable|string',
+            'agent.address3' => 'nullable|string',
+            'agent.tel' => 'required|string',
+            'agent.fax' => 'nullable|string',
+            'agent.mobile' => 'nullable|string',
+            'agent.position' => 'required|string',
+            'agent.last_name' => 'required|string',
+            'agent.first_name' => 'required|string',            
+        ];
+
+        $validated = $request->validate($rules);
+
+        $form = $validated;
+        $agent = $validated['agent'];
+
+        $member->organizations()->updateOrCreate(
+            ['type' => 3],
+            [
+                'name'        => $agent['company_name'],
+                'postal_code' => $agent['postal_code'] ?? null,
+                'address1'    => $agent['address1'] ?? null,
+                'address2'    => $agent['address2'] ?? null,
+                'address3'    => $agent['address3'] ?? null,
+                'tel'         => $agent['tel'] ?? null,
+                'fax'         => $agent['fax'] ?? null,
+                'mobile'      => $agent['mobile'] ?? null,
+                'email'       => $agent['email'] ?? null,
+                'position'    => $agent['position'] ?? null,
+                'last_name'   => $agent['last_name'] ?? null,
+                'first_name'  => $agent['first_name'] ?? null,
+            ]
+        );
+
+        return back();
+    }
+
+    public function saveBank(Request $request, Member $member)
+    {
+        $rules = [
+            'bank_type' => 'required|integer',
+            'bank_name' => 'required|string',
+            'bank_code' => 'required|string',
+            'branch_code' => 'required|string',
+            'account_type' => 'required|string',
+            'account_no' => 'required|string',
+            'account_kana' => 'required|string',
+            'account_name' => 'required|string',
+        ];
+        if ($request->input('bank_code') !== '9900') {
+            $rules['branch_name'] = 'required|string';
+        }
+
+        $bank = $request->validate($rules);
+
+        // bank_accounts
+        $member->bankAccount()->updateOrCreate(
+            [],
+            [
+                'bank_type' => $bank['bank_type'],
+                'bank_name' => $bank['bank_name'],
+                'bank_code' => $bank['bank_code'] ?? null,
+                'branch_name' => $bank['branch_name'] ?? null,
+                'branch_code' => $bank['branch_code'] ?? null,
+                'account_type' => $bank['account_type'],
+                'account_no' => $bank['account_no'],
+                'account_kana' => $bank['account_kana'],
+                'account_name' => $bank['account_name'],
+            ]
+        );
+
+        return back();
     }
 
 

@@ -6,7 +6,7 @@
       <h2 class="text-2xl font-bold mb-6">{{ t('registers.members') }}</h2>
 
       <form @submit.prevent="submitForm" class="space-y-8">
-        <div class="mt-4 grid grid-cols-6 gap-4 items-end">
+        <div class="mt-4 grid grid-cols-7 gap-4 items-end">
 
           <!-- 会社種類（2W） -->
           <div class="col-span-2">
@@ -45,7 +45,12 @@
               </option>
             </select>
           </div>
-
+          <div class="col-span-1">
+            <InputLabel value=" " class="mb-1" />
+            <div class="border rounded px-3 py-2 bg-gray-100 text-center">
+              50
+            </div>
+          </div>
           <!-- 4桁番号（1W） -->
           <div class="col-span-1">
             <InputLabel :value="t('members.number')" class="mb-1" />
@@ -82,8 +87,6 @@
 
           <!-- 左カラム：会社情報 -->
           <div class="space-y-4">
-            <h3 class="text-lg font-semibold mb-2">{{ t('registers.organization') }}</h3>
-
             <div>
               <InputLabel :value="t('registers.company_kana')" />
 
@@ -189,11 +192,7 @@
             </div>
           </div>
         </div>
-<!--  ここまでが会社情報　-->
-        <h3></h3>
-        <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded shadow-sm mb-4">
-          <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.corp') }}</h3>
-        </div>        
+<!--  ここまでが会社情報　-->     
         <div>
           <InputLabel :value="t('registers.zip_code')" />
           <TextInput
@@ -340,6 +339,34 @@
             </div>
           </div>
         </div>
+        <div class="mb-4 flex">
+            <InputLabel :value="t('registers.note')" />
+            <textarea
+                v-model="form.corp.note"
+                class="w-full border rounded px-3 py-2"
+                rows="3"
+            ></textarea>
+            <InputError :message="form.errors.note" />
+        </div>
+        <!-- セクション単位Saveボタン -->
+        <div class="flex justify-end space-x-3 items-center mt-6">
+          <!-- 更新ボタン -->
+          <PrimaryButton
+            type="button"
+            class="bg-blue-600 hover:bg-blue-700"
+            @click="saveBasic"
+          >
+            {{ t('update') }}
+          </PrimaryButton>
+          <!-- キャンセルボタン -->
+          <SecondaryButton>
+            <Link :href="route('admin.member.index', persistQuery())" class="inline-flex items-center">
+              <ArrowLeftIcon class="w-4 h-4 mr-2"/>
+              {{ t('actions.cancel') }}
+            </Link>
+          </SecondaryButton>
+        </div>
+
         <div class="p-4 bg-green-50 border-l-4 border-green-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.mail') }}</h3>
         </div>                
@@ -470,9 +497,28 @@
               <InputError :message="errors?.mail?.staff" />
             </div>
           </div>
+          <div class="flex justify-end space-x-3 items-center mt-6">
+            <!-- 更新ボタン -->
+            <PrimaryButton
+              type="button"
+              class="bg-blue-600 hover:bg-blue-700"
+              @click="saveMail"
+            >
+              {{ t('update') }}
+            </PrimaryButton>
+            <!-- キャンセルボタン -->
+            <SecondaryButton>
+              <Link :href="route('admin.member.index', persistQuery())" class="inline-flex items-center">
+                <ArrowLeftIcon class="w-4 h-4 mr-2"/>
+                {{ t('actions.cancel') }}
+              </Link>
+            </SecondaryButton>
+          </div>  
         </div>
+                  
+
         <!-- ここから代理人-->
-        <div v-if="form.is_agent">
+        <div>
 
         <div class="p-4 bg-orange-50 border-l-4 border-orange-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.agent') }}</h3>
@@ -577,6 +623,21 @@
                 携帯電話は 090-1234-5678 の形式で入力してください
               </p>
             </div>
+            <div class="flex-1">
+              <InputLabel>{{ t('registers.email') }}</InputLabel>
+
+              <TextInput
+                v-model="form.agent.email"
+                class="w-full"
+              />
+
+              <p
+                v-if="form.errors['agent.email']"
+                class="text-red-500 text-sm mt-1"
+              >
+                {{ form.errors['agent.email'] }}
+              </p>
+            </div>
           </div>            
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
             <!-- 肩書き -->
@@ -600,11 +661,32 @@
               <InputError :message="errors?.agent?.staff" />
             </div>
           </div>
+        </div>                   
+
+        <!-- セクション単位Saveボタン -->
+        <div class="flex justify-end space-x-3 items-center mt-6">
+          <!-- 更新ボタン -->
+          <PrimaryButton
+            type="button"
+            class="bg-blue-600 hover:bg-blue-700"
+            @click="saveAgent"
+          >
+            {{ t('update') }}
+          </PrimaryButton>
+          <!-- キャンセルボタン -->
+          <SecondaryButton>
+            <Link :href="route('admin.member.index', persistQuery())" class="inline-flex items-center">
+              <ArrowLeftIcon class="w-4 h-4 mr-2"/>
+              {{ t('actions.cancel') }}
+            </Link>
+          </SecondaryButton>
         </div>
       </div>
       <!-- ここまでが代理人-->
-      <section class="bg-white rounded shadow p-4">
+      <div class="p-4 bg-orenge-50 border-l-4 border-orenge-400 rounded shadow-sm mb-4">
         <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.bank') }}</h3>
+      </div>         
+      <div class="">
         <!-- 2カラム -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- 左カラム -->
@@ -743,7 +825,27 @@
             </p>
           </div>  
         </div>
-      </section>
+      <!-- セクション単位Saveボタン -->
+        <div class="flex justify-end space-x-3 items-center mt-6">
+          <!-- 更新ボタン -->
+          <PrimaryButton
+            type="button"
+            class="bg-blue-600 hover:bg-blue-700"
+            @click="saveBank"
+          >
+            {{ t('update') }}
+          </PrimaryButton>
+          <!-- キャンセルボタン -->
+          <SecondaryButton>
+            <Link :href="route('admin.member.index', persistQuery())" class="inline-flex items-center">
+              <ArrowLeftIcon class="w-4 h-4 mr-2"/>
+              {{ t('actions.cancel') }}
+            </Link>
+          </SecondaryButton>
+        </div> 
+      </div>
+                   
+
 
       <section class="bg-white rounded shadow p-4">
           <h2 class="font-bold mb-2">提出書類</h2>
@@ -758,8 +860,8 @@
               </div>
           </div>
       </section>  
+<!--
       <div class="flex space-x-3 items-center mt-6">
-        <!-- 更新ボタン -->
         <PrimaryButton
           type="button"
           class="bg-blue-600 hover:bg-blue-700"
@@ -768,7 +870,6 @@
           {{ t('update') }}
         </PrimaryButton>
 
-        <!-- キャンセルボタン -->
         <SecondaryButton>
           <Link :href="route('admin.member.index', persistQuery())" class="inline-flex items-center">
             <ArrowLeftIcon class="w-4 h-4 mr-2"/>
@@ -776,6 +877,7 @@
           </Link>
         </SecondaryButton>
       </div>
+-->      
 
       </form>
 
@@ -834,9 +936,9 @@ const { t } = useI18n()
 const page = usePage()
 
 watch(
-  () => page.props.errors,
+  () => form.errors,
   e => {
-    console.log('Laravel errors:', e)
+    console.log('form errors:', e)
   },
   { deep: true }
 )
@@ -859,6 +961,10 @@ const form = useForm({
   rep_first_name: page.props.form?.rep_first_name ?? '',
   same_as_corp: Boolean(Number(page.props.form?.same_as_corp)),
   is_agent: page.props.form?.is_agent,
+  region_id: page.props.form?.region_id,
+  number: page.props.form?.number,
+  joined_at: page.props.form?.joined_at,
+  withdrawn_at: page.props.form?.withdrawn_at,
 
   corp: {
     type: 1,
@@ -873,6 +979,7 @@ const form = useForm({
     position: page.props.form?.corp?.position ?? '',
     last_name: page.props.form?.corp?.last_name ?? '',
     first_name: page.props.form?.corp?.first_name ?? '',
+    note: page.props.form?.corp?.note ?? '',
   },
 
   mail: {
@@ -891,7 +998,7 @@ const form = useForm({
   },
 
   agent: {
-    type: 4,
+    type: 3,
     company_name: page.props.form?.agent?.company_name ?? '',
     postal_code: page.props.form?.agent?.postal_code ?? '',
     address1: page.props.form?.agent?.address1 ?? '',
@@ -900,6 +1007,7 @@ const form = useForm({
     tel: page.props.form?.agent?.tel ?? '',
     fax: page.props.form?.agent?.fax ?? '',
     mobile: page.props.form?.agent?.mobile ?? '',
+    email: page.props.form?.agent?.email ?? '',
     position: page.props.form?.agent?.position ?? '',
     last_name: page.props.form?.agent?.last_name ?? '',
     first_name: page.props.form?.agent?.first_name ?? '',
@@ -1318,20 +1426,27 @@ const bankAccountMaxLength = computed(() => {
   return 7 // それ以外は7桁
 })
 
+function toHalfWidth(str) {
+  return str.replace(/[０-９]/g, s =>
+    String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
+  )
+}
 // 入力チェック（桁数超過や数字以外の入力防止）
 function validateAccountNo() {
   accountNoError.value = null
 
-  if (!/^\d*$/.test(form.bank.account_no)) {
-    accountNoError.value = '数字のみ入力してください'
-    // 数字以外は削除
-    form.bank.account_no = form.bank.account_no.replace(/\D/g, '')
-  }
+  // 全角→半角変換
+  form.bank.account_no = toHalfWidth(form.bank.account_no)
+
+  // 数字以外除去
+  form.bank.account_no = form.bank.account_no.replace(/\D/g, '')
 
   if (form.bank.account_no.length > bankAccountMaxLength.value) {
-    accountNoError.value = `口座番号は${bankAccountMaxLength.value}桁で入力してください`
-    // 超過分は切り捨て
-    form.bank.account_no = form.bank.account_no.slice(0, bankAccountMaxLength.value)
+    accountNoError.value =
+      `口座番号は${bankAccountMaxLength.value}桁で入力してください`
+
+    form.bank.account_no =
+      form.bank.account_no.slice(0, bankAccountMaxLength.value)
   }
 }
 
@@ -1341,4 +1456,31 @@ watch(() => form.bank.bank_code, () => {
   accountNoError.value = null
 })
 
+const saveBasic = () => {
+  form.post(`/admin/member/${page.props.form.id}/save-basic`, {
+    preserveScroll: true,
+    onSuccess: () => alert('法人情報を保存しました'),
+  })
+}
+
+const saveMail = () => {
+  form.post(`/admin/member/${page.props.form.id}/save-mail`, {
+    preserveScroll: true,
+    onSuccess: () => alert('郵送先情報を保存しました'),
+  })
+}
+
+const saveAgent = () => {
+  form.post(`/admin/member/${page.props.form.id}/save-agent`, {
+    preserveScroll: true,
+    onSuccess: () => alert('行政書士・監理団体・登録支援機関情報を保存しました'),
+  })
+}
+
+const saveBank = () => {
+  router.post(`/admin/member/${page.props.form.id}/save-bank`, form.bank, {
+    preserveScroll: true,
+    onSuccess: () => alert('銀行情報を保存しました'),
+  })
+}
 </script>

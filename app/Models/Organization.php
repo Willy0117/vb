@@ -24,6 +24,7 @@ class Organization extends Model
         'mobile',
         'fax',
         'email',
+        'note',
     ];
 
     /* ===== 表示用 ===== */
