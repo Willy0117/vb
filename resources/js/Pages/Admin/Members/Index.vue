@@ -481,6 +481,8 @@ watch(() => props.members.current_page, () => {
 
 const exportCsv = () => {
   window.location.href = route('admin.member.csv', persistQuery())
+  //  window.location.href = route('admin.member.csv', persistQuery())
+
 }
 
 // persistQueryに各検索項目を追加

@@ -80,7 +80,19 @@
           </div>
 
         </div>
+        <div class="mt-4 grid grid-cols-7 gap-4 items-end">
+        <!-- アプラス顧客番号 -->
+          <div class="col-span-1">
+            <InputLabel value="アプラス顧客番号" class="mb-1" />
+            <TextInput v-model="form.aplus_customer_no" class="w-full" />
+          </div>
 
+          <!-- JAC認定番号 -->
+          <div class="col-span-1">
+            <InputLabel value="JAC認定番号" class="mb-1" />
+            <TextInput v-model="form.jac_certification_no" class="w-full" />
+          </div>
+        </div>
         <!-- 2カラム -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!--  ここから会社情報　-->
@@ -965,6 +977,8 @@ const form = useForm({
   number: page.props.form?.number,
   joined_at: page.props.form?.joined_at,
   withdrawn_at: page.props.form?.withdrawn_at,
+  aplus_customer_no: page.props.form?.aplus_customer_no ?? '',
+  jac_certification_no: page.props.form?.jac_certification_no ?? '',
 
   corp: {
     type: 1,

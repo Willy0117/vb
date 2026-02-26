@@ -22,7 +22,9 @@ class Member extends Model
         'canceled_at',
         'withdrawn_at',
         'region_id',
-        'number', 
+        'number',
+        'aplus_customer_no',
+        'jac_certification_no', 
     ];
 
     protected $casts = [
@@ -55,6 +57,21 @@ class Member extends Model
         return $this->hasMany(Organization::class);
     }
 
+    public function corpOrg()
+    {
+        return $this->hasOne(Organization::class)->where('type', 1);
+    }
+
+    public function mailOrg()
+    {
+        return $this->hasOne(Organization::class)->where('type', 2);
+    }
+    public function agentOrg()
+    {
+        return $this->hasOne(Organization::class)->where('type', 3);
+    }
+
+
     public function applicationOrganization()
     {
         return $this->hasOne(ApplicationOrganization::class);
@@ -78,6 +95,16 @@ class Member extends Model
     public function bankAccount()
     {
         return $this->hasOne(BankAccount::class);
+    }
+    
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
     }
 
     /* =====================
