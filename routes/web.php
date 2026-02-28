@@ -32,7 +32,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'role:admin|super_admin'])->group(function () {
 
         Route::post('/logout', function () {
-            Auth::guard('admin')->logout();
             request()->session()->invalidate();
             request()->session()->regenerateToken();
             return redirect('/admin/login');
