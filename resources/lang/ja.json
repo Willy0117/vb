@@ -200,7 +200,12 @@
     "number": "外国人受入支援番号",
     "not_submitted": "未提出",
     "joined_at": "入会日",
-    "withdrawn_at": "退会日"
+    "withdrawn_at": "退会日",
+    "amount": "年会費請求額（入金額）",
+    "aplus_customer_no": "ｱﾌﾟﾗｽ口振依頼書顧客番号",
+    "jac_certification_no": "JAC認定番号",
+    "issued_at": "年会費請求日",
+    "paid_at": "年会費入金日"
   }, 
   "billing_name": "請求先名",
   "billing_postal": "請求先郵便番号",

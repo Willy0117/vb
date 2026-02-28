@@ -87,6 +87,11 @@ class Member extends Model
         return $this->hasMany(Invoice::class);
     }
     
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
+    }
+    
     public function getFullNameAttribute()
     {
         return trim($this->last_name . ' ' . $this->first_name);
@@ -95,11 +100,6 @@ class Member extends Model
     public function bankAccount()
     {
         return $this->hasOne(BankAccount::class);
-    }
-    
-    public function invoice()
-    {
-        return $this->hasOne(Invoice::class);
     }
 
     public function region()

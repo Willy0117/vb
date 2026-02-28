@@ -80,18 +80,40 @@
           </div>
 
         </div>
-        <div class="mt-4 grid grid-cols-7 gap-4 items-end">
-        <!-- アプラス顧客番号 -->
+        <div class="mt-4 grid grid-cols-5 gap-4 items-end">
+          <!-- アプラス顧客番号 -->
           <div class="col-span-1">
-            <InputLabel value="アプラス顧客番号" class="mb-1" />
+            <InputLabel :value="t('members.aplus_customer_no')" class="mb-1" />
             <TextInput v-model="form.aplus_customer_no" class="w-full" />
           </div>
 
           <!-- JAC認定番号 -->
           <div class="col-span-1">
-            <InputLabel value="JAC認定番号" class="mb-1" />
+            <InputLabel :value="t('members.jac_certification_no')" class="mb-1" />
             <TextInput v-model="form.jac_certification_no" class="w-full" />
           </div>
+
+                    <!-- 入会日（1W） -->
+          <div class="col-span-1">
+            <InputLabel :value="t('members.issued_at')" class="mb-1" />
+            <TextInput type="date" v-model="form.issued_at" class="w-full" />
+          </div>
+
+          <!-- 退会日（1W） -->
+          <div class="col-span-1">
+            <InputLabel :value="t('members.paid_at')" class="mb-1" />
+            <TextInput type="date" v-model="form.paid_at" class="w-full" />
+          </div>
+          <!-- 入会金額 -->
+          <div class="col-span-1">
+            <InputLabel :value="t('members.amount')" class="mb-1" />
+            <TextInput
+              v-model="form.amount"
+              class="w-full"
+              @input="onAmountInput"
+            />
+          </div>
+
         </div>
         <!-- 2カラム -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -947,14 +969,6 @@ const { t } = useI18n()
 
 const page = usePage()
 
-watch(
-  () => form.errors,
-  e => {
-    console.log('form errors:', e)
-  },
-  { deep: true }
-)
-
 console.log(page.props) // ← ここで form が見える
 const regions = page.props.regions || []
 
@@ -979,6 +993,9 @@ const form = useForm({
   withdrawn_at: page.props.form?.withdrawn_at,
   aplus_customer_no: page.props.form?.aplus_customer_no ?? '',
   jac_certification_no: page.props.form?.jac_certification_no ?? '',
+  issued_at: page.props.form?.invoice?.issued_at,
+  paid_at: page.props.form?.invoice?.paid_at,
+  amount: page.props.form?.invoice?.amount ?? 0,
 
   corp: {
     type: 1,
@@ -1040,6 +1057,14 @@ const form = useForm({
 
   documents: page.props.form?.documents,
 });
+
+watch(
+  () => form.errors,
+  e => {
+    console.log('form errors:', e)
+  },
+  { deep: true }
+)
 
 // エラー
 //const errors = page.props.errors || {}
@@ -1496,5 +1521,12 @@ const saveBank = () => {
     preserveScroll: true,
     onSuccess: () => alert('銀行情報を保存しました'),
   })
+}
+
+function onAmountInput(e) {
+  // 半角数字と小数点だけ残す
+  e.target.value = e.target.value.replace(/[^\d.]/g, '')
+  // Vue側のフォームに反映
+  form.amount = e.target.value
 }
 </script>

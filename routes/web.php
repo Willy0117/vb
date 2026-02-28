@@ -32,13 +32,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'role:admin|super_admin'])->group(function () {
 
         Route::post('/logout', function () {
-            auth()->logout();
+            Auth::guard('admin')->logout();
             request()->session()->invalidate();
             request()->session()->regenerateToken();
-
-            return Inertia::location('/admin/login');
+            return redirect('/admin/login');
         })->name('logout');
-        
+
         Route::get('/dashboard', fn () => inertia('Admin/Dashboard'))
             ->name('dashboard');
         // Tenant

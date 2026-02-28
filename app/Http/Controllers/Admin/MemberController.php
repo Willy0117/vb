@@ -213,6 +213,7 @@ class MemberController extends Controller
             'progress',
             'organizations', // 複数
             'bankAccount',
+            'invoice',
         ]);
 
         $orgs = $member->organizations->keyBy('type');
@@ -309,6 +310,7 @@ class MemberController extends Controller
                 'mail'        => $mail,
                 'agent'       => $agent,
                 'bank_account'=> $member->bankAccount,                
+                'invoice'     => $member->invoice ? $member->invoice : null,                
                 // 書類は独立
                 'documents'   => $documents,
             ],
@@ -528,6 +530,9 @@ class MemberController extends Controller
             'aplus_customer_no' => 'nullable|string',
             'jac_certification_no' => 'nullable|string',
             'same_as_corp'  => 'boolean',
+            'issued_at' => 'nullable|string',
+            'paid_at' => 'nullable|string',
+            'amount' => 'nullable|integer',
             // ===== 法人（corp）=====
             'corp' => 'required|array',
             'corp.type' => 'required|integer',
@@ -565,6 +570,15 @@ class MemberController extends Controller
             'aplus_customer_no' => $form['aplus_customer_no'] ?? null,
             'jac_certification_no' => $form['jac_certification_no'] ?? null,
         ]);
+
+        $member->invoice()->updateOrCreate(
+            [],
+            [
+                'issued_at' => $form['issued_at'] ?? null,
+                'paid_at'   => $form['paid_at'] ?? null,
+                'amount'    => $form['amount'] ?? 0,
+            ]
+        );
 
         $member->organizations()->updateOrCreate(
             ['type' => 1],
