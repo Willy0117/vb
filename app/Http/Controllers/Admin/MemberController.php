@@ -808,7 +808,17 @@ logger()->error('BASE DIR DEBUG', [
         // 一覧と同じ Query を組み立てる
         $query = $this->buildMemberQuery($request);
 
-        $members = Member::with(['corpOrg', 'mailOrg', 'agentOrg', 'bankAccount', 'region','invoice'])->get();
+//        $members = Member::with(['corpOrg', 'mailOrg', 'agentOrg', 'bankAccount', 'region','invoice'])->get();
+        $members = $query
+            ->with([
+                'corpOrg',
+                'mailOrg',
+                'agentOrg',
+                'bankAccount',
+                'region',
+                'invoice'
+            ])
+            ->get();
 
         $response = new StreamedResponse(function () use ($members) {
             $handle = fopen('php://output', 'w');
