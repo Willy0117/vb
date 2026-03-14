@@ -6,7 +6,7 @@
     <div class="max-w-5xl mx-auto bg-white p-8 rounded shadow">
       <h2 class="text-2xl font-bold mb-6">{{ t('registers.members') }}</h2>
 
-      <form @submit.prevent="submitForm" class="space-y-8">
+      <form @submit.prevent="submitForm" class="space-y-8" @keydown.enter="focusNext">
         <div class="mt-4">
           <InputLabel :value="t('registers.applicant')" class="mb-2" />
 
@@ -48,7 +48,8 @@
               <InputLabel :value="t('registers.company_kana')" />
 
               <TextInput
-                v-model="companyKana"
+                v-model="form.company_kana"
+                @blur="form.company_kana = normalizeKana(form.company_kana)"
                 :class="{
                   'border-red-500': getError('company_kana'),
                   'border-gray-300': !getError('company_kana')
@@ -81,7 +82,7 @@
                       'border-gray-300': !getError('company_name')
                     }"
                     class="flex-1"
-                    placeholder="〇〇商事"
+                    placeholder="〇〇建設"
                   />
                 </div>
                 <div class="flex-1">
@@ -97,7 +98,7 @@
                 </div>
               </div>
               <p class="text-xs text-gray-500 mt-1">
-                例）株式会社〇〇商事 ／ 〇〇商事株式会社
+                例）株式会社〇〇建設 ／ 〇〇建設株式会社
               </p>
             </div>  
           </div>
@@ -110,6 +111,7 @@
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
                 <div class="flex-1">
                   <TextInput v-model="form.rep_last_kana"
+                    @blur="form.rep_last_kana = normalizeKana(form.rep_last_kana)"
                     :class="{
                       'border-red-500': getError('rep_last_kana'),
                       'border-gray-300': !getError('rep_last_kana')
@@ -118,6 +120,7 @@
                 </div>  
                 <div class="flex-1">
                   <TextInput v-model="form.rep_first_kana"
+                    @blur="form.rep_first_kana = normalizeKana(form.rep_first_kana)"
                     :class="{
                       'border-red-500': getError('rep_first_kana'),
                       'border-gray-300': !getError('rep_first_kana')
@@ -475,7 +478,7 @@
                   'border-gray-300': !getError('agent.company_name')
                 }"
                 class="w-full"
-                placeholder="〇〇商事"
+                placeholder="〇〇建設"
               />
           </div>
           </div>
@@ -1337,14 +1340,6 @@ const normalizeKana = (value) => {
   return value.replace(/[^\u30A0-\u30FFー　]/g, '')
 }
 
-const companyKana = computed({
-  get: () => form.company_kana,
-  set: (value) => {
-    form.company_kana = normalizeKana(value)
-  },
-})
-
-
 //〒番号関係
 const candidates = ref([])
 /*
@@ -1486,7 +1481,6 @@ watch(
   ],
   () => {
     // ===== 口座名義（フリガナ） =====
-    // ===== 口座名義（フリガナ） =====
     const prefixKana = getCompanyTypeKana(form.company_type_prefix)
     const suffixKana = getCompanyTypeKana(form.company_type_suffix)
 
@@ -1562,6 +1556,18 @@ watch(() => form.branch_code, (val) => {
   form.branch_code = toHalfWidthNumber(val)
 })
 
+const focusNext = (e) => {
+
+  if (e.isComposing) return
+
+  const form = e.target.form
+  const index = Array.prototype.indexOf.call(form, e.target)
+
+  if (index > -1) {
+    e.preventDefault()
+    form.elements[index + 1]?.focus()
+  }
+}
 
 </script>
 
