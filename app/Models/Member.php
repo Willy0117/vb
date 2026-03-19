@@ -37,6 +37,12 @@ class Member extends Model
         'withdrawn_at' => 'datetime',
     ];
 
+    protected function serializeDate(\DateTimeInterface $date)
+    {
+        // これにより、Vueには "2026-03-12 16:42:00" という形式で渡ります
+        return $date->format('Y-m-d H:i:s');
+    }
+    
     public function status()
     {
         return $this->belongsTo(Status::class);

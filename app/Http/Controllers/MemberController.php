@@ -362,7 +362,7 @@ class MemberController extends Controller
             'company_kana' => 'required|string',
             'rep_last_kana' => 'required|string',
             'rep_first_kana' => 'required|string',
-            'company_type_prefix' => 'required|string',
+            'company_type_prefix' => 'nullable|string',
             'company_name' => 'required|string',
             'company_type_suffix' => 'nullable|string',
             'rep_last_name' => 'required|string',
