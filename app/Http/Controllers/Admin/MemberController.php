@@ -131,6 +131,7 @@ class MemberController extends Controller
         $member->load([
             'status',
             'progress',
+            'region',
             'organizations',
             'organizations.documents', // documents はここで取得するだけ
             'applicationOrganization',
@@ -157,12 +158,20 @@ class MemberController extends Controller
         return Inertia::render('Admin/Members/Show', [
             'member' => [
                 'id' => $member->id,
-
                 // 申請者
                 'first_name' => $member->first_name,
                 'last_name'  => $member->last_name,
                 'name'       => $member->full_name,
-
+                'number'     => $member->number,
+                'aplus_customer_no' => $member->aplus_customer_no,
+                'jac_certification_no' => $member->jac_certification_no,
+                'joined_at'     => $member->joined_at
+                        ? DateHelper::withWareki($member->joined_at) : null,
+                'withdrawn_at'  => $member->withdrawn_at
+                        ? DateHelper::withWareki($member->withdrawn_at) : null,
+                'canceled_at'   => $member->canceled_at
+                        ? DateHelper::withWareki($member->canceled_at) : null,
+                'region'        => $member->region->name ?? null,
                 // ステータス
                 'status'   => $member->status,
                 'progress' => $member->progress,
@@ -1238,22 +1247,84 @@ logger()->error('BASE DIR DEBUG', [
                 $q->where('status_id', $status_id);
             });
         // =====================
-        // 検索
+        // フィールド指定検索（NEW）
         // =====================
 
-        if ($companyName = $request->input('company_name')) {
-            $query->whereHas('organization', function ($q) use ($companyName) {
-                $q->where('name', 'like', "%{$companyName}%");
-            });
-        }
+        $field = $request->input('field');
+        $keyword = trim($request->input('keyword'));
 
-        if ($name = $request->input('name')) {
-            $query->whereHas('organization', function ($q) use ($name) {
-                $q->where(function ($qq) use ($name) {
-                    $qq->where('last_name', 'like', "%{$name}%")
-                       ->orWhere('first_name', 'like', "%{$name}%");
+        $memberFields = [
+            'number',
+            'aplus_customer_no',
+            'jac_certification_no',
+            'last_name',
+            'first_name',
+            'last_name_kana',
+            'first_name_kana',
+        ];
+
+        $organizationFields = [
+            'company_name',           // 実際は name
+            'company_kana',           // name_kana
+            'representative_name',    // last_name + first_name
+            'representative_kana',    // last_name_kana + first_name_kana
+            'tel',
+        ];
+
+        if ($field && $keyword) {
+
+            // 正規化
+            $keyword = mb_convert_kana($keyword, 'as');
+
+            // =====================
+            // members側
+            // =====================
+            if (in_array($field, $memberFields)) {
+
+                $query->where($field, 'like', "%{$keyword}%");
+
+            }
+
+            // =====================
+            // organizations側
+            // =====================
+            elseif (in_array($field, $organizationFields)) {
+
+                $query->whereHas('organization', function ($q) use ($field, $keyword) {
+
+                    $q->where('type', 1);
+
+                    // 🔥 フィールド別にマッピング
+                    if ($field === 'company_name') {
+                        $q->where('name', 'like', "%{$keyword}%");
+                    }
+
+                    elseif ($field === 'company_kana') {
+                        $q->where('name_kana', 'like', "%{$keyword}%");
+                    }
+
+                    elseif ($field === 'representative_name') {
+                        $q->where(function ($qq) use ($keyword) {
+                            $qq->where('last_name', 'like', "%{$keyword}%")
+                            ->orWhere('first_name', 'like', "%{$keyword}%");
+                        });
+                    }
+
+                    elseif ($field === 'representative_kana') {
+                        $q->where(function ($qq) use ($keyword) {
+                            $qq->where('last_name_kana', 'like', "%{$keyword}%")
+                            ->orWhere('first_name_kana', 'like', "%{$keyword}%");
+                        });
+                    }
+
+                    elseif ($field === 'tel') {
+                        $q->where(function ($qq) use ($keyword) {
+                            $qq->where('tel', 'like', "%{$keyword}%");
+                        });
+                    }
+
                 });
-            });
+            }
         }
 
         // =====================

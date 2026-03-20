@@ -7,28 +7,57 @@
       <!-- 申請者 -->
       <section class="bg-white rounded shadow p-4">
         <h2 class="font-bold mb-2">申請者</h2>
+
         <p>{{ t('members.name')}} ： {{ props.member.name }}</p>
         <p>{{ t('status') }} ： {{ props.member.status.name }}</p>
         <p>{{ t('members.progress') }} : {{ props.member.progress?.name ?? '-' }}</p>
+        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <p class="col-1">{{ t('members.region') }}: {{ props.member?.region }}</p>
+          <p class="col-1">{{ t('members.number') }}: {{ props.member?.number }}</p>
+        </div>  
+        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <p class="col-1">{{ t('members.joined_at') }} : {{ props.member?.joined_at ?? '-' }}</p>
+          <p class="col-1">{{ t('members.withdrawn_at') }} : {{ props.member?.withdrawn_at ?? '-' }}</p>
+
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <!-- アプラス顧客番号 -->
+          <p>{{ t('members.aplus_customer_no') }}: {{ props.member?.aplus_customer_no }}</p>
+          <p>{{ t('members.jac_certification_no') }} : {{  props.member?.jac_certification_no }}</p>
+       </div>   
+        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <p>{{ t('members.issued_at') }} : {{ props.member?.issued_at }}</p>
+          <P>{{ t('members.paid_at') }} : {{ props.member?.paid_at }}</p>
+       </div>   
+
       </section>
 
       <!-- 法人 -->
     <section class="bg-white rounded shadow p-4">
+      <div class="flex justify-end mb-4">
+        <button
+          @click="toggleCompare"
+          class="px-4 py-2 bg-blue-500 text-white rounded text-sm"
+        >
+          {{ isCompare ? '閉じる' : '申込時情報' }}
+        </button>
+      </div>
       <div class="space-y-6">
-
         <div
           v-for="type in [1,2,3]"
           :key="type"
-          class="border rounded shadow p-4"
-        >
-          <h3 class="font-bold mb-4">{{ typeLabels[type] }}</h3>
+          class="border rounded shadow p-4 overflow-hidden"
+        >        
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold">{{ typeLabels[type] }}</h3>
+          </div>
 
-          <div class="grid grid-cols-2 gap-6">
-
+          <div class="flex gap-6">
             <!-- 左：現状 -->
-            <div class="bg-gray-50 p-4 rounded">
-              <h4 class="font-semibold mb-2">現状</h4>
-
+            <div
+              :class="isCompare ? 'w-1/2' : 'w-full'"
+              class="transition-all duration-300 space-y-6"
+            >
               <template v-if="getCurrentByType(type)">
                 <p
                   :class="{
@@ -91,29 +120,31 @@
 
               <p v-else class="text-gray-400">データなし</p>
             </div>
+              <!-- 右：申込時 -->
+            <transition name="slide-right">
+            <div
+              v-if="isCompare"
+                class="w-1/2 bg-blue-50 p-4 rounded space-y-6"
+            >
+                <!-- ヘッダー -->
+                <template v-if="getAppByType(type)">
+                  <p>法人名：{{ getAppByType(type).name || '-' }}</p>
+                  <p>
+                    {{ getAppByType(type).postal_code || '-' }}
+                    {{ getAppByType(type).address || '-' }}
+                  </p>
+                  <p>
+                    TEL: {{ getAppByType(type).tel || '-' }}
+                    FAX: {{ getAppByType(type).fax || '-' }}
+                  </p>
+                  <p>Mobile: {{ getAppByType(type).mobile || '-' }}</p>
+                  <p>Email: {{ getAppByType(type).email || '-' }}</p>
+                  <p>担当者: {{ getAppByType(type).contact_name || '-' }}</p>
+                </template>
 
-            <!-- 右：申込時 -->
-            <div class="bg-blue-50 p-4 rounded">
-              <h4 class="font-semibold mb-2">申込時</h4>
-
-              <template v-if="getAppByType(type)">
-                <p>法人名：{{ getAppByType(type).name || '-' }}</p>
-                <p>
-                  {{ getAppByType(type).postal_code || '-' }}
-                  {{ getAppByType(type).address || '-' }}
-                </p>
-                <p>
-                  TEL: {{ getAppByType(type).tel || '-' }}
-                  FAX: {{ getAppByType(type).fax || '-' }}
-                </p>
-                <p>Mobile: {{ getAppByType(type).mobile || '-' }}</p>
-                <p>Email: {{ getAppByType(type).email || '-' }}</p>
-                <p>担当者: {{ getAppByType(type).contact_name || '-' }}</p>
-              </template>
-
-              <p v-else class="text-gray-400">データなし</p>
+                <p v-else class="text-gray-400">データなし</p>
             </div>
-
+            </transition> 
           </div>
         </div>
 
@@ -219,6 +250,12 @@ const persistQuery = () => {
   return { ...props.filters }
 }
 
+const isCompare = ref(false)
+
+const toggleCompare = () => {
+  isCompare.value = !isCompare.value
+}
+
 const previewPdf = ref(null)
 
 const openPdf = (pdfPath) => {
@@ -251,3 +288,19 @@ const isDifferent = (current, app, field) =>
   (current?.[field] ?? '') !== (app?.[field] ?? '')
 
 </script>
+<style lang="css">
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-right-enter-from {
+  transform: translateX(30px);
+  opacity: 0;
+}
+
+.slide-right-enter-to {
+  transform: translateX(0);
+  opacity: 1;
+}
+</style>

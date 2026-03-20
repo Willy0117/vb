@@ -56,7 +56,8 @@
             <InputLabel :value="t('members.number')" class="mb-1" />
             <TextInput
               v-model="form.number"
-              maxlength="4"
+              @blur="form.number = normalizeNumber(form.number)"
+              maxlength="5"
               placeholder="0000"
               :class="{
                 'border-red-500': getError('number'),
@@ -1529,4 +1530,34 @@ function onAmountInput(e) {
   // Vue側のフォームに反映
   form.amount = e.target.value
 }
+
+const normalizeNumber = (value) => {
+  if (!value) return ''
+
+  let v = value
+    // 全角→半角
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, s =>
+      String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
+    )
+    // 大文字
+    .toUpperCase()
+    // 英数字以外削除
+    .replace(/[^A-Z0-9]/g, '')
+
+  // 英字 + 数字
+  const matchAlpha = v.match(/^([A-Z])(\d+)$/)
+  if (matchAlpha) {
+    return (matchAlpha[1] + matchAlpha[2].padStart(4, '0')).slice(0, 5)
+  }
+
+  // 数字のみ
+  const matchNum = v.match(/^\d+$/)
+  if (matchNum) {
+    return matchNum[0].padStart(5, '0').slice(0, 5)
+  }
+
+  // その他（中途半端入力時）
+  return v.slice(0, 5)
+}
+
 </script>

@@ -1,71 +1,8 @@
 <template>
   <AppLayout>
     <template #header>{{ t('members.member_list') }}</template>
-    <div dir="rtl">
-      <!-- 検索 トリガーボタン -->
-        <div class="relative size-4 ...">
-          <div class="absolute start-0 top-0 size-14 ...">
-              <button
-              @click="openDrawer = true"
-              class="p-2 rounded hover:bg-gray-200 flex items-center justify-center"
-            >
-              <MagnifyingGlassIcon class="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-        </div>
-    </div>
     <div class="p-6">
-      <!-- 右側 Drawer -->
-      <div v-if="openDrawer" class="fixed inset-0 z-40">
-        <!-- 背景オーバーレイ -->
-        <div class="absolute inset-0 bg-black bg-opacity-30" @click="openDrawer = false"></div>
-
-        <!-- 右側 Drawer -->
-        <aside
-          class="absolute top-0 right-0 h-full bg-white shadow-lg z-50 flex flex-col transition-all duration-300 overflow-hidden"
-          :style="{ width: openDrawer ? '20rem' : '0rem' }"
-        >      
-          <div class="p-4 flex justify-between items-center border-b">
-            <h2 class="text-lg font-bold">{{ t('search') }}</h2>
-            <button @click="openDrawer = false" class="text-gray-500 hover:text-gray-700">&times;</button>
-          </div>
-
-          <div class="p-4 space-y-3">
-            <select v-if="isSuperAdmin" v-model="form.tenant_id" class="border rounded px-3 py-2 w-full">
-              <option value="">{{ t('please_select') }}</option>
-              <option v-for="t in tenants" :key="t.id" :value="t.id">
-                {{ t.name }}
-              </option>
-            </select>
-            <!-- 既存 form をそのまま利用 -->
-            <input v-model="form.code" type="text" :placeholder="t('code')" class="border rounded px-3 py-2 w-full" />
-            <input v-model="form.name" type="text" :placeholder="t('name')" class="border rounded px-3 py-2 w-full" />
-            <select v-model="form.process_id" class="border rounded px-3 py-2 w-full">
-              <option value="">{{ t('please_select') }}</option>
-              <option v-for="p in processes" :key="p.id" :value="p.id">
-                {{ p.name }}
-              </option>
-            </select>
-            <select v-model="form.measurement" class="border rounded px-3 py-2 w-full">
-              <option :value="null">{{ t('please_select')}}</option>
-              <option value="0">{{ t('dont') }}</option>
-              <option value="1">{{ t('do') }}</option>
-            </select>
-
-            <div class="flex justify-end space-x-2 mt-4">
-              <button @click="submitSearch(); openDrawer = false"
-                      class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                {{ t('search') }}
-              </button>
-              <button @click="openDrawer = false"
-                      class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
-                {{ t('close') }}
-              </button>
-            </div>
-          </div>
-        </aside>
-      </div>       
-      <div class="grid grid-cols-1 md:grid-cols-6 items-center gap-2 mb-4 text-sm">
+      <div class="grid grid-cols-1 md:grid-cols-6 items-center gap-2 mb-4">
         <div>
           <select
             v-model.number="form.per_page"
@@ -75,7 +12,40 @@
             <option v-for="n in [10,20,30,50]" :key="n" :value="n">{{ n }}</option>
           </select>
         </div>
-        <div></div>
+        <div class="flex items-center space-x-2">
+
+          <!-- フィールド選択 -->
+          <select
+            v-model="form.field"
+            class="h-10 border border-gray-300 rounded-md px-3 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <optgroup label="会員情報">
+              <option value="number">支援番号</option>
+              <option value="last_name">姓</option>
+              <option value="first_name">名</option>
+              <option value="last_name_kana">セイ（カナ）</option>
+              <option value="first_name_kana">メイ（カナ）</option>
+            </optgroup>
+
+            <optgroup label="会社情報">
+              <option value="company_name">会社名</option>
+              <option value="company_kana">会社名カナ</option>
+              <option value="representative_name">代表者名</option>
+              <option value="representative_kana">代表者カナ</option>
+              <option value="tel">TEL</option>
+            </optgroup>
+          </select>
+
+          <!-- キーワード -->
+          <TextInput
+            v-model="form.keyword"
+            type="text"
+            class="border rounded px-2 py-1 w-64"
+            placeholder="検索キーワード"
+            @keyup.enter="search"
+          />
+
+        </div>
         <div></div>
         <div>
           <SecondaryButton
@@ -86,18 +56,6 @@
             <ArrowDownTrayIcon class="w-4 h-4" />
             CSV
           </SecondaryButton> 
-        </div>
-        <div>
-          <!-- 複数削除ボタン -->
-          <!-- button
-            @click="bulkDelete"
-            :disabled="selectedIds.length === 0"
-            class="px-4 h-10 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 flex items-center space-x-1"
-          >
-            <TrashIcon class="w-4 h-4"/>
-            <span>{{ t('delete_selected') }}</span>
-          </button -->
-
         </div>
         <div class="md:text-right whitespace-nowrap">
           {{ t('total') }} : {{ props.members.total }}
@@ -414,11 +372,12 @@ import AppLayout from '@/Layouts/Admin/AppLayout.vue'
 import Pagination from '@/Components/Pagination.vue'
 import DialogModal from '@/Components/DialogModal.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import TextInput from '@/Components/TextInput.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 import axios from 'axios'
-import { Link, router } from '@inertiajs/vue3'
+import { Link, router, useForm } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch} from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
@@ -438,6 +397,7 @@ const props = defineProps({
     })
   }
 })
+
 console.log(props.members)
 const { t } = useI18n()
 
@@ -456,6 +416,17 @@ const form = reactive({
   per_page: props.filters.per_page || 20,
   sort_by: props.filters.sort_by,   // ← 初期値を必ずセット
   sort_dir: props.filters.sort_dir,    // ← 初期値を必ずセット
+  field: props.filters.field || 'company_name',
+  keyword: props.filters.keyword || '',
+})
+
+const placeholder = computed(() => {
+  switch (form.field) {
+    case 'number': return '支援番号で検索'
+    case 'company_name': return '会社名で検索'
+    case 'representative_name': return '代表者名で検索'
+    default: return 'キーワード入力'
+  }
 })
 
 // 選択削除
@@ -494,9 +465,26 @@ const persistQuery = () => ({
   per_page: form.per_page,
   sort_by: form.sort_by,
   sort_dir: form.sort_dir,
+  field: form.field,
+  keyword: form.keyword,
   page: props.members.current_page
 })
 
+const search = () => {
+  router.get(route('admin.member.index'), { ...persistQuery(), page: 1 }, {
+    preserveState: true,
+    replace: true,
+    onSuccess: () => resetSelectedIds()
+  })
+}
+/*
+const search = () => {
+  form.get(route('admin.members.index'), {
+    preserveState: true,
+    preserveScroll: true,
+  })
+}
+*/
 const submitSearch = () => {
   console.log(persistQuery())
   router.get(route('admin.member.index'), { ...persistQuery(), page: 1 }, {

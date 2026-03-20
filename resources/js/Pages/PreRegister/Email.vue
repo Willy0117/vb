@@ -2,6 +2,7 @@
 import { useForm } from '@inertiajs/vue3'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
 import { useI18n } from 'vue-i18n'
+import { watch } from 'vue'
 
 const { t } = useI18n()
 
@@ -17,6 +18,13 @@ const form = useForm({
   is_agent: props.isAgent, // ★これが命
 })
 
+watch(
+  () => props.isAgent,
+  (val) => {
+    form.is_agent = val
+  }
+)
+
 </script>
 
 <template>
@@ -24,7 +32,7 @@ const form = useForm({
     <div class="max-w-md mx-auto mt-8">
     
       <h1 class="text-xl font-bold mb-4">
-      {{ t('email.title') }}
+        {{ props.isAgent ? t('email.agent_title') : t('email.title') }}
       </h1>
       <p class="text-sm text-gray-700 leading-relaxed">
           一般社団法人 全国中小建設工事業団体連合会への加盟申請ありがとうございます。

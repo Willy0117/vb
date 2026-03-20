@@ -262,7 +262,8 @@
   "mail.verify.body": "以下のボタンをクリックして、メールアドレスを確認してください。",
   "mail.verify.button": "メールを確認する",
   "mail.verify.note": "このリンクは一定時間後に無効になります。",
-  "email.title": "メールアドレス確認のお願い",
+  "email.title": "メールアドレス確認のお願い 【企業様・個人事業主様】",
+  "email.agent_title": "メールアドレス確認のお願い 【代理申請者様】",
   "email.submit": "メールアドレスを送信",
   "copyright": "一般社団法人 全国中小建設工事業団体連合会"
 }
