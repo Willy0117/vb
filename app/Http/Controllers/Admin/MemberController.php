@@ -1232,6 +1232,12 @@ logger()->error('BASE DIR DEBUG', [
         ]);
     }
 
+    public function checkNumber(Request $request)
+    {
+        $number = $request->input('number');
+        $exists = Member::where('number', $number)->exists();
+        return response()->json(['available' => !$exists]);
+    }
 
 
     private function buildMemberQuery(Request $request)
@@ -1294,7 +1300,6 @@ logger()->error('BASE DIR DEBUG', [
 
                     $q->where('type', 1);
 
-                    // 🔥 フィールド別にマッピング
                     if ($field === 'company_name') {
                         $q->where('name', 'like', "%{$keyword}%");
                     }

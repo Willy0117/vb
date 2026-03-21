@@ -6,8 +6,7 @@
       <h2 class="text-2xl font-bold mb-6">{{ t('registers.members') }}</h2>
 
       <form @submit.prevent="submitForm" class="space-y-8">
-        <div class="mt-4 grid grid-cols-7 gap-4 items-end">
-
+        <div class="mt-4 grid grid-cols-8 gap-4 items-end">
           <!-- 会社種類（2W） -->
           <div class="col-span-2">
             <InputLabel :value="t('registers.applicant')" class="mb-2" />
@@ -34,7 +33,21 @@
             </div>
             <p v-if="errors.type" class="text-red-500 text-sm mt-1">{{ errors.type }}</p>
           </div>
+          <!-- 入会日（1W） -->
+          <div class="col-span-2">
+            <InputLabel :value="t('members.joined_at')" class="mb-1" />
+            <TextInput type="date" v-model="form.joined_at" class="w-full" />
+          </div>
 
+          <!-- 退会日（1W） -->
+          <div class="col-span-2">
+            <InputLabel :value="t('members.withdrawn_at')" class="mb-1" />
+            <TextInput type="date" v-model="form.withdrawn_at" class="w-full" />
+          </div>
+
+        </div>
+
+        <div class="mt-4 grid grid-cols-8 gap-4 items-end">
           <!-- Region（1W） -->
           <div class="col-span-1">
             <InputLabel :value="t('members.region')" class="mb-1" />
@@ -51,14 +64,14 @@
               50
             </div>
           </div>
-          <!-- 4桁番号（1W） -->
-          <div class="col-span-1">
+          <!-- 5桁番号（1W） -->
+          <div class="col-span-2">
             <InputLabel :value="t('members.number')" class="mb-1" />
             <TextInput
               v-model="form.number"
-              @blur="form.number = normalizeNumber(form.number)"
+              @blur="handleNumberBlur"
               maxlength="5"
-              placeholder="0000"
+              placeholder="A0000"
               :class="{
                 'border-red-500': getError('number'),
                 'border-gray-300': !getError('number')
@@ -66,42 +79,30 @@
               class="w-full"
             />
             <p v-if="getError('number')" class="text-red-500 text-sm mt-1">{{ getError('number') }}</p>
+            <p v-if="numberError" class="text-red-500 text-sm mt-1">{{ numberError }}</p>
           </div>
-
-          <!-- 入会日（1W） -->
-          <div class="col-span-1">
-            <InputLabel :value="t('members.joined_at')" class="mb-1" />
-            <TextInput type="date" v-model="form.joined_at" class="w-full" />
-          </div>
-
-          <!-- 退会日（1W） -->
-          <div class="col-span-1">
-            <InputLabel :value="t('members.withdrawn_at')" class="mb-1" />
-            <TextInput type="date" v-model="form.withdrawn_at" class="w-full" />
-          </div>
-
-        </div>
-        <div class="mt-4 grid grid-cols-5 gap-4 items-end">
           <!-- アプラス顧客番号 -->
-          <div class="col-span-1">
+          <div class="col-span-2">
             <InputLabel :value="t('members.aplus_customer_no')" class="mb-1" />
             <TextInput v-model="form.aplus_customer_no" class="w-full" />
           </div>
 
           <!-- JAC認定番号 -->
-          <div class="col-span-1">
+          <div class="col-span-2">
             <InputLabel :value="t('members.jac_certification_no')" class="mb-1" />
             <TextInput v-model="form.jac_certification_no" class="w-full" />
           </div>
 
+        </div>
+        <div class="mt-4 grid grid-cols-8 gap-4 items-end">
                     <!-- 入会日（1W） -->
-          <div class="col-span-1">
+          <div class="col-span-2">
             <InputLabel :value="t('members.issued_at')" class="mb-1" />
             <TextInput type="date" v-model="form.issued_at" class="w-full" />
           </div>
 
           <!-- 退会日（1W） -->
-          <div class="col-span-1">
+          <div class="col-span-2">
             <InputLabel :value="t('members.paid_at')" class="mb-1" />
             <TextInput type="date" v-model="form.paid_at" class="w-full" />
           </div>
@@ -1531,33 +1532,40 @@ function onAmountInput(e) {
   form.amount = e.target.value
 }
 
-const normalizeNumber = (value) => {
+const numberError = ref('')
+
+const normalizeNumber = async (value) => {
   if (!value) return ''
 
   let v = value
-    // 全角→半角
     .replace(/[Ａ-Ｚａ-ｚ０-９]/g, s =>
       String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
     )
-    // 大文字
     .toUpperCase()
-    // 英数字以外削除
     .replace(/[^A-Z0-9]/g, '')
 
-  // 英字 + 数字
   const matchAlpha = v.match(/^([A-Z])(\d+)$/)
   if (matchAlpha) {
-    return (matchAlpha[1] + matchAlpha[2].padStart(4, '0')).slice(0, 5)
+    v = (matchAlpha[1] + matchAlpha[2].padStart(4, '0')).slice(0, 5)
+  } else if (v.match(/^\d+$/)) {
+    v = v.padStart(5, '0').slice(0, 5)
+  } else {
+    v = v.slice(0, 5)
   }
 
-  // 数字のみ
-  const matchNum = v.match(/^\d+$/)
-  if (matchNum) {
-    return matchNum[0].padStart(5, '0').slice(0, 5)
+  // 重複チェック
+  try {
+    const res = await axios.post('/admin/member/check-number', { number: v })
+    numberError.value = res.data.available ? '' : 'この番号は既に使用されています'
+  } catch (e) {
+    numberError.value = 'チェックに失敗しました'
   }
 
-  // その他（中途半端入力時）
-  return v.slice(0, 5)
+  return v
 }
 
+// blur ハンドラを作る
+const handleNumberBlur = async () => {
+  form.number = await normalizeNumber(form.number)
+}
 </script>
