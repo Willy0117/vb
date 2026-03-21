@@ -30,6 +30,8 @@
   "cancel": "キャンセル",
   "deleted": "削 除",
   "total": "登録件数",
+  "member": "申請者数",
+  "pre-register": "メール登録者数",
   "actions": {
     "action": "操 作",
     "save": "保 存",
