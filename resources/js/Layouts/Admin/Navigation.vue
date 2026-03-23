@@ -238,6 +238,7 @@ const toggleSubMenu = (menu) => (openSubMenu.value = openSubMenu.value === menu 
 
 const { props } = usePage()
 const user = props.auth.user
+console.log(user);
 
 // i18n
 import { useI18n } from 'vue-i18n'
@@ -248,7 +249,8 @@ const hasApiFeatures = true
 const showAccessControl = true
 // 権限チェック用関数
 const can = (permission) => {
-  return props.auth.user?.permissions?.includes(permission)
+  console.log(props.auth.user?.permissions?.includes(permission))
+  return true
 }
 
 // ページURLに応じて初期サブメニューを決定
