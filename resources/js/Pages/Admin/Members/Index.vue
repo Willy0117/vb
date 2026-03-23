@@ -192,10 +192,12 @@
             <td class="px-3 py-2 text-center flex justify-center space-x-1">
               <Link :href="route('admin.member.show', { member: member.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
                 <EyeIcon class="w-4 h-4"/>
-              </Link -->
-              <Link :href="route('admin.member.edit', { member: member.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
+              </Link>
+              <Link
+               v-if="can('member edit')"
+               :href="route('admin.member.edit', { member: member.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
                 <PencilIcon class="w-4 h-4"/>
-              </Link -->
+              </Link>
               <button
                 @click="openUpload(member)"
                 class="text-green-500 hover:text-green-700"
@@ -402,7 +404,7 @@ console.log(props.members)
 const { t } = useI18n()
 
 const isSuperAdmin = computed(() =>
-  props.user?.roles?.some(r => r.name.toLowerCase() === 'super admin')
+  props.user?.roles?.some(r => r.name.toLowerCase() === 'super_admin')
 )
 
 // 検索フォーム・per_page・sort・sort_dirを reactive で管理
@@ -428,6 +430,10 @@ const placeholder = computed(() => {
     default: return 'キーワード入力'
   }
 })
+// 権限チェック用関数
+const can = (permission) => {
+  return props.user?.permissions?.includes(permission)
+}
 
 // 選択削除
 const selectedIds = ref([])

@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <template #header>{{ t('permission_list') }}</template>
+    <template #header>{{ t('permissions.permission_list') }}</template>
 
     <div class="p-6">
       <!-- per_page + Add Permission -->
@@ -15,7 +15,7 @@
             class="px-4 h-10 bg-green-500 text-white rounded hover:bg-green-600 flex items-center space-x-1"
           >
             <PlusIcon class="w-4 h-4"/>
-            <span>{{ t('add_permission') }}</span>
+            <span>{{ t('permissions.add_permission') }}</span>
           </Link>
         </div>
 
@@ -89,7 +89,7 @@ import { PlusIcon, PencilIcon, TrashIcon, DocumentDuplicateIcon, UserIcon } from
 
 const props = defineProps({
   permissions: Object,
-  tenants: Array, // Super Admin 用
+  tenants: Array, // super_admin 用
   user: Object,   // ← これが必要  
   filters: {
     type: Object,
@@ -106,7 +106,7 @@ const props = defineProps({
 const { t } = useI18n()
 
 const isSuperAdmin = computed(() =>
-  props.user?.roles?.some(r => r.name.toLowerCase() === 'super admin')
+  props.user?.roles?.some(r => r.name.toLowerCase() === 'super_admin')
 )
 
 const form = reactive({

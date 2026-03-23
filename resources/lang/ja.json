@@ -64,6 +64,7 @@
     "edit_user": "ユーザー編集",
     "name": "名前",
     "email": "メールアドレス",
+    "confirm_password": "パスワードをもう一度", 
     "user has been created.": "ユーザーを作成しました。",
     "user has been updated.": "ユーザーを更新しました。",
     "user has been deleted.": "ユーザーを削除しました。"

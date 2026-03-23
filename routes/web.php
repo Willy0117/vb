@@ -29,7 +29,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         ->middleware('guest');
 
     // 認証後
-    Route::middleware(['auth', 'role:admin|super_admin'])->group(function () {
+    Route::middleware(['auth'])->group(function () {
 
         Route::post('/logout', function () {
             request()->session()->invalidate();
@@ -56,7 +56,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [AdminMemberController::class, 'index'])->name('index');
             Route::get('/csv', [AdminMemberController::class, 'csv'])->name('csv');
             Route::get('/export', [AdminMemberController::class, 'export'])->name('export');
-            
+
             Route::post('/check-number', [AdminMemberController::class, 'checkNumber']);
 
             Route::get('/pdf/{id}', [AdminMemberController::class, 'pdfPreview'])->name('pdf.preview');

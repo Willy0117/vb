@@ -171,6 +171,7 @@
     <div class="flex gap-2">
         <!-- 編集ボタン -->
         <Link
+        v-if="can('member edit')"
         :href="route('admin.member.edit', { member: props.member.id, ...persistQuery() })"
         class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
         >
@@ -225,7 +226,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'
 
 import Pagination from '@/Components/Pagination.vue'
-import { Link, router } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch} from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
@@ -244,11 +245,17 @@ const props = defineProps({
   },
 })
 
-console.log(props.member)
+const { props: pageProps } = usePage()
+
+const can = (permission) => {
+  return pageProps.auth.user?.permissions?.includes(permission)
+}
+
 // persistQueryに各検索項目を追加
 const persistQuery = () => {
   return { ...props.filters }
 }
+
 
 const isCompare = ref(false)
 

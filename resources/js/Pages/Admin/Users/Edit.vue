@@ -10,50 +10,50 @@
         <div>
           <label class="block mb-1 font-medium">{{ t('name') }}</label>
           <input v-model="form.name" type="text" class="border rounded px-3 py-2 w-full" />
-          <div v-if="errors.name" class="text-red-500 text-sm">{{ errors.name }}</div>
+          <div v-if="form.errors.name" class="text-red-500 text-sm">{{ errors.name }}</div>
         </div>
 
         <!-- メール -->
         <div>
           <label class="block mb-1 font-medium">{{ t('email') }}</label>
           <input v-model="form.email" type="email" class="border rounded px-3 py-2 w-full" />
-          <div v-if="errors.email" class="text-red-500 text-sm">{{ errors.email }}</div>
+          <div v-if="form.errors.email" class="text-red-500 text-sm">{{ errors.email }}</div>
         </div>
 
         <!-- パスワード -->
         <div>
           <label class="block mb-1 font-medium">{{ t('password') }}</label>
           <input v-model="form.password" type="password" class="border rounded px-3 py-2 w-full" />
-          <div v-if="errors.password" class="text-red-500 text-sm">{{ errors.password }}</div>
+          <div v-if="form.errors.password" class="text-red-500 text-sm">{{ errors.password }}</div>
         </div>
 
         <div>
-          <label class="block mb-1 font-medium">{{ t('confirm_password') }}</label>
+          <label class="block mb-1 font-medium">{{ t('users.confirm_password') }}</label>
           <input v-model="form.password_confirmation" type="password" class="border rounded px-3 py-2 w-full" />
         </div>
 
         <!-- Tenant（SuperAdminのみ） -->
-        <div v-if="isSuperAdmin">
-          <label class="block mb-1 font-medium">{{ t('tenant') }}</label>
+        <div v-if="tenants.length">
+          <label class="block mb-1 font-medium">{{ t('tenants.tenant') }}</label>
           <select v-model="form.tenant_id" class="border rounded px-3 py-2 w-full">
             <option :value="null" disabled>{{ t('select_tenant') }}</option>
             <option v-for="tenant in tenants" :key="tenant.id" :value="tenant.id">
               {{ tenant.name }}
             </option>
           </select>
-          <div v-if="errors.tenant_id" class="text-red-500 text-sm">{{ errors.tenant_id }}</div>
+          <div v-if="form.errors.tenant_id" class="text-red-500 text-sm">{{ errors.tenant_id }}</div>
         </div>
 
         <!-- Role選択 -->
-        <div>
-          <label class="block mb-1 font-medium">{{ t('role') }}</label>
+        <div v-if="props.canManageRoles">
+          <label class="block mb-1 font-medium">{{ t('roles.role') }}</label>
           <select v-model="form.role_id" class="border rounded px-3 py-2 w-full">
             <option :value="null" disabled>{{ t('select_role') }}</option>
             <option v-for="role in roles" :key="role.id" :value="role.id">
               {{ role.name }} - {{ role.tenant_name }}
             </option>
           </select>
-          <div v-if="errors.role_id" class="text-red-500 text-sm">{{ errors.role_id }}</div>
+          <div v-if="form.errors.role_id" class="text-red-500 text-sm">{{ errors.role_id }}</div>
         </div>
 
         <!-- 保存ボタン -->
@@ -80,12 +80,9 @@ const props = defineProps({
   user: { type: Object, default: () => ({}) },
   roles: { type: Array, default: () => [] },
   tenants: { type: Array, default: () => [] },
-  selected_role: { type: Number, default: null }
+  selected_role: { type: Number, default: null },
+  canManageRoles: { type: Boolean, default: false }, 
 })
-
-// Super Admin 判定
-const isAdminOrSuper = Array.isArray(props.user?.roles) &&
-  props.user.roles.some(r => ['super admin', 'admin'].includes(r.name.toLowerCase()));
 
 const form = useForm({
   name: props.user?.name || '',

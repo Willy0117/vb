@@ -26,6 +26,16 @@ class AppServiceProvider extends ServiceProvider
        }
        Inertia::share([
             'csrf_token' => fn () => csrf_token(),
+            'auth' => [
+                'user' => fn () => auth()->user()
+                    ? [
+                        'id' => auth()->user()->id,
+                        'name' => auth()->user()->name,
+                        'roles' => auth()->user()->roles->pluck('name'),
+                        'permissions' => auth()->user()->getAllPermissions()->pluck('name')->toArray(),
+                    ]
+                    : null,
+            ],
        ]);
     }
 }

@@ -143,7 +143,7 @@
               class="flex items-center py-2 px-2 rounded hover:bg-gray-100"
             >
               <BuildingOfficeIcon class="w-4 h-4 mr-1"/>
-              {{ t('tenants') }}
+              {{ t('tenants.tenant') }}
             </Link>
             <Link
               v-if="can('manage roles')"
@@ -151,7 +151,7 @@
               class="flex items-center py-2 px-2 rounded hover:bg-gray-100"
             >
               <UsersIcon class="w-4 h-4 mr-1"/>
-              {{ t('roles') }}
+              {{ t('roles.role') }}
             </Link>
             <Link
               v-if="can('manage permissions')"
@@ -159,7 +159,7 @@
               class="flex items-center py-2 px-2 rounded hover:bg-gray-100"
             >
               <TicketIcon class="w-4 h-4 mr-1"/>
-              {{ t('permissions') }}
+              {{ t('permissions.permission') }}
             </Link>
           </div>
         </transition>
@@ -191,6 +191,7 @@
         <transition name="slide-fade">
           <div v-show="openSubMenu === 'users' && !collapsed" class="pl-6 mt-1 space-y-1">
             <Link
+              v-if="can('manage users')"
               :href="route('admin.users.index')"
               class="flex items-center py-2 px-2 rounded hover:bg-gray-100"
               :class="isActive('admin.users.index') ? 'bg-gray-200 font-semibold' : ''"
@@ -245,7 +246,10 @@ const { t } = useI18n()
 const isActive = (routeName) => false
 const hasApiFeatures = true
 const showAccessControl = true
-const can = (permission) => true
+// 権限チェック用関数
+const can = (permission) => {
+  return props.auth.user?.permissions?.includes(permission)
+}
 
 // ページURLに応じて初期サブメニューを決定
 onMounted(() => {

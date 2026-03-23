@@ -21,8 +21,8 @@ class PermissionController extends Controller
         $user = $request->user();
         $query = Permission::query();
 
-        // テナント絞り込み（Super Admin は全件表示）
-        if (!$user->hasRole('Super Admin')) {
+        // テナント絞り込み（super_admin は全件表示）
+        if (!$user->hasRole('super_admin')) {
             $query->where('tenant_id', $user->tenant_id);
         }
 
@@ -39,7 +39,7 @@ class PermissionController extends Controller
         // ページネーション
         $permissions = $query->paginate($request->input('per_page', 20))
                              ->withQueryString();
-        $tenants = $user->hasRole('Super Admin') ? Tenant::all() : [];                     
+        $tenants = $user->hasRole('super_admin') ? Tenant::all() : [];                     
 
         return Inertia::render('Admin/Permissions/Index', [
             'permissions' => $permissions,
@@ -55,7 +55,7 @@ class PermissionController extends Controller
     {
         $user = auth()->user()->load('roles');
 
-        $tenants = $user->hasRole('Super Admin') ? Tenant::all() : [];
+        $tenants = $user->hasRole('super_admin') ? Tenant::all() : [];
 
         return Inertia::render('Admin/Permissions/Edit', [
             'permission' => $permission,
@@ -67,14 +67,21 @@ class PermissionController extends Controller
     /**
      * 新規作成画面用
      */
-    public function create()
+    public function create(Request $request)
     {
         $user = auth()->user()->load('roles');
+        
+        $permission = null;
 
-        $tenants = $user->hasRole('Super Admin') ? Tenant::all() : [];
+        $tenants = $user->hasRole('super_admin') ? Tenant::all() : [];
+
+        // コピー用モードの場合
+        if ($request->input('mode') === 'copy' && $permission_id = $request->input('permission_id')) {
+            $permission = Permission::find($permission_id);
+        }
 
         return Inertia::render('Admin/Permissions/Edit', [
-            'permission' => null,
+            'permission' => $permission,
             'tenants' => $tenants,
             'user' => $user,
             'filters' => request()->all(),
@@ -88,7 +95,7 @@ class PermissionController extends Controller
     {
         $user = $request->user();
 
-        $tenantId = $user->hasRole('Super Admin') ? $request->tenant_id : $user->tenant_id;
+        $tenantId = $user->hasRole('super_admin') ? $request->tenant_id : $user->tenant_id;
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -114,7 +121,7 @@ class PermissionController extends Controller
     {
         $user = $request->user();
 
-        $tenantId = $user->hasRole('Super Admin') ? $request->tenant_id : $user->tenant_id;
+        $tenantId = $user->hasRole('super_admin') ? $request->tenant_id : $user->tenant_id;
 
         $request->validate([
             'name' => 'required|string|max:255',

@@ -22,8 +22,8 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $query = User::with('roles');
-        // テナント絞り込み（Super Admin は全件表示）
-        if (! $request->user()->hasRole('Super Admin|Admin')) {
+        // テナント絞り込み（super_admin は全件表示）
+        if (! $request->user()->hasRole('super_admin|Admin')) {
             $query->where('tenant_id', $request->user()->tenant_id);
         }
 
@@ -79,7 +79,7 @@ class UserController extends Controller
     {
         $currentUser = $request->user();
 
-        $roles = $currentUser->hasRole('Super Admin')
+        $roles = $currentUser->hasRole('super_admin')
             ? Role::all()
             : Role::where('tenant_id', $currentUser->tenant_id)->get();
 
@@ -90,7 +90,7 @@ class UserController extends Controller
             return $role;
         });
 
-        $availableTenants = $currentUser->hasRole('Super Admin') ? Tenant::all() : [];
+        $availableTenants = $currentUser->hasRole('super_admin') ? Tenant::all() : [];
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => null,
@@ -115,8 +115,8 @@ class UserController extends Controller
             'tenant_id' => 'nullable|exists:tenants,id',
         ]);
 
-        // Super Admin は tenant_id を選択可能、tenant_admin は自分の tenant_id に固定
-        $tenantId = $currentUser->hasRole('Super Admin')
+        // super_admin は tenant_id を選択可能、tenant_admin は自分の tenant_id に固定
+        $tenantId = $currentUser->hasRole('super_admin')
             ? $request->tenant_id
             : $currentUser->tenant_id;
 
@@ -143,23 +143,29 @@ class UserController extends Controller
     {
         $currentUser = auth()->user();
 
-        $roles = $currentUser->hasRole('Super Admin')
+        $roles = $currentUser->hasRole('super_admin')
             ? Role::all()
             : Role::where('tenant_id', $currentUser->tenant_id)->get();
 
         $tenants = Tenant::all()->keyBy('id');
+        
         $roles = $roles->map(function($role) use ($tenants) {
             $role->tenant_name = $role->tenant_id ? ($tenants[$role->tenant_id]->name ?? '(Global)') : '(Global)';
             return $role;
         });
 
-        $availableTenants = $currentUser->hasRole('Super Admin') ? Tenant::all() : [];
+        $availableTenants = $currentUser->hasRole('super_admin')
+                ? Tenant::all()
+                : Tenant::where('id', $currentUser->tenant_id)->get();
+
+        $canManageRoles = $currentUser->hasAnyRole(['super_admin', 'admin']);
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user,
             'roles' => $roles,
             'selected_role' => $user->roles->first()?->id,
             'tenants' => $availableTenants,
+            'canManageRoles' => $canManageRoles,
         ]);
     }
 
@@ -178,7 +184,7 @@ class UserController extends Controller
             'tenant_id' => 'nullable|exists:tenants,id',
         ]);
 
-        $tenantId = $currentUser->hasRole('Super Admin')
+        $tenantId = $currentUser->hasRole('super_admin')
             ? $validated['tenant_id']
             : $currentUser->tenant_id;
         $user->name = $request->name;

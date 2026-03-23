@@ -45,11 +45,11 @@ class RoleController extends Controller
     {
         $user = Auth::user();
 
-        $permissions = $user->hasRole('Super Admin')
+        $permissions = $user->hasRole('super_admin')
             ? Permission::all()
             : Permission::where('tenant_id', $user->tenant_id)->orWhereNull('tenant_id')->get();
 
-        // Super Admin がテナントを選べるよう tenants は必要なら追加して渡してください（既にある構成に合わせて）
+        // super_admin がテナントを選べるよう tenants は必要なら追加して渡してください（既にある構成に合わせて）
         return Inertia::render('Admin/Roles/Edit', [
             'role' => null,
             'permissions' => $permissions,
@@ -61,7 +61,7 @@ class RoleController extends Controller
     {
         $user = Auth::user();
 
-        $tenantId = $user->hasRole('Super Admin')
+        $tenantId = $user->hasRole('super_admin')
             ? ($request->tenant_id ?? null)
             : $user->tenant_id;
 
@@ -87,11 +87,11 @@ class RoleController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->hasRole('Super Admin') && $role->tenant_id !== $user->tenant_id) {
+        if (! $user->can('manage roles') && $role->tenant_id !== $user->tenant_id) {
             abort(403);
         }
 
-        $permissions = ($user->hasRole('Super Admin')
+        $permissions = ($user->hasRole('super_admin')
             ? Permission::all()
             : Permission::where('tenant_id', $user->tenant_id)
                 ->orWhereNull('tenant_id')->get()
@@ -119,7 +119,7 @@ class RoleController extends Controller
         $user = Auth::user();
 
         // Tenant Admin は自テナント Role のみ編集可能
-        if (! $user->hasRole('Super Admin') && $role->tenant_id !== $user->tenant_id) {
+        if (! $user->can('manage roles') && $role->tenant_id !== $user->tenant_id) {
             abort(403);
         }
 
@@ -136,7 +136,7 @@ class RoleController extends Controller
 
         // Tenant Admin は自テナント Permission のみ同期
         $permissions = $request->permissions ?? [];
-        if (! $user->hasRole('Super Admin')) {
+        if (! $user->hasRole('super_admin')) {
             $permissions = Permission::whereIn('id', $permissions)
                                     ->where('tenant_id', $user->tenant_id)
                                     ->pluck('id')
@@ -152,7 +152,7 @@ class RoleController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->hasRole('Super Admin') && $role->tenant_id !== $user->tenant_id) {
+        if (! $user->hasRole('super_admin') && $role->tenant_id !== $user->tenant_id) {
             abort(403);
         }
 
@@ -167,7 +167,7 @@ class RoleController extends Controller
 
         $roles = Role::whereIn('id', $roleIds);
 
-        if (!Auth::user()->hasRole('Super Admin')) {
+        if (!Auth::user()->hasRole('super_admin')) {
             $roles->where('tenant_id', Auth::user()->tenant_id);
         }
 

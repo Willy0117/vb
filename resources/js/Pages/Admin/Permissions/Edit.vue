@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <template #header>
-      {{ permission ? t('edit_permission') : t('create_permission') }}
+      {{ permission ? t('permissions.edit_permission') : t('permissions.create_permission') }}
     </template>
 
     <div class="p-6">
@@ -19,7 +19,7 @@
             <p v-if="errors.name" class="text-red-500 text-sm mt-1">{{ errors.name }}</p>
           </div>
 
-          <!-- Tenant 選択 (Super Admin のみ) -->
+          <!-- Tenant 選択 (super_admin のみ) -->
           <div v-if="isSuperAdmin" class="mt-4">
             <label class="block mb-1">{{ t('tenant') }}</label>
             <select v-model="form.tenant_id" class="border rounded px-3 py-2 w-full">
@@ -39,7 +39,7 @@
               {{ permission ? t('update') : t('create') }}
             </button>
             <button
-              @click="router.get(route('permissions.index', filters), { preserveState: true })"
+              @click="router.get(route('admin.permissions.index', filters), { preserveState: true })"
               type="button"
               class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
             >
@@ -53,23 +53,24 @@
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/Admin/AppLayout.vue'
 import { router } from '@inertiajs/vue3'
 import { reactive, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   permission: Object,  // null = 新規作成, オブジェクト = 編集
-  tenants: Array,      // Super Admin のみ
+  tenants: Array,      // super_admin のみ
   user: Object,        // 現在のログインユーザー
-  filters: Object      // Index画面の検索条件
+  filters: Object,      // Index画面の検索条件
+  mode: { type: String, default: '' }
 })
 
 const { t } = useI18n()
 
-// Super Admin 判定
+// super_admin 判定
 const isSuperAdmin = computed(() =>
-  props.user?.roles?.some(r => r.name.toLowerCase() === 'super admin')
+  props.user?.roles?.some(r => r.name.toLowerCase() === 'super_admin')
 )
 
 // フォーム初期値
@@ -87,19 +88,19 @@ const errors = reactive({
 
 // 送信処理
 const submitForm = () => {
-  if (props.permission) {
+  if (props.permission && props.mode !== 'copy') {
     // 編集
-    router.put(route('permissions.update', props.permission.id), form, {
+    router.put(route('admin.permissions.update', props.permission.id), form, {
       preserveState: true,
       onError: (err) => Object.assign(errors, err),
-      onSuccess: () => router.get(route('permissions.index', props.filters))
+      onSuccess: () => router.get(route('admin.permissions.index', props.filters))
     })
   } else {
     // 新規作成
-    router.post(route('permissions.store'), form, {
+    router.post(route('admin.permissions.store'), form, {
       preserveState: true,
       onError: (err) => Object.assign(errors, err),
-      onSuccess: () => router.get(route('permissions.index', props.filters))
+      onSuccess: () => router.get(route('admin.permissions.index', props.filters))
     })
   }
 }

@@ -91,7 +91,7 @@ const user = props.auth.user
 const { t, messages, locale } = useI18n();
 
 const logout = () => {
-  router.post('logout')
+  router.post(route('admin.logout'))
 }
 
 const toggleMenu = () => {

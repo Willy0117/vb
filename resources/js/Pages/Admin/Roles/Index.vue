@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <template #header>{{ t('role_list') }}</template>
+    <template #header>{{ t('roles.role_list') }}</template>
 
     <!-- 検索トリガーボタン -->
     <div dir="rtl">
@@ -60,7 +60,7 @@
             class="px-4 h-10 bg-green-500 text-white rounded hover:bg-green-600 flex items-center space-x-1"
           >
             <PlusIcon class="w-4 h-4"/>
-            <span>{{ t('add_role') }}</span>
+            <span>{{ t('roles.add_role') }}</span>
           </Link>
         </div>
 
@@ -131,7 +131,7 @@ import dayjs from 'dayjs'
 import { PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
-  roles: Object,
+  roles: Object,  
   filters: {
     type: Object,
     default: () => ({
@@ -140,8 +140,11 @@ const props = defineProps({
   }
 })
 
+console.log(props.roles)
+
 const { t } = useI18n()
 const openDrawer = ref(false)
+
 const form = reactive({
   name: props.filters.name,
   per_page: props.filters.per_page,
@@ -153,8 +156,10 @@ const selectedIds = ref([])
 const toggleSelectAll = (checked) => {
   selectedIds.value = checked ? props.roles.data.map(r => r.id) : []
 }
+
 const resetSelectedIds = () => { selectedIds.value = [] }
 const selectAll = computed(() => selectedIds.value.length === props.roles.data.length)
+
 watch(() => props.roles.current_page, () => { selectedIds.value = [] })
 
 const persistQuery = () => ({
@@ -170,7 +175,7 @@ const submitSearch = () => {
 }
 
 const goPage = (page) => {
-  router.get(route('roles.index'), { ...persistQuery(), page }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
+  router.get(route('admin.roles.index'), { ...persistQuery(), page }, { preserveState: true, replace: true, onSuccess: resetSelectedIds })
 }
 
 const sortBy = (field) => {
