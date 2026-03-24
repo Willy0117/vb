@@ -111,7 +111,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="member in members.data" :key="member.id" class="odd:bg-white even:bg-gray-100">
+          <tr v-for="member in props.members?.data" :key="member.id" class="odd:bg-white even:bg-gray-100">
 
             <td class="px-3 py-2">
               <input type="checkbox" :value="member.id" v-model="selectedIds" />
@@ -210,7 +210,7 @@
       </table>
 
       <!-- ページネーション -->
-      <Pagination :paginator="members" :onPageChange="goPage" :startItem="startItem" :endItem="endItem"/>
+      <Pagination :paginator="props.members" :onPageChange="goPage" :startItem="startItem" :endItem="endItem"/>
     </div>
 
     <div>
@@ -379,28 +379,18 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 import axios from 'axios'
-import { Link, router, useForm } from '@inertiajs/vue3'
+import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch} from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { ArrowDownTrayIcon, PencilIcon, EyeIcon, MagnifyingGlassIcon, DocumentPlusIcon} from '@heroicons/vue/24/outline'
 
-const props = defineProps({
-  members: Object,
-  user: Object,
-  tenants: Array,
-  statuses: Array,
-  processes: Array,
-  filters: {
-    type: Object,
-    default: () => ({
-      company_name: '', representative: '', tel: '', tenant_id: '', status_id: 1,
-      per_page: 20, sort_by: 'created_at', sort_dir: 'desc', page: 1
-    })
-  }
-})
+const { props } = usePage()
 
-console.log(props.members)
+const user = props.auth.user
+
+console.log('ここ',user)
+
 const { t } = useI18n()
 
 const isSuperAdmin = computed(() =>
@@ -432,7 +422,7 @@ const placeholder = computed(() => {
 })
 // 権限チェック用関数
 const can = (permission) => {
-  return props.user?.permissions?.includes(permission)
+  return props.auth?.user?.permissions?.includes(permission)
 }
 
 // 選択削除

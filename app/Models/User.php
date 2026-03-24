@@ -52,7 +52,10 @@ class User extends Authenticatable
      */
     public function tenantRoles()
     {
-        return $this->roles()->where('tenant_id', $this->tenant_id);
+        if ($this->isSuperAdmin()) {
+            return $this->roles->get();
+        }
+        return $this->roles()->where('roles.tenant_id', $this->tenant_id); 
     }
 
     /**
@@ -60,7 +63,19 @@ class User extends Authenticatable
      */
     public function tenantPermissions()
     {
-        return $this->permissions()->where('tenant_id', $this->tenant_id);
+        // SuperAdminなら全権限
+        if ($this->isSuperAdmin()) {
+            return $this->getAllPermissions();
+        }
+
+        // ユーザーに紐付く権限のうち、現在の tenant_id と一致するものだけを取得
+        return $this->permissions()
+            ->where('permissions.tenant_id', $this->tenant_id);
+    }
+
+    public function isSuperAdmin()
+    {
+        return $this->hasRole('super_admin');
     }
 }
 

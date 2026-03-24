@@ -246,6 +246,7 @@ const props = defineProps({
 })
 
 const { props: pageProps } = usePage()
+console.log(pageProps)
 
 const can = (permission) => {
   return pageProps.auth.user?.permissions?.includes(permission)

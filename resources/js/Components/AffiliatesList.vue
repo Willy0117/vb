@@ -5,12 +5,12 @@
     <!-- トップ：建設技能人材機構 -->
     <div class="mb-6">
       <h3 class="font-semibold mb-2">● (一社）建設技能人材機構</h3>
-      <div class="grid grid-cols-1 text-sm leading-relaxed">
+      <!--div class="grid grid-cols-1 text-sm leading-relaxed">
         <div v-for="item in affiliates1" :key="item" class="flex items-start">
           <span class="mr-1">■</span>
           <span>{{ item }}</span>
         </div>
-      </div>
+      </div -->
     </div>
 
     <!-- 専門工事業団体 -->

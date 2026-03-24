@@ -226,13 +226,15 @@ class MemberController extends Controller
                         'first_name' => $agent['first_name'],
                     ]); 
                 }               
-                    //1:履歴事項全部証明書
-                $corpOrg->documents()->create([  
-                    'type' => 1,
-                    'file_path' => $form['history_certificate_path'],
-                    'thumbnail_path' => $form['history_certificate_thumbnail'],
-                ]);
- 
+                //1:履歴事項全部証明書
+                if (!empty($form['history_certificate_path'])) {    
+                    $corpOrg->documents()->create([  
+                        'type' => 1,
+                        'file_path' => $form['history_certificate_path'],
+                        'thumbnail_path' => $form['history_certificate_thumbnail'],
+                    ]);
+                }
+
                 if ($form['same_as_corp'] != 1 && $form['mail_address_certificate_path'] ) {
                     //2:郵送先確認書類
                     $corpOrg->documents()->create([  
@@ -432,6 +434,21 @@ class MemberController extends Controller
             ]);
         }
         // 法人：履歴事項全部証明書
+
+        $rules = array_merge($rules, [
+            'history_certificate_path' => [
+                function ($attr, $value, $fail) use ($request) {
+                    if (
+                        $request->input('type') === 'corporation' &&
+                        !$request->hasFile('history_certificate') &&
+                        !$value
+                    ) {
+                        $fail('履歴事項全部証明書は必須です');
+                    }
+                },
+            ],
+        ]);
+/*        
         $rules = array_merge($rules, [
             'history_certificate' => [
                 'nullable',
@@ -447,7 +464,7 @@ class MemberController extends Controller
                 },
             ],
         ]);
-
+*/
 
         // 郵送先が別：郵送先確認資料
         $rules = array_merge($rules, [
@@ -535,12 +552,12 @@ class MemberController extends Controller
         // ---- 2) 契約者名（漢字）
         $pdf->SetXY(50, 73);
         $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
-
+/*
         $pdf->SetXY(50, 80);
         $pdf->Write(8, $form['corp']['position'] ?? '');
         $pdf->SetXY(80, 80);
         $pdf->Write(8, ($form['rep_last_name']??'') . ($form['rep_first_name']??''));
-
+*/
         // ---- 3) zip code
         $pdf->SetXY(50, 90);
         $pdf->Write(7, $form['corp']['postal_code'] ?? null);
@@ -665,7 +682,22 @@ class MemberController extends Controller
 
         // ---- 10) 口座名義（漢字）
         $pdf->SetXY(35, 190);
-        $pdf->Write(8, $form['account_name']);
+        // 文字がはみ出る場合自動縮小
+        $text = $form['account_name'];
+        $maxWidth = 100; // 枠の幅
+
+        $fontSize = 10;
+        $pdf->SetFontSize($fontSize);
+
+        // 幅に収まるまで縮小
+        while ($pdf->GetStringWidth($text) > $maxWidth) {
+            $fontSize -= 0.2;
+            $pdf->SetFontSize($fontSize);
+
+            if ($fontSize <= 5) break; // 最小サイズ制限
+        }
+        // 出力
+        $pdf->Cell($maxWidth, 8, $text, 0, 0);
 
         if ($form['is_agent']) {
 

@@ -85,6 +85,7 @@ import { ArrowRightOnRectangleIcon, GlobeAltIcon } from '@heroicons/vue/24/outli
 import { useI18n } from 'vue-i18n'
 
 const { props } = usePage()
+
 const user = props.auth.user
 
 //const { t } = useI18n()
