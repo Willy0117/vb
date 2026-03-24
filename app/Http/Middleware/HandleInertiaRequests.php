@@ -42,7 +42,7 @@ class HandleInertiaRequests extends Middleware
                         'id' => $request->user()->id,
                         'name' => $request->user()->name,
                         'roles' => $request->user()->tenantRoles->pluck('name')->toArray(),
-                        'permissions' => $request->user()->tenantPermissions->pluck('name')->toArray(), // ← ここ
+                        'permissions' => $request->user()->tenantPermissions()->pluck('name')->toArray(), // ← ここ
                     ]
                     : null,
             ],

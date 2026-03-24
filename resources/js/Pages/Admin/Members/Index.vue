@@ -2,7 +2,7 @@
   <AppLayout>
     <template #header>{{ t('members.member_list') }}</template>
     <div class="p-6">
-      <div class="grid grid-cols-1 md:grid-cols-6 items-center gap-2 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-5 items-center gap-2 mb-4">
         <div>
           <select
             v-model.number="form.per_page"
@@ -20,7 +20,7 @@
             class="h-10 border border-gray-300 rounded-md px-3 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <optgroup label="会員情報">
-              <option value="number">支援番号</option>
+              <option value="number">外国人番号</option>
               <option value="last_name">姓</option>
               <option value="first_name">名</option>
               <option value="last_name_kana">セイ（カナ）</option>
@@ -33,6 +33,7 @@
               <option value="representative_name">代表者名</option>
               <option value="representative_kana">代表者カナ</option>
               <option value="tel">TEL</option>
+              <option value="note">備考L</option>
             </optgroup>
           </select>
 
@@ -40,7 +41,7 @@
           <TextInput
             v-model="form.keyword"
             type="text"
-            class="border rounded px-2 py-1 w-64"
+            class="border rounded px-2 py-2 w-full"
             placeholder="検索キーワード"
             @keyup.enter="search"
           />
@@ -77,6 +78,10 @@
             <th class="px-3 py-2 cursor-pointer" @click="sortBy('agent')">
               {{ t('members.agent') }}
               <span v-if="form.sort_by==='agent'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+            </th>            
+            <th v-if="form.status_id == null || [2,3].includes(Number(form.status_id))" class="px-3 py-2 cursor-pointer" @click="sortBy('number')">
+              {{ t('members.number') }}
+              <span v-if="form.sort_by==='number'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
             </th>            
             <th class="px-3 py-2 cursor-pointer" @click="sortBy('company_name')">
               {{ t('members.company_name') }}
@@ -121,6 +126,7 @@
             </td>            
             <td class="px-3 py-2">{{ member.type ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.agent ?? '-' }}</td>
+            <td v-if="form.status_id == null || [0,2,3].includes(Number(form.status_id))" class="px-3 py-2">{{ member.number ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.organization?.name ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.name ?? '-' }}</td>
             <!-- td class="px-3 py-2">{{ member.tel ?? '-' }}</td -->
@@ -389,8 +395,6 @@ const { props } = usePage()
 
 const user = props.auth.user
 
-console.log('ここ',user)
-
 const { t } = useI18n()
 
 const isSuperAdmin = computed(() =>
@@ -403,7 +407,7 @@ const openDrawer = ref(false)
 // 複数検索用に reactive 拡張
 const form = reactive({
   name: props.filters.name,
-  status_id: props.filters.status_id,
+  status_id: props.filters.status_id ?? null,
   tenant_id: props.filters.tenant_id,
   per_page: props.filters.per_page || 20,
   sort_by: props.filters.sort_by,   // ← 初期値を必ずセット
@@ -412,9 +416,12 @@ const form = reactive({
   keyword: props.filters.keyword || '',
 })
 
+console.log('status_id:', form.status_id)
+console.log('type:', typeof form.status_id)
+
 const placeholder = computed(() => {
   switch (form.field) {
-    case 'number': return '支援番号で検索'
+    case 'number': return '外国人番号で検索'
     case 'company_name': return '会社名で検索'
     case 'representative_name': return '代表者名で検索'
     default: return 'キーワード入力'

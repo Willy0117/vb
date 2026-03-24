@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Helpers\DateHelper;
+use App\Models\OperationLog;
 
 class MemberController extends Controller
 {
@@ -59,7 +60,7 @@ class MemberController extends Controller
                     'id' => $member->id,
                     'type' => $member->type_label,
                     'agent' => $member->agent_label,
-
+                    'number' => $member->number,
                     'status_id'   => $member->status_id,
                     'progress_id' => $member->progress_id,
                     'status'   => $member->status,
@@ -96,7 +97,7 @@ class MemberController extends Controller
             'filters' => [
                 'company_name' => $request->company_name ?? '',
                 'name'         => $request->name ?? '',
-                'status_id'    => $request->status_id ?? '1',
+                'status_id'    => $request->status_id ?? null,
                 'progress'     => $request->progress ?? '',
                 'per_page'     => $request->per_page ?? 20,
                 'sort_by'      => $request->sort_by ?? 'created_at',  // ← 初期値
@@ -154,6 +155,16 @@ class MemberController extends Controller
                 'path'           => $doc->file_path ? Storage::url($doc->file_path) : null,
                 'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
             ]);
+
+        OperationLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'member_view',
+            'message' => '会員参照',
+            'data' => [
+                'member_id' => $member->id ?? null,
+                'filters' => request()->all(),
+            ],
+        ]);
 
         return Inertia::render('Admin/Members/Show', [
             'member' => [
@@ -563,6 +574,11 @@ class MemberController extends Controller
 
         $validated = $request->validate($rules);
 
+        // 保存前の状態
+        $memberBefore = $member->getOriginal();
+        $invoiceBefore = $member->invoice?->toArray();
+        $organizationBefore = $member->organizations()->where('type', 1)->first()?->toArray();
+
         $form = $validated;
         $corp = $validated['corp'];
 
@@ -610,6 +626,22 @@ class MemberController extends Controller
                 'note'        => $corp['note'] ?? null,
             ]
         );
+        // 更新後の状態
+        $memberAfter = $member->getChanges();
+        $invoiceAfter = $member->invoice?->getChanges();
+        $organizationAfter = $member->organizations()->where('type', 1)->first()?->getChanges();
+
+        // ログ落とし
+        OperationLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'member_update_basic',
+            'message' => 'Basic 部更新 (members + invoice + organization type=1)',
+            'data' => [
+                'member' => ['before' => $memberBefore, 'after' => $memberAfter],
+                'invoice' => ['before' => $invoiceBefore, 'after' => $invoiceAfter],
+                'organization' => ['before' => $organizationBefore, 'after' => $organizationAfter],
+            ],
+        ]);
 
         return back();
 
@@ -643,6 +675,9 @@ class MemberController extends Controller
 
         $validated = $request->validate($rules);
 
+        // 保存前の状態
+        $organizationBefore = $member->organizations()->where('type', 2)->first()?->toArray();
+
         $form = $validated;
         $mail = $validated['mail'];
 
@@ -666,6 +701,19 @@ class MemberController extends Controller
                 'first_name'  => $mail['first_name'] ?? null,
             ]
         );
+
+        $organizationAfter = $member->organizations()->where('type', 2)->first()?->getChanges();
+
+        // ログ落とし
+        OperationLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'member_update_basic',
+            'message' => '郵送更新 (organization type=2)',
+            'data' => [
+                'organization' => ['before' => $organizationBefore, 'after' => $organizationAfter],
+            ],
+        ]);
+
 
         return back();
     }
@@ -693,6 +741,8 @@ class MemberController extends Controller
         ];
 
         $validated = $request->validate($rules);
+        // 保存前の状態
+        $organizationBefore = $member->organizations()->where('type', 3)->first()?->toArray();
 
         $form = $validated;
         $agent = $validated['agent'];
@@ -714,6 +764,18 @@ class MemberController extends Controller
                 'first_name'  => $agent['first_name'] ?? null,
             ]
         );
+
+        $organizationAfter = $member->organizations()->where('type', 3)->first()?->getChanges();
+
+        // ログ落とし
+        OperationLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'member_update_basic',
+            'message' => '代理店更新 (organization type=3)',
+            'data' => [
+                'organization' => ['before' => $organizationBefore, 'after' => $organizationAfter],
+            ],
+        ]);
 
         return back();
     }
@@ -1275,6 +1337,7 @@ logger()->error('BASE DIR DEBUG', [
             'representative_name',    // last_name + first_name
             'representative_kana',    // last_name_kana + first_name_kana
             'tel',
+            'note',
         ];
 
         if ($field && $keyword) {
@@ -1328,6 +1391,11 @@ logger()->error('BASE DIR DEBUG', [
                         });
                     }
 
+                    elseif ($field === 'note') {
+                        $q->where(function ($qq) use ($keyword) {
+                            $qq->where('note', 'like', "%{$keyword}%");
+                        });
+                    }
                 });
             }
         }
