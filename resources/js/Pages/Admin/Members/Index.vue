@@ -33,7 +33,7 @@
               <option value="representative_name">代表者名</option>
               <option value="representative_kana">代表者カナ</option>
               <option value="tel">TEL</option>
-              <option value="note">備考L</option>
+              <option value="note">備考</option>
             </optgroup>
           </select>
 
@@ -41,7 +41,7 @@
           <TextInput
             v-model="form.keyword"
             type="text"
-            class="border rounded px-2 py-2 w-full"
+            class="border rounded px-2 py-2 w-128"
             placeholder="検索キーワード"
             @keyup.enter="search"
           />
@@ -405,7 +405,7 @@ const isSuperAdmin = computed(() =>
 const openDrawer = ref(false)
 
 // 複数検索用に reactive 拡張
-const form = reactive({
+const form = useForm({
   name: props.filters.name,
   status_id: props.filters.status_id ?? null,
   tenant_id: props.filters.tenant_id,
@@ -415,9 +415,6 @@ const form = reactive({
   field: props.filters.field || 'company_name',
   keyword: props.filters.keyword || '',
 })
-
-console.log('status_id:', form.status_id)
-console.log('type:', typeof form.status_id)
 
 const placeholder = computed(() => {
   switch (form.field) {
@@ -474,20 +471,23 @@ const persistQuery = () => ({
 })
 
 const search = () => {
+  console.log(form)
   router.get(route('admin.member.index'), { ...persistQuery(), page: 1 }, {
-    preserveState: true,
+    preserveState: false,
     replace: true,
     onSuccess: () => resetSelectedIds()
   })
 }
+  
 /*
 const search = () => {
-  form.get(route('admin.members.index'), {
+  form.get(route('admin.member.index'), {
     preserveState: true,
     preserveScroll: true,
   })
 }
 */
+
 const submitSearch = () => {
   console.log(persistQuery())
   router.get(route('admin.member.index'), { ...persistQuery(), page: 1 }, {

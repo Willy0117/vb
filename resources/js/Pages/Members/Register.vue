@@ -200,7 +200,7 @@
                 }"
                 class="w-full"
               />
-              <InputError :message="form.errors?.corp?.address1" />
+              <InputError :message="form.errors['corp.address1']" />
             </div>
             <div class="flex-1">
               <InputLabel :value="t('registers.address2')" />
@@ -435,7 +435,7 @@
                 <InputLabel :value="t('registers.position')" />
                 <TextInput v-model="form.mail.position" class="w-full" />
               </div>
-              <InputError :message="errors?.mail?.position" />
+              <InputError :message="form.errors?.mail?.position" />
             </div>
 
             <!-- 氏名 -->
@@ -447,7 +447,8 @@
                   <TextInput v-model="form.mail.first_name" class="w-full" />
                 </div>
               </div>
-              <InputError :message="errors?.mail?.staff" />
+              <InputError :message="form.errors?.mail?.last_name" />
+              <InputError :message="form.errors?.mail?.first_name" />
             </div>
           </div>
         </div>
@@ -566,7 +567,7 @@
                 <InputLabel :value="t('registers.position')" />
                 <TextInput v-model="form.agent.position" class="w-full" />
               </div>
-              <InputError :message="form.errors.agent.position" />
+              <InputError :message="form.errors.agent?.position" />
             </div>
 
             <!-- 氏名 -->
@@ -578,8 +579,8 @@
                   <TextInput v-model="form.agent.first_name" class="w-full" />
                 </div>
               </div>
-              <InputError :message="form.errors.agent.last_name" />
-              <InputError :message="form.errors.agent.first_name" />
+              <InputError :message="form.errors?.agent?.last_name" />
+              <InputError :message="form.errors?.agent?.first_name" />
             </div>
           </div>
         </div>
@@ -624,8 +625,8 @@
                   :initial="form.bank_name"
                   @selected="handleBankSelected"
                 />
-                <p v-if="form.errors.bank_name" class="text-red-500 text-sm mt-1">
-                  {{ form.errors.bank_name }}
+                <p v-if="form.errors?.bank_name" class="text-red-500 text-sm mt-1">
+                  {{ form.errors?.bank_name }}
                 </p>
               </div>
               <div>
@@ -650,8 +651,8 @@
                     :initial="form.branch_name"
                     @selected="handleBranchSelected"
                   />
-                  <p v-if="form.errors.branch_name" class="text-red-500 text-sm mt-1">
-                    {{ form.errors.branch_name }}
+                  <p v-if="form.errors?.branch_name" class="text-red-500 text-sm mt-1">
+                    {{ form.errors?.branch_name }}
                   </p>
                 </template>
                 <!-- ゆうちょ時のダミー表示（任意） -->
@@ -868,10 +869,10 @@ const mail_address_certificate_name =
 
 const form = useForm({
   type: page.props.form?.type ?? 'corporation',
-  company_kana: page.props.form?.company_kana ?? 'カ)',
+  company_kana: page.props.form?.company_kana ?? '',
   rep_last_kana: page.props.form?.rep_last_kana ?? '',
   rep_first_kana: page.props.form?.rep_first_kana ?? '',
-  company_type_prefix: page.props.form?.company_type_prefix ?? '株式会社',
+  company_type_prefix: page.props.form?.company_type_prefix ?? '',
   company_name: page.props.form?.company_name ?? '',
   company_type_suffix: page.props.form?.company_type_suffix ?? '',
   rep_last_name: page.props.form?.rep_last_name ?? '',
@@ -1426,7 +1427,6 @@ watch(
   ],
   () => {
     form.account_kana = buildAccountKana()
-    form.company_kana = buildAccountKana()
   }
 )
 // 郵送先が同じならコピーする

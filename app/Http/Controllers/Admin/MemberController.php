@@ -95,11 +95,10 @@ class MemberController extends Controller
         return Inertia::render('Admin/Members/Index', [
             'members' => $members,
             'filters' => [
-                'company_name' => $request->company_name ?? '',
-                'name'         => $request->name ?? '',
                 'status_id'    => $request->status_id ?? null,
-                'progress'     => $request->progress ?? '',
                 'per_page'     => $request->per_page ?? 20,
+                'field'        => $request->field ?? '',
+                'keyword'      => $request->keyword ?? '',
                 'sort_by'      => $request->sort_by ?? 'created_at',  // ← 初期値
                 'sort_dir'     => $request->sort_dir ?? 'desc',       // ← 初期値
             ],
@@ -1479,6 +1478,5 @@ logger()->error('BASE DIR DEBUG', [
 
         return $query;
     }
-
 
 }

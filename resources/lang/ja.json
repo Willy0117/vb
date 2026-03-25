@@ -100,7 +100,7 @@
   "banks": {
     "select_bank": "銀行選択",
     "bank_selection": "銀行選択",
-    "bank_category": "金融機関種類",
+    "bank_category": "金融機関種別",
     "bank_name": "銀行名",
     "branch_name": "支店名",
     "bank_code": "銀行コード",

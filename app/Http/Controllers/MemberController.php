@@ -464,12 +464,9 @@ class MemberController extends Controller
                 },
             ],
         ]);
-*/
-
         // 郵送先が別：郵送先確認資料
         $rules = array_merge($rules, [
             'mail_address_certificate' => [
-                'nullable',
                 'file',
                 'mimes:pdf',
                 function ($attr, $value, $fail) use ($request) {
@@ -478,6 +475,23 @@ class MemberController extends Controller
                         && !$request->file('mail_address_certificate')
                         && !$request->input('mail_address_certificate_path')
                     ) {
+                        $fail('郵送先確認書類は必須です。');
+                    }
+                },
+            ],
+        ]); 
+*/
+
+        // 郵送先が別：郵送先確認資料
+        $rules = array_merge($rules, [
+            'mail_address_certificate_path' => [
+                function ($attr, $value, $fail) use ($request) {
+                    if (
+                        !$request->boolean('same_as_corp')
+                        && !$request->hasfile('mail_address_certificate')
+                        && !$value
+                    ) {
+                        $fail('郵送先確認書類は必須です。');
                     }
                 },
             ],
@@ -546,12 +560,11 @@ class MemberController extends Controller
         $pdf->SetFont('kozminproregular', '', 12);
 
         // ---- 1) 契約者名（フリガナ）
-        $pdf->SetXY(50, 65);
-        $pdf->Write(8, $form['company_kana']??'');
+        $this->writeWrappedText($pdf, 50, 67, $form['company_kana']??'', 140, 10, 5, 2);
 
         // ---- 2) 契約者名（漢字）
-        $pdf->SetXY(50, 73);
-        $pdf->Write(8, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''));
+        $this->writeWrappedText($pdf, 50, 80, ($form['company_type_prefix']??'') . ($form['company_name']) . ($form['company_type_suffix']??''), 140, 10, 5, 2);
+
 /*
         $pdf->SetXY(50, 80);
         $pdf->Write(8, $form['corp']['position'] ?? '');
@@ -677,27 +690,10 @@ class MemberController extends Controller
         }
 
         // ---- 9) 口座名義（フリガナ）
-        $pdf->SetXY(35, 170);
-        $pdf->Write(8, $form['account_kana']);
+        $this->writeWrappedText($pdf, 30, 170, $form['account_kana'], 96, 8, 5, 2);
 
         // ---- 10) 口座名義（漢字）
-        $pdf->SetXY(35, 190);
-        // 文字がはみ出る場合自動縮小
-        $text = $form['account_name'];
-        $maxWidth = 100; // 枠の幅
-
-        $fontSize = 10;
-        $pdf->SetFontSize($fontSize);
-
-        // 幅に収まるまで縮小
-        while ($pdf->GetStringWidth($text) > $maxWidth) {
-            $fontSize -= 0.2;
-            $pdf->SetFontSize($fontSize);
-
-            if ($fontSize <= 5) break; // 最小サイズ制限
-        }
-        // 出力
-        $pdf->Cell($maxWidth, 8, $text, 0, 0);
+        $this->writeWrappedText($pdf, 30, 185, $form['account_name'], 96, 10, 5, 2);
 
         if ($form['is_agent']) {
 
@@ -809,6 +805,61 @@ class MemberController extends Controller
         ]); 
         */
     }
+
+
+    function writeWrappedText($pdf, $x, $y, $text, $maxWidth = 100, $fontSize = 10, $minFontSize = 5, $lineSpacing = 2) {
+
+        $pdf->SetFontSize($fontSize);
+
+        $lines = [];
+
+
+            // ② スペースなし → 幅で自動改行
+            $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
+            $currentLine = '';
+
+            foreach ($chars as $char) {
+                $testLine = $currentLine . $char;
+
+                if ($pdf->GetStringWidth($testLine) <= $maxWidth) {
+                    $currentLine = $testLine;
+                } else {
+                    $lines[] = $currentLine;
+                    $currentLine = $char;
+                }
+            }
+
+            if ($currentLine !== '') {
+                $lines[] = $currentLine;
+            }
+
+        // ③ フォントサイズを全体で調整
+        while (true) {
+            $tooWide = false;
+
+            foreach ($lines as $line) {
+                if ($pdf->GetStringWidth($line) > $maxWidth) {
+                    $tooWide = true;
+                    break;
+                }
+            }
+
+            if (!$tooWide || $fontSize <= $minFontSize) break;
+
+            $fontSize -= 0.2;
+            $pdf->SetFontSize($fontSize);
+        }
+
+        // ④ 出力
+        $lineHeight = $fontSize * 0.35 + $lineSpacing;
+
+        foreach ($lines as $i => $line) {
+            $pdf->SetXY($x, $y + $i * $lineHeight);
+            $pdf->SetFontSize($fontSize);
+            $pdf->Cell($maxWidth, $lineHeight, $line, 0, 1, 'L');
+        }
+    }
+
 
     public function pdfPreview(Request $request,$token)
     {
