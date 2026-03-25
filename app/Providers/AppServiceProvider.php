@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Inertia\Inertia;
 use Illuminate\Support\ServiceProvider;
+use App\Models\Member;
+use App\Observers\MemberObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,5 +29,8 @@ class AppServiceProvider extends ServiceProvider
        Inertia::share([
             'csrf_token' => fn () => csrf_token(),
        ]);
+
+       Member::observe(MemberObserver::class);
+
     }
 }

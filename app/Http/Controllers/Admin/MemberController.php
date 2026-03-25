@@ -421,6 +421,7 @@ class MemberController extends Controller
 
         $data = [
             'status_id' => $statusId,
+            'updated_by' => auth()->id(),
         ];
 
         switch ($statusId) {
@@ -466,11 +467,12 @@ class MemberController extends Controller
     public function updateProgress(Request $request, Member $member)
     {
         $request->validate([
-            'progress_id' => ['required', 'exists:progresses,id'],
+            'progress_id' => ['required', 'exists:progresses,id'],            
         ]);
 
         $member->update([
             'progress_id' => $request->progress_id,
+            'updated_by' => auth()->id(),
         ]);
 
         return response()->json(['ok' => true]);
@@ -593,6 +595,7 @@ class MemberController extends Controller
             'withdrawn_at'=> $form['withdrawn_at'] ?? null,
             'aplus_customer_no' => $form['aplus_customer_no'] ?? null,
             'jac_certification_no' => $form['jac_certification_no'] ?? null,
+            'updated_by'  => auth()->id(),
         ]);
 
         $member->invoice()->updateOrCreate(

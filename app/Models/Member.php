@@ -25,6 +25,7 @@ class Member extends Model
         'number',
         'aplus_customer_no',
         'jac_certification_no', 
+        'updated_by',
     ];
 
     protected $casts = [
@@ -132,5 +133,20 @@ class Member extends Model
     {
         return $this->agent ? '代理人申請' : '本人申請';
     }
+
+    public function updatedByUser()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function statusHistories()
+    {
+        return $this->hasMany(MemberStatusHistory::class);
+    }
+
+    public function progressHistories()
+    {
+        return $this->hasMany(MemberProgressHistory::class);
+    }    
 
 }
