@@ -141,7 +141,7 @@
                 ]"
                 @click="openStatus(member)"
               >
-                {{ member.status.name }}
+                {{ member.status.name ?? '-' }}
               </span>
 
             </td>
@@ -393,6 +393,8 @@ import { ArrowDownTrayIcon, PencilIcon, EyeIcon, MagnifyingGlassIcon, DocumentPl
 
 const { props } = usePage()
 
+console.log(props)
+
 const user = props.auth.user
 
 const { t } = useI18n()
@@ -467,7 +469,7 @@ const persistQuery = () => ({
   sort_dir: form.sort_dir,
   field: form.field,
   keyword: form.keyword,
-  page: props.members.current_page
+//  page: props.members.current_page
 })
 
 const search = () => {
@@ -500,7 +502,7 @@ const submitSearch = () => {
 // ページ番号クリック
 const goPage = (page) => {
   router.get(route('admin.member.index'), { ...persistQuery(), page }, {
-    preserveState: true,
+    preserveState: false,
     replace: true,
     onSuccess: () => resetSelectedIds()
   })
@@ -594,8 +596,12 @@ const submitProgress = async () => {
 
   closeModal()
 
-  // 一覧だけ再取得
-  router.reload({ only: ['members'] })
+  const memberIndex = props.members.data.findIndex(m => m.id === progressForm.member_id)
+  if(memberIndex !== -1) {
+    // 送った progress_id で差し替え
+    props.members.data[memberIndex].progress_id = progressForm.progress_id
+    props.members.data[memberIndex].progress = progresses.value.find(p => p.id === progressForm.progress_id)
+  }
 }
 
 const showStatusModal = ref(false)
@@ -643,7 +649,9 @@ const submitStatus = async () => {
   )
 
   showStatusModal.value = false
-  router.reload({ only: ['members'] })
+
+  router.get(route('admin.member.index'), {...persistQuery(),})
+  
 }
 
 const closeModal = () => {

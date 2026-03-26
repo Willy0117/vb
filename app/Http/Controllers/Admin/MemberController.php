@@ -26,7 +26,7 @@ class MemberController extends Controller
     // 一覧ページ
     public function index(Request $request)
     {
-         $query = $this->buildMemberQuery($request);
+        $query = $this->buildMemberQuery($request);
 
         // =====================
         // ページング + 整形
@@ -38,59 +38,53 @@ class MemberController extends Controller
             ->orderBy('id')
             ->get();
 
-        $members = $query
+        $paginated = $query
+            ->with(['organization.documents', 'status', 'progress'])
             ->paginate($perPage)
-            ->withQueryString()
-            ->through(function ($member) use ($request) {
+            ->withQueryString();
 
-                $org = $member->organization;
+        // data 部分だけ加工（日本語ラベルなど）
+        $members = $paginated->through(function ($member) {
+            
+            $statusId = $member->status_id;
 
-                $doc = $org?->documents?->first(); // type=1 は with 側で絞る前提
+            $date = match ($statusId) {
+                2 => $member->joined_at,
+                3 => $member->withdrawn_at,
+                4 => $member->canceled_at,
+                default => $member->created_at,
+            };
 
-                $statusId = (int) $request->status_id ?? '1';
+            return [
+                'id' => $member->id,
+                'type' =>$member->type_label,  // 法人/個人事業主
+                'agent' => $member->agent_label, // 代理人申請/本人申請
+                'name' => $member->full_name,
+                'status_id' => $member->status_id,
+                'status' => $member->status ? [
+                    'id' => $member->status->id,
+                    'name' => $member->status->name, // ← ここで日本語に変換することも可能
+                ] : null,
+                'progress_id' => $member->status_id,
+                'progress' => $member->progress ? [
+                    'id' => $member->progress->id,
+                    'name' => $member->progress->name, // ← ここで日本語に変換することも可能
+                ] : null,
+                'organization' => [
+                    'name' => $member->organization?->full_name,
+                ],
+                'address' => $member->organization?->full_address,
+                'documents' => $member->organization->documents->map(fn($doc) => [
+                    'type' => $doc->type,
+                    'path' => $doc->file_path ? Storage::url($doc->file_path) : null,
+                    'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
+                ]),
+                'created_at' => $member->created_at,
+                'display_date' => $date ? DateHelper::withWareki($date) : null,
+            ];
+        });
 
-                $date = match ($statusId) {
-                    2 => $member->joined_at,
-                    3 => $member->withdrawn_at,
-                    4 => $member->canceled_at,
-                    default => $member->created_at,
-                };
 
-                return [
-                    'id' => $member->id,
-                    'type' => $member->type_label,
-                    'agent' => $member->agent_label,
-                    'number' => $member->number,
-                    'status_id'   => $member->status_id,
-                    'progress_id' => $member->progress_id,
-                    'status'   => $member->status,
-                    'progress' => $member->progress,
-                    // 法人
-                    'organization' => [
-                        'name' => $org?->full_name,
-                    ],
-
-                    // 申請者（member）
-                    'name' => $member->full_name,
-
-                    // 連絡先（organization に集約）
-                    'tel' => $org?->tel,
-                    'address' => $org?->full_address,
-
-                    'documents' => $org?->documents->map(function ($doc) {
-                        return [
-                            'type' => $doc->type,
-                            'path' => $doc->file_path ? Storage::url($doc->file_path) : null,
-                            'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
-                        ];
-                    }),
-
-                    'created_at' => $member->created_at,
-                    'display_date' => $date
-                        ? DateHelper::withWareki($date)
-                         : null,
-                ];
-            });
 
         return Inertia::render('Admin/Members/Index', [
             'members' => $members,
@@ -102,7 +96,6 @@ class MemberController extends Controller
                 'sort_by'      => $request->sort_by ?? 'created_at',  // ← 初期値
                 'sort_dir'     => $request->sort_dir ?? 'desc',       // ← 初期値
             ],
-            'statuses' => $statuses,
         ]);
     }
 
@@ -219,7 +212,7 @@ class MemberController extends Controller
             ],
             // 検索条件をそのまま渡す
             'filters' => $request->only([
-                'company_name', 'name', 'tel', 'per_page', 'sort_by', 'sort_dir', 'page'
+                'company_name', 'name', 'tel', 'per_page', 'sort_by', 'sort_dir', 'page','status_id',
             ]),            
         ]);
     }
@@ -334,7 +327,7 @@ class MemberController extends Controller
                 'documents'   => $documents,
             ],
             'regions' => $regions,
-            'filters' => $request->only(['company_name', 'name', 'tel', 'per_page', 'sort_by', 'sort_dir']),
+            'filters' => $request->only(['company_name', 'name', 'tel', 'per_page', 'sort_by', 'sort_dir','status_id']),
         ]);
     }
 
@@ -446,8 +439,9 @@ class MemberController extends Controller
         }
 
         $member->update($data);
+        // JSONで更新済み member を返す
+        return response()->json(['member' => $member->fresh()]);
 
-        return response()->json(['ok' => true]);
     }
 
     
@@ -474,8 +468,8 @@ class MemberController extends Controller
             'progress_id' => $request->progress_id,
             'updated_by' => auth()->id(),
         ]);
-
-        return response()->json(['ok' => true]);
+        // JSONで更新済み member を返す
+        return response()->json(['member' => $member->fresh()]);
     }
 
     public function uploadDocument(Request $request, Member $member)
