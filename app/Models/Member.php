@@ -147,6 +147,6 @@ class Member extends Model
     public function progressHistories()
     {
         return $this->hasMany(MemberProgressHistory::class);
-    }    
+    }
 
 }

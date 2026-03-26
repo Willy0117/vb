@@ -208,7 +208,8 @@
     "aplus_customer_no": "ｱﾌﾟﾗｽ口振依頼書顧客番号",
     "jac_certification_no": "JAC認定番号",
     "issued_at": "年会費請求日",
-    "paid_at": "年会費入金日"
+    "paid_at": "年会費入金日",
+    "updated": "最終更新者"
   }, 
   "billing_name": "請求先名",
   "billing_postal": "請求先郵便番号",

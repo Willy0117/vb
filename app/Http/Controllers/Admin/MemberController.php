@@ -128,6 +128,9 @@ class MemberController extends Controller
             'organizations',
             'organizations.documents', // documents はここで取得するだけ
             'applicationOrganization',
+            'updatedByUser',
+            'statusHistories.user',
+            'progressHistories.user',
         ]);
         // persistQuery() 用に現在のクエリを保持
         $queryParams = $request->only([
@@ -158,6 +161,9 @@ class MemberController extends Controller
             ],
         ]);
 
+        $latestStatusHistory = $member->statusHistories->sortByDesc('created_at')->first();
+        $latestProgressHistory = $member->progressHistories->sortByDesc('created_at')->first();        
+
         return Inertia::render('Admin/Members/Show', [
             'member' => [
                 'id' => $member->id,
@@ -178,7 +184,22 @@ class MemberController extends Controller
                 // ステータス
                 'status'   => $member->status,
                 'progress' => $member->progress,
+                'updated_by_user' => $member->updatedByUser
+                    ? [
+                        'id' => $member->updatedByUser->id,
+                        'name' => $member->updatedByUser->name,
+                    ]
+                    : null,
+                'updated_at' => $member->updated_at,
+                'status_meta' => $latestStatusHistory ? [
+                    'updated_at' => $latestStatusHistory->created_at,
+                    'user_name'  => $latestStatusHistory->user->name ?? null,
+                ] : null,
 
+                'progress_meta' => $latestProgressHistory ? [
+                    'updated_at' => $latestProgressHistory->created_at,
+                    'user_name'  => $latestProgressHistory->user->name ?? null,
+                ] : null,
                 // organization（typeごとに整理）
                 'organizations' => $member->organizations->map(fn ($o) => [
                     'id'           => $o->id,

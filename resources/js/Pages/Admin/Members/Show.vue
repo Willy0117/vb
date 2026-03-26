@@ -7,10 +7,21 @@
       <!-- 申請者 -->
       <section class="bg-white rounded shadow p-4">
         <h2 class="font-bold mb-2">申請者</h2>
+        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <p class="col-1">{{ t('members.name')}} ： {{ props.member.name }}</p>
+          <p class="col-1 text-red-500">{{ t('members.updated') }} ： {{ props.member.updated_at ? dayjs(props.member.updated_at).format('YYYY-MM-DD HH:mm') : '未更新' }} {{ props.member.updated_by_user?.name ?? '未更新' }}</p>
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <p class="col-1">{{ t('status') }} ： {{ props.member.status.name }}</p>
+          <p class="col-1 text-red-500">{{ t('members.updated') }} ： {{ props.member.status_meta?.updated_at
+      ? dayjs(props.member.status_meta.updated_at).format('YYYY-MM-DD HH:mm') : '-' }} {{ props.member.status_meta?.user_name ?? '-' }}</p>
+        </div>  
+        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <p class="col-1">{{ t('members.progress') }} : {{ props.member.progress?.name ?? '-' }}</p>
+          <p class="col-1 text-red-500">{{ t('members.updated') }} ： {{ props.member.progress_meta?.updated_at
+      ? dayjs(props.member.progress_meta.updated_at).format('YYYY-MM-DD HH:mm') : '-' }} {{ props.member.progress_meta?.user_name ?? '-' }}</p>
+        </div>  
 
-        <p>{{ t('members.name')}} ： {{ props.member.name }}</p>
-        <p>{{ t('status') }} ： {{ props.member.status.name }}</p>
-        <p>{{ t('members.progress') }} : {{ props.member.progress?.name ?? '-' }}</p>
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
           <p class="col-1">{{ t('members.region') }}: {{ props.member?.region }}</p>
           <p class="col-1">{{ t('members.number') }}: {{ props.member?.number }}</p>
