@@ -651,7 +651,7 @@ const submitStatus = async () => {
   showStatusModal.value = false
 
   router.get(route('admin.member.index'), {...persistQuery(),})
-  
+
 }
 
 const closeModal = () => {
@@ -752,7 +752,9 @@ const submitUpload = async () => {
 
     alert('アップロード完了')
     showUploadModal.value = false
-    router.reload({ only: ['members'] })
+
+    router.get(route('admin.member.index'), {...persistQuery(),})
+    
   } catch (err) {
     console.error(err)
     alert('アップロード失敗')
