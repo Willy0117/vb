@@ -1480,6 +1480,7 @@ watch(
 
 
     // ===== 口座名義（漢字） =====
+
     form.account_name = (
       `${form.company_type_prefix ?? ''}` +
       `${form.company_name ?? ''}` +
@@ -1488,6 +1489,7 @@ watch(
       `${form.rep_last_name ?? ''}` +
       `${form.rep_first_name ?? ''}`
     ).trim()//replace(/\s+/g, '')
+
   },
   { immediate: true }
 )

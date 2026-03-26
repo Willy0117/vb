@@ -52,7 +52,10 @@
           {{ t('revise') }}
         </button>
       </div>
-
+      <p class="text-red-500 text-sm mt-6">
+      ※口座振替依頼書は、口座名義人（フリガナ含む）の記入と
+      押印（金融機関お届け印）をしたものをご郵送いただきますようお願いいたします。
+      </p>
     </div>
   </GuestLayout>
 </template>

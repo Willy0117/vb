@@ -205,6 +205,9 @@ class MemberController extends Controller
                     'last_name' => $mail['last_name'],
                     'first_name' => $mail['first_name'],
                 ]);
+                
+                $agentOrg = null;
+
                 if ($isAgent) {
 
                     $agent = $form['agent'];
@@ -297,6 +300,7 @@ class MemberController extends Controller
             try {
                 $data = $agent ?? $corp; // 代理人がいれば agent、それ以外は member
                 Mail::to($toUser)
+                    ->bcc('membership-application@zenchuren-group.jp')
                     ->send(new MemberRegistrationCompleted($data));
 
                 $member->user_mail_sent_at = now();
@@ -408,8 +412,8 @@ class MemberController extends Controller
             'branch_code' => 'required|string',
             'account_type' => 'required|string',
             'account_no' => 'required|string',
-            'account_kana' => 'required|string',
-            'account_name' => 'required|string',
+            'account_kana' => 'nullable|string',
+            'account_name' => 'nullable|string',
         ];
 
         if ($request->bank_code !== '9900') {
@@ -690,10 +694,10 @@ class MemberController extends Controller
         }
 
         // ---- 9) 口座名義（フリガナ）
-        $this->writeWrappedText($pdf, 30, 170, $form['account_kana'], 96, 8, 5, 2);
+        //$this->writeWrappedText($pdf, 30, 170, $form['account_kana'], 96, 8, 5, 2);
 
         // ---- 10) 口座名義（漢字）
-        $this->writeWrappedText($pdf, 30, 185, $form['account_name'], 96, 10, 5, 2);
+        //$this->writeWrappedText($pdf, 30, 185, $form['account_name'], 96, 10, 5, 2);
 
         if ($form['is_agent']) {
 
