@@ -205,7 +205,7 @@ class MemberController extends Controller
                     'last_name' => $mail['last_name'],
                     'first_name' => $mail['first_name'],
                 ]);
-                
+
                 $agentOrg = null;
 
                 if ($isAgent) {
@@ -304,11 +304,16 @@ class MemberController extends Controller
                     ->send(new MemberRegistrationCompleted($data));
 
                 $member->user_mail_sent_at = now();
-
+                Log::info('SES user mail sent', [
+                    'member_id' => $member->id ?? null,
+                    'to' => $toUser,
+                    'bcc' => 'membership-application@zenchuren-group.jp',
+                ]);
             } catch (\Throwable $e) {
                 Log::error('SES user mail send failed', [
                     'member_id' => $member->id ?? null,
                     'to' => $toUser,
+                    'bcc' => 'membership-application@zenchuren-group.jp',
                     'error' => $e->getMessage(),
                 ]);
             }
