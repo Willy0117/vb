@@ -716,7 +716,10 @@
                 <InputError :message="form.errors.account_kana" />
             </div>
                 <!-- 注意文言 -->
-            <p class="text-xs text-gray-500 mt-2">
+            <p class="text-xs text-red-500 mt-1">
+                口座名義、口座名義(カナ)は、口座振替依頼書には記入されません！
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
                 肩書を忘れないように！社名と肩書の間にスペースを入れて下さい！
             </p>
           </div>  
