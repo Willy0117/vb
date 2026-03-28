@@ -27,6 +27,10 @@ class MemberRegistrationCompleted extends Mailable
     public function build()
     {
         return $this
+            ->from(
+                config('mail.from.address'),
+                config('mail.from.name')
+            )
             ->subject('【一般社団法人 全国中小建設工事業団体連合会】 への入会申込完了のお知らせ')
             ->view('emails.member_registration_completed');
     }
