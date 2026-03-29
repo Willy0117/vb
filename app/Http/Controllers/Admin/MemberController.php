@@ -74,7 +74,7 @@ class MemberController extends Controller
                     'name' => $member->organization?->full_name,
                 ],
                 'address' => $member->organization?->full_address,
-                'documents' => $member->organization->documents->map(fn($doc) => [
+                'documents' => $member->organization?->documents?->map(fn($doc) => [
                     'type' => $doc->type,
                     'path' => $doc->file_path ? Storage::url($doc->file_path) : null,
                     'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
