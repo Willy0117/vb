@@ -109,6 +109,7 @@ class MemberController extends Controller
                     'progress' => 1,
                     'agent' => $isAgent,
                     'type' => $form['type'],
+                    'desired_join_month' => $form['desired_join_month'] ? $form['desired_join_month'] . '-01' : null,
                 ]);
                 // bank_accounts
                 $member->bankAccount()->create([
@@ -300,20 +301,20 @@ class MemberController extends Controller
             try {
                 $data = $agent ?? $corp; // 代理人がいれば agent、それ以外は member
                 Mail::to($toUser)
-                    ->bcc('membership-application@zenchuren-group.jp')
+                    ->bcc('membership-application@zenchu.or.jp')
                     ->send(new MemberRegistrationCompleted($data));
 
                 $member->user_mail_sent_at = now();
                 Log::info('SES user mail sent', [
                     'member_id' => $member->id ?? null,
                     'to' => $toUser,
-                    'bcc' => 'membership-application@zenchuren-group.jp',
+                    'bcc' => 'membership-application@zenchu.or.jp',
                 ]);
             } catch (\Throwable $e) {
                 Log::error('SES user mail send failed', [
                     'member_id' => $member->id ?? null,
                     'to' => $toUser,
-                    'bcc' => 'membership-application@zenchuren-group.jp',
+                    'bcc' => 'membership-application@zenchu.or.jp',
                     'error' => $e->getMessage(),
                 ]);
             }
@@ -367,9 +368,9 @@ class MemberController extends Controller
     public function pdfGenerate(Request $request, string $token)
     {
         $rules = [
-
             // ===== 基本情報 =====
             'type' => 'required|string',
+            'desired_join_month' => 'required|string',
             'company_kana' => 'required|string',
             'rep_last_kana' => 'required|string',
             'rep_first_kana' => 'required|string',
@@ -399,10 +400,10 @@ class MemberController extends Controller
             'mail' => 'required|array',
             'mail.type' => 'required|integer',
             'mail.postal_code' => 'nullable|string',
-            'mail.address1' => 'nullable|string',
-            'mail.address2' => 'nullable|string',
+            'mail.address1' => 'required|string',
+            'mail.address2' => 'required|string',
             'mail.address3' => 'nullable|string',
-            'mail.tel' => 'nullable|string',
+            'mail.tel' => 'required|string',
             'mail.fax' => 'nullable|string',
             'mail.mobile' => 'nullable|string',
             'mail.email' => 'nullable|email',
@@ -432,14 +433,14 @@ class MemberController extends Controller
                 'agent.company_name' => 'required|string',
                 'agent.postal_code' => 'required|string',
                 'agent.address1' => 'required|string',
-                'agent.address2' => 'nullable|string',
+                'agent.address2' => 'required|string',
                 'agent.address3' => 'nullable|string',
                 'agent.tel' => 'required|string',
                 'agent.fax' => 'nullable|string',
                 'agent.mobile' => 'nullable|string',
-                'agent.position' => 'required|string',
+                'agent.position' => 'nullable|string',
                 'agent.last_name' => 'required|string',
-                'agent.first_name' => 'required|string',
+                'agent.first_name' => 'nullable|string',
             ]);
         }
         // 法人：履歴事項全部証明書
