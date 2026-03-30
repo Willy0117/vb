@@ -167,6 +167,7 @@ class MemberController extends Controller
         return Inertia::render('Admin/Members/Show', [
             'member' => [
                 'id' => $member->id,
+                'desired_join_month' => $member->desired_join_month,
                 // 申請者
                 'first_name' => $member->first_name,
                 'last_name'  => $member->last_name,
