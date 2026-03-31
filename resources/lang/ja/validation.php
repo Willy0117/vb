@@ -43,5 +43,6 @@ return [
         'agent.position' => '肩書',
         'agent.last_name' => '姓',
         'agent.first_name' => '名',
+        'desired_join_month' => '入会希望日',
     ],
 ];
