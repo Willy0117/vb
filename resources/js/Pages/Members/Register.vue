@@ -1434,7 +1434,7 @@ watch(
     form.company_name_kana,
   ],
   () => {
-    form.account_kana = buildAccountKana()
+    //form.account_kana = buildAccountKana()
   }
 )
 // 郵送先が同じならコピーする
@@ -1476,15 +1476,15 @@ watch(
 
     if (prefixKana) {
       // 株式会社○○ → カ）○○ / 有限会社○○ → ユ）○○
-      form.account_kana = `${prefixKana}）${form.company_kana ?? ''}`
+      //form.account_kana = `${prefixKana}）${form.company_kana ?? ''}`
     } else if (suffixKana) {
       // ○○株式会社 → ○○（カ / ○○有限会社 → ○○（ユ
-      form.account_kana = `${form.company_kana ?? ''}（${suffixKana}`
+      //form.account_kana = `${form.company_kana ?? ''}（${suffixKana}`
     } else {
-      form.account_kana = form.company_kana ?? ''
+      //form.account_kana = form.company_kana ?? ''
     }
 
-    form.account_kana = form.account_kana.replace(/\s+/g, '')
+    //form.account_kana = form.account_kana.replace(/\s+/g, '')
 
 
     // ===== 口座名義（漢字） =====
