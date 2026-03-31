@@ -92,12 +92,15 @@ class UserController extends Controller
 
         $availableTenants = $currentUser->hasRole('super_admin') ? Tenant::all() : [];
 
+        $canManageRoles = $currentUser->hasAnyRole(['super_admin', 'admin']);
+
         return Inertia::render('Admin/Users/Edit', [
             'user' => null,
             'roles' => $roles,
             'selected_role' => null,
             'tenants' => $availableTenants,
-        ]);
+            'canManageRoles' => $canManageRoles,
+       ]);
     }
 
     /**
