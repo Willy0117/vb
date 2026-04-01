@@ -249,9 +249,11 @@ class MemberController extends Controller
                     ]);
                 }
 
-                $preUser->update([
-                    'verified_at' => now(),
-                ]);
+                if (!$isAgent) {
+                    $preUser->update([
+                        'verified_at' => now(),
+                    ]);
+                }
 
                 // member 登録
                 $member->verified_at = now();
@@ -438,7 +440,7 @@ class MemberController extends Controller
                 'agent.tel' => 'required|string',
                 'agent.fax' => 'nullable|string',
                 'agent.mobile' => 'nullable|string',
-                'agent.position' => 'nullable|string',
+                'agent.position' => 'required|string',
                 'agent.last_name' => 'required|string',
                 'agent.first_name' => 'nullable|string',
             ]);

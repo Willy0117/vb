@@ -246,7 +246,7 @@
               />
               <InputError :message="form.errors['corp.tel']" />
               <p v-if="form.corp.tel"
-                class="text-xs text-gray-300 mt-1">
+                class="text-xs text-gray-500 mt-1">
                 電話番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
@@ -259,7 +259,7 @@
                 @input="e => onPhoneInput('corp', 'fax', e)"
                 placeholder="03-1234-5678"
               />
-              <p v-if="form.corp.fax" class="text-xs text-gray-300 mt-1">
+              <p v-if="form.corp.fax" class="text-xs text-gray-500 mt-1">
                 FAX番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
@@ -522,7 +522,7 @@
                 />
                 <InputError :message="form.errors['agent.tel']" />
                 <p v-if="form.agent.tel"
-                  class="text-xs text-gray-300 mt-1">
+                  class="text-xs text-gray-500 mt-1">
                   電話番号は 03-1234-5678 の形式で入力してください
                 </p>
               </div>
@@ -537,7 +537,7 @@
                 />
                 <InputError :message="form.errors['agent.fax']" />
                 <p v-if="form.agent.fax"
-                  class="text-xs text-gray-300 mt-1">
+                  class="text-xs text-gray-500 mt-1">
                   FAX番号は 03-1234-5678 の形式で入力してください
                 </p>
               </div>
@@ -552,7 +552,7 @@
                 />
                 <InputError :message="form.errors['agent.mobile']" />
                 <p v-if="form.agent.mobile"
-                  class="text-xs text-gray-300 mt-1">
+                  class="text-xs text-gray-500 mt-1">
                   携帯電話は 090-1234-5678 の形式で入力してください
                 </p>
               </div>
@@ -564,7 +564,7 @@
                   <InputLabel :value="t('registers.position')" class="h-5" />
                   <TextInput v-model="form.agent.position" class="w-full" />
                 </div>
-                <InputError :message="form.errors['agent?.position']" />
+                <InputError :message="form.errors['agent.position']" />
               </div>
               <!-- 氏名 -->
               <div class="flex-1">
