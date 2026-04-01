@@ -246,7 +246,7 @@
               />
               <InputError :message="form.errors['corp.tel']" />
               <p v-if="form.corp.tel"
-                class="text-xs text-red-500 mt-1">
+                class="text-xs text-gray-300 mt-1">
                 電話番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
@@ -259,8 +259,7 @@
                 @input="e => onPhoneInput('corp', 'fax', e)"
                 placeholder="03-1234-5678"
               />
-              <p v-if="form.corp.fax"
-                class="text-xs text-red-500 mt-1">
+              <p v-if="form.corp.fax" class="text-xs text-gray-300 mt-1">
                 FAX番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
@@ -274,25 +273,17 @@
                 @input="e => onPhoneInput('corp', 'mobile', e)"
               />
               <p v-if="form.corp.mobile"
-                class="text-xs text-red-500 mt-1">
+                class="text-xs text-gray-500 mt-1">
                 携帯電話は 090-1234-5678 の形式で入力してください
               </p>
             </div>
-            <div>
+            <div v-if="form.is_agent">
               <InputLabel>
                 {{ t('registers.email') }}
-                <span v-if="form.is_agent" class="text-red-500 ml-1">*</span>
               </InputLabel>
 
-              <TextInput
-                v-model="form.corp.email"
-                class="w-full"
-              />
-
-              <p
-                v-if="form.errors['corp.email']"
-                class="text-red-500 text-sm mt-1"
-              >
+              <TextInput v-model="form.corp.email" class="w-full" />
+              <p v-if="form.errors['corp.email']" class="text-red-500 text-sm mt-1" >
                 {{ form.errors['corp.email'] }}
               </p>
             </div>
@@ -398,11 +389,11 @@
                 placeholder="03-1234-5678"
               />
               <InputError :message="form.errors['mail.tel']" />
+              <p v-if="form.mail.tel"
+                class="text-xs text-gray-500 mt-1">
+                電話番号は 03-1234-5678 の形式で入力してください
+              </p>
             </div>
-            <p v-if="form.mail.tel"
-              class="text-xs text-red-500 mt-1">
-              電話番号は 03-1234-5678 の形式で入力してください
-            </p>
             <div>
               <InputLabel :value="t('registers.fax')" />
               <TextInput
@@ -412,11 +403,11 @@
                 placeholder="03-1234-5678"
               />
               <InputError :message="form.errors['mail.fax']" />
+              <p v-if="form.mail.fax"
+                class="text-xs text-gray-500 mt-1">
+                FAX番号は 03-1234-5678 の形式で入力してください
+              </p>
             </div>
-            <p v-if="form.mail.fax"
-              class="text-xs text-red-500 mt-1">
-              FAX番号は 03-1234-5678 の形式で入力してください
-            </p>
             <div>
               <InputLabel :value="t('registers.mobile')" />
               <TextInput
@@ -427,11 +418,11 @@
                 @input="e => onPhoneInput('mail', 'mobile', e)"
               />
               <InputError :message="form.errors['mail.mobile']" />
+              <p v-if="form.mail.mobile"
+                class="text-xs text-gray-500 mt-1">
+                携帯電話は 090-1234-5678 の形式で入力してください
+              </p>
             </div>
-            <p v-if="form.mail.mobile"
-              class="text-xs text-red-500 mt-1">
-              携帯電話は 090-1234-5678 の形式で入力してください
-            </p>
         </div>            
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <!-- 肩書き -->
@@ -531,7 +522,7 @@
                 />
                 <InputError :message="form.errors['agent.tel']" />
                 <p v-if="form.agent.tel"
-                  class="text-xs text-red-500 mt-1">
+                  class="text-xs text-gray-300 mt-1">
                   電話番号は 03-1234-5678 の形式で入力してください
                 </p>
               </div>
@@ -546,7 +537,7 @@
                 />
                 <InputError :message="form.errors['agent.fax']" />
                 <p v-if="form.agent.fax"
-                  class="text-xs text-red-500 mt-1">
+                  class="text-xs text-gray-300 mt-1">
                   FAX番号は 03-1234-5678 の形式で入力してください
                 </p>
               </div>
@@ -561,7 +552,7 @@
                 />
                 <InputError :message="form.errors['agent.mobile']" />
                 <p v-if="form.agent.mobile"
-                  class="text-xs text-red-500 mt-1">
+                  class="text-xs text-gray-300 mt-1">
                   携帯電話は 090-1234-5678 の形式で入力してください
                 </p>
               </div>
@@ -723,9 +714,9 @@
             <p class="text-xs text-gray-500 mt-1">
                 口座名義、口座名義(カナ)は、口座振替依頼書には記入されません！
             </p>
-            <p class="text-xs text-gray-500 mt-1">
+            <!--p class="text-xs text-gray-500 mt-1">
                 肩書を忘れないように！社名と肩書の間にスペースを入れて下さい！
-            </p>
+            </p -->
           </div>  
         </div>
         <!-- PDF アップロード 2点 -->
@@ -1546,6 +1537,10 @@ watch(() => form.bank_code, (val) => {
 
 watch(() => form.branch_code, (val) => {
   form.branch_code = toHalfWidthNumber(val)
+})
+
+watch(() => form.account_no, (val) => {
+  form.account_no = toHalfWidthNumber(val)
 })
 
 const focusNext = (e) => {
