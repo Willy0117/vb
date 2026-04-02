@@ -6,7 +6,7 @@
 </head>
 <body>
     <p>
-       {{ $member->name }} 御中<br> 
+       {{ $member->name_prefix }}{{ $member->name }}{{ $member->name_suffix }} 御中<br> 
        {{ $member->last_name }} {{ $member->first_name }} 様
     </p>
 
