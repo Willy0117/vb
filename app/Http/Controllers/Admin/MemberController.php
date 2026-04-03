@@ -60,6 +60,7 @@ class MemberController extends Controller
                 'type' =>$member->type_label,  // 法人/個人事業主
                 'agent' => $member->agent_label, // 代理人申請/本人申請
                 'name' => $member->full_name,
+                'number' => $member->number,
                 'status_id' => $member->status_id,
                 'status' => $member->status ? [
                     'id' => $member->status->id,
@@ -1010,7 +1011,7 @@ logger()->error('BASE DIR DEBUG', [
                     $member->number,
 
                     // 会社名
-                    $corp->name ?? '',
+                    ($corp->name_prefix ?? '') . ($corp->name ?? '') . ($corp->name_suffix ?? ''),
 
                     // 代表者
                     $corpRepresentative,
