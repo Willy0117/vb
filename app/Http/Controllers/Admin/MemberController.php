@@ -340,6 +340,8 @@ class MemberController extends Controller
                 'company_type_prefix' => $corp['prefix'],
                 'company_name'=> $corp['name'],
                 'company_type_suffix' => $corp['suffix'],
+                'aplus_customer_no'   => $member->aplus_customer_no,
+                'jac_certification_no'=> $member->jac_certification_no,
                 'corp'        => $corp,
                 'mail'        => $mail,
                 'agent'       => $agent,
@@ -585,8 +587,6 @@ class MemberController extends Controller
             'corp.last_name'=> 'required|string',
             'corp.first_name' => 'required|string',
             'corp.note'     => 'nullable|string',
-
-
         ];
 
         $validated = $request->validate($rules);
@@ -999,12 +999,6 @@ logger()->error('BASE DIR DEBUG', [
                     ($corp->last_name ?? '') . ' ' .
                     ($corp->first_name ?? '')
                 );
-
-                $agentName = trim(
-                    ($agent->last_name ?? '') . ' ' .
-                    ($agent->first_name ?? '')
-                );
-
                 // ===== 会費（最新1件想定）=====
                 $invoice = $member->invoice;
 
@@ -1079,11 +1073,11 @@ logger()->error('BASE DIR DEBUG', [
                     trim(($mail->last_name ?? '') . ' ' . ($mail->first_name ?? '')),
 
                     // ===== 代理申込（type=3）=====
-                    $agentName,
+                    $agent->name ?? '',
                     $agent->tel ?? '',
                     $agentAddress,
                     trim(($agent->last_name ?? '') . ' ' . ($agent->first_name ?? '')),
-                    $agent->tel ?? '',
+                    $agent->mobile ?? '',
                     $agent->fax ?? '',
                     $agent->email ?? '',
 

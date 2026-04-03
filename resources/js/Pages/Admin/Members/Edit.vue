@@ -6,7 +6,7 @@
       <h2 class="text-2xl font-bold mb-6">{{ t('registers.members') }}</h2>
 
       <form @submit.prevent="submitForm" class="space-y-8">
-        <div class="mt-4 grid grid-cols-8 gap-4 items-end">
+        <div class="mt-4 grid grid-cols-8 gap-4 items-start">
           <!-- 会社種類（2W） -->
           <div class="col-span-2">
             <InputLabel :value="t('registers.applicant')" class="mb-2" />
@@ -123,18 +123,7 @@
 
           <!-- 左カラム：会社情報 -->
           <div class="space-y-4">
-            <div>
-              <InputLabel :value="t('registers.company_kana')" />
-
-              <TextInput
-                v-model="companyKana"
-                :class="{
-                  'border-red-500': getError('company_kana'),
-                  'border-gray-300': !getError('company_kana')
-                }"
-                class="w-full"
-              />
-            </div>
+ 
             <div>
               <InputLabel :value="t('registers.company_name')" /> 
 
@@ -175,14 +164,44 @@
                   </select>
                 </div>
               </div>
-              <p class="text-xs text-gray-500 mt-1">
-                例）株式会社〇〇商事 ／ 〇〇商事株式会社
-              </p>
+            </div>
+            <div>
+              <InputLabel :value="t('registers.company_kana')" />
+
+              <TextInput
+                v-model="companyKana"
+                :class="{
+                  'border-red-500': getError('company_kana'),
+                  'border-gray-300': !getError('company_kana')
+                }"
+                class="w-full"
+              />
             </div>  
           </div>
 
          <!-- 右カラム：代表者/担当者 -->
           <div class="space-y-4">
+            <div>
+             <InputLabel value="代表者名" />
+              <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div class="flex-1">
+                  <TextInput v-model="form.rep_last_name"
+                    :class="{
+                      'border-red-500': getError('rep_last_name'),
+                      'border-gray-300': !getError('rep_last_name')
+                    }"
+                    class="w-full" :placeholder="t('registers.last_name')" />
+                </div>
+                <div class="flex-1">  
+                  <TextInput v-model="form.rep_first_name"
+                    :class="{
+                      'border-red-500': getError('rep_first_name'),
+                      'border-gray-300': !getError('rep_first_name')
+                    }"
+                    class="w-full" :placeholder="t('registers.first_name')" />
+                </div>
+              </div>
+            </div>
             <div>
               <InputLabel value="代表者名（フリガナ）" />
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -204,27 +223,6 @@
                 </div>
               </div>
 
-            </div>
-            <div>
-             <InputLabel value="代表者名" />
-              <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
-                <div class="flex-1">
-                  <TextInput v-model="form.rep_last_name"
-                    :class="{
-                      'border-red-500': getError('rep_last_name'),
-                      'border-gray-300': !getError('rep_last_name')
-                    }"
-                    class="w-full" :placeholder="t('registers.last_name')" />
-                </div>
-                <div class="flex-1">  
-                  <TextInput v-model="form.rep_first_name"
-                    :class="{
-                      'border-red-500': getError('rep_first_name'),
-                      'border-gray-300': !getError('rep_first_name')
-                    }"
-                    class="w-full" :placeholder="t('registers.first_name')" />
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -285,12 +283,12 @@
                   'border-red-500': getError('corp.tel'),
                   'border-gray-300': !getError('corp.tel')
                 }"
-                maxlength="12"
+                maxlength="20"
                 @input="e => onPhoneInput('corp', 'tel', e)"
                 placeholder="03-1234-5678"
               />
-              <p v-if="form.corp.tel && form.corp.tel.length !== 12"
-                class="text-xs text-red-500 mt-1">
+              <p v-if="form.corp.tel"
+                class="text-xs text-gray-300 mt-1">
                 電話番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
@@ -299,12 +297,12 @@
               <InputLabel :value="t('registers.fax')" />
               <TextInput
                 v-model="form.corp.fax"
-                maxlength="12"
+                maxlength="20"
                 @input="e => onPhoneInput('corp', 'fax', e)"
                 placeholder="03-1234-5678"
               />
-              <p v-if="form.corp.fax && form.corp.fax.length !== 12"
-                class="text-xs text-red-500 mt-1">
+              <p v-if="form.corp.fax"
+                class="text-xs text-gray-300 mt-1">
                 FAX番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
@@ -314,11 +312,11 @@
                 v-model="form.corp.mobile"
                 class="w-full"
                 placeholder="090-xxxx-xxxx"
-                maxlength="13"
+                maxlength="20"
                 @input="e => onPhoneInput('corp', 'mobile', e)"
               />
-              <p v-if="form.corp.mobile && form.corp.mobile.length !== 13"
-                class="text-xs text-red-500 mt-1">
+              <p v-if="form.corp.mobile"
+                class="text-xs text-gray-300 mt-1">
                 携帯電話は 090-1234-5678 の形式で入力してください
               </p>
             </div>
@@ -342,15 +340,15 @@
             </div>
           </div>
         </div>
-        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
           <!-- 肩書き -->
           <div class="flex-1">
             <div>
               <InputLabel :value="t('registers.position')" />
               <TextInput v-model="form.corp.position" class="w-full" />
             </div>
-            <p v-if="form.corp.mobile && form.corp.mobile.length !== 13"
-                class="text-xs text-red-500 mt-1">
+            <p v-if="form.corp.mobile"
+                class="text-xs text-gray-300 mt-1">
                 携帯電話は 090-1234-5678 の形式で入力してください
             </p>
           </div>
@@ -448,7 +446,7 @@
             </ul>
             <InputError :message="errors.mail?.post_zip" />
           </div>
-          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div class="flex-1">
               <InputLabel :value="t('registers.address1')" />
               <TextInput v-model="form.mail.address1" class="w-full" placeholder="○○県△△市xx区" />
@@ -465,53 +463,53 @@
               <InputError :message="errors?.mail?.address3" />
             </div>
           </div>            
-          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div>
               <InputLabel :value="t('registers.tel')" />
               <TextInput
                 v-model="form.mail.tel"
-                maxlength="12"
+                maxlength="20"
                 @input="e => onPhoneInput('mail', 'tel', e)"
                 placeholder="03-1234-5678"
               />
               <InputError :message="errors.tel" />
+              <p v-if="form.mail.tel"
+                class="text-xs text-gray-300 mt-1">
+                電話番号は 03-1234-5678 の形式で入力してください
+              </p>
             </div>
-            <p v-if="form.mail.tel && form.mail.tel.length !== 12"
-              class="text-xs text-red-500 mt-1">
-              電話番号は 03-1234-5678 の形式で入力してください
-            </p>
 
             <div>
               <InputLabel :value="t('registers.fax')" />
               <TextInput
                 v-model="form.mail.fax"
-                maxlength="12"
+                maxlength="20"
                 @input="e => onPhoneInput('mail', 'fax', e)"
                 placeholder="03-1234-5678"
               />
               <InputError :message="errors?.mail?.fax" />
+              <p v-if="form.mail.fax"
+                class="text-xs text-gray-300 mt-1">
+                FAX番号は 03-1234-5678 の形式で入力してください
+              </p>
             </div>
-            <p v-if="form.mail.fax && form.mail.fax.length !== 12"
-              class="text-xs text-red-500 mt-1">
-              FAX番号は 03-1234-5678 の形式で入力してください
-            </p>
             <div>
               <InputLabel :value="t('registers.mobile')" />
               <TextInput
                 v-model="form.mail.mobile"
                 class="w-full"
                 placeholder="090-xxxx-xxxx"
-                maxlength="13"
+                maxlength="20"
                 @input="e => onPhoneInput('mail', 'mobile', e)"
               />
               <InputError :message="errors?.mail?.mobile" />
+              <p v-if="form.mail.mobile"
+                class="text-xs text-gray-300 mt-1">
+                携帯電話は 090-1234-5678 の形式で入力してください
+              </p>
             </div>
-            <p v-if="form.mail.mobile && form.mail.mobile.length !== 13"
-              class="text-xs text-red-500 mt-1">
-              携帯電話は 090-1234-5678 の形式で入力してください
-            </p>
           </div>            
-          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <!-- 肩書き -->
             <div class="flex-1">
               <div>
@@ -561,7 +559,7 @@
         </div>                
 
         <div class="">
-          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
           <div class="flex-1">
             <InputLabel :value="t('registers.zip_code')" />
             <TextInput
@@ -597,7 +595,7 @@
               />
           </div>
           </div>
-          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div class="flex-1">
               <InputLabel :value="t('registers.address1')" />
               <TextInput v-model="form.agent.address1" class="w-full" placeholder="○○県△△市xx区" />
@@ -614,18 +612,18 @@
               <InputError :message="errors?.agent?.address3" />
             </div>
           </div>            
-          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div class="flex-1">
               <InputLabel :value="t('registers.tel')" />
               <TextInput
                 v-model="form.agent.tel"
-                maxlength="12"
+                maxlength="20"
                 @input="e => onPhoneInput('agent', 'tel', e)"
                 placeholder="03-1234-5678"
               />
               <InputError :message="errors.tel" />
               <p v-if="form.agent.tel && form.agent.tel.length !== 12"
-                class="text-xs text-red-500 mt-1">
+                class="text-xs text-gray-300 mt-1">
                 電話番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
@@ -634,13 +632,13 @@
               <InputLabel :value="t('registers.fax')" />
               <TextInput
                 v-model="form.agent.fax"
-                maxlength="12"
+                maxlength="20"
                 @input="e => onPhoneInput('agent', 'fax', e)"
                 placeholder="03-1234-5678"
               />
               <InputError :message="errors?.agent?.fax" />
-              <p v-if="form.agent.fax && form.agent.fax.length !== 12"
-                class="text-xs text-red-500 mt-1">
+              <p v-if="form.agent.fax"
+                class="text-xs text-gray-300 mt-1">
                 FAX番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
@@ -650,12 +648,12 @@
                 v-model="form.agent.mobile"
                 class="w-full"
                 placeholder="090-xxxx-xxxx"
-                maxlength="13"
+                maxlength="20"
                 @input="e => onPhoneInput('agent', 'mobile', e)"
               />
               <InputError :message="errors?.agent?.mobile" />
-              <p v-if="form.agent.mobile && form.agent.mobile.length !== 13"
-                class="text-xs text-red-500 mt-1">
+              <p v-if="form.agent.mobile"
+                class="text-xs text-gray-300 mt-1">
                 携帯電話は 090-1234-5678 の形式で入力してください
               </p>
             </div>
@@ -675,7 +673,7 @@
               </p>
             </div>
           </div>            
-          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <!-- 肩書き -->
             <div class="flex-1">
               <div>
@@ -991,12 +989,12 @@ const form = useForm({
   is_agent: page.props.form?.is_agent,
   region_id: page.props.form?.region_id,
   number: page.props.form?.number,
-  joined_at: page.props.form?.joined_at,
-  withdrawn_at: page.props.form?.withdrawn_at,
+  joined_at: page.props.form?.joined_at ? page.props.form.joined_at.slice(0, 10) : '',
+  withdrawn_at: page.props.form?.withdrawn_at ? page.props.form?.withdrawn_at.slice(0, 10) : '',
   aplus_customer_no: page.props.form?.aplus_customer_no ?? '',
   jac_certification_no: page.props.form?.jac_certification_no ?? '',
-  issued_at: page.props.form?.invoice?.issued_at,
-  paid_at: page.props.form?.invoice?.paid_at,
+  issued_at: page.props.form?.invoice?.issued_at ? page.props.form?.invoice?.issued_at.slice(0, 10) : '',
+  paid_at: page.props.form?.invoice?.paid_at ? page.props.form?.invoice?.paid_at.slice(0, 10) : '',
   amount: page.props.form?.invoice?.amount ?? 0,
 
   corp: {
