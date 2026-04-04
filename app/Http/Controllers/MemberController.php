@@ -303,27 +303,27 @@ class MemberController extends Controller
             try {
                 $data = $agent ?? $corp; // 代理人がいれば agent、それ以外は member
                 Mail::to($toUser)
-                    ->bcc('membership-application@zenchu.or.jp')
+                    ->bcc(config('mail.bcc'))
                     ->send(new MemberRegistrationCompleted($data));
 
                 $member->user_mail_sent_at = now();
                 Log::info('SES user mail sent', [
                     'member_id' => $member->id ?? null,
                     'to' => $toUser,
-                    'bcc' => 'membership-application@zenchu.or.jp',
+                    'bcc' => config('mail.bcc'),
                 ]);
             } catch (\Throwable $e) {
                 Log::error('SES user mail send failed', [
                     'member_id' => $member->id ?? null,
                     'to' => $toUser,
-                    'bcc' => 'membership-application@zenchu.or.jp',
+                    'bcc' => config('mail.bcc'),
                     'error' => $e->getMessage(),
                 ]);
             }
         }
 
         // corp 宛（agent の場合のみ or mail がある場合）
-        if ($toCorp) {
+        if ($toCorp && $member->agent) {
             try {
                 Mail::to($toCorp)
                     ->send(new AgentRegistrationCompleted($corp));
