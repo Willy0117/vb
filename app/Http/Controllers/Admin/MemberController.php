@@ -1046,7 +1046,7 @@ logger()->error('BASE DIR DEBUG', [
                     optional($member->withdrawn_at)?->format('Y-m-d'),
 
                     // 外国人会費請求日
-                    optional($invoice)->billing_date?->format('Y-m-d'),
+                    optional($invoice)->issued_at?->format('Y-m-d'),
 
                     // 外国人会費入金日
                     optional($invoice)->paid_at?->format('Y-m-d'),
