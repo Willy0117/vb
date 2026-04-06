@@ -130,6 +130,9 @@ Route::prefix('members')->group(function () {
     Route::get('resend', [MemberRegController::class, 'resend'])
         ->name('members.resend');
 
+        Route::get('already', [MemberRegController::class, 'already'])
+        ->name('members.already');
+
     Route::get('bank', [MemberRegController::class, 'bank'])
         ->name('members.bank');
 

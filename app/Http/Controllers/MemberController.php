@@ -875,6 +875,20 @@ class MemberController extends Controller
 
     public function pdfPreview(Request $request,$token)
     {
+        if (app()->environment('production')) {
+            $preUser = PreUser::where('token', $token)->firstOrFail();
+
+            // ① すでに完了している場合
+            if (!$preUser || $preUser->verified_at) {
+                return redirect()->route('members.already');
+            }
+
+            // ② 有効期限チェック（もし持ってるなら）
+            if (!$preUser || Carbon::now()->greaterThan($preUser->expires_at)) {
+                return redirect()
+                    ->route('members.resend');
+            }
+        }
         return Inertia::render('Members/PdfPreview', [
             'token'  => $token,
             'pdfUrl' => $request->query('pdfUrl'),
@@ -893,6 +907,13 @@ class MemberController extends Controller
     {
         return Inertia::render('Members/Resend', [
             'message' => "このURLは24時間以上経過しており、有効期限が切れています。\n大変申し訳ありませんが、もう一度メール送信から入会申込をやり直してください。\n\nどうぞよろしくお願い致します。",
+        ]);
+    }
+
+    public function already()
+    {
+        return Inertia::render('Members/Already', [
+            'message' => "すでにお申込は完了しております。\n\n入会にあたっては、審査がございます。\nいま、しばらくお待ち下さいます様、どうぞよろしくお願い致します。",
         ]);
     }
 
