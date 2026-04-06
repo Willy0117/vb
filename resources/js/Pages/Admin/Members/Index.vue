@@ -493,7 +493,7 @@ const search = () => {
 const submitSearch = () => {
   console.log(persistQuery())
   router.get(route('admin.member.index'), { ...persistQuery(), page: 1 }, {
-    preserveState: true,
+    preserveState: false,
     replace: true,
     onSuccess: () => resetSelectedIds()
   })

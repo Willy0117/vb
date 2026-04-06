@@ -32,6 +32,11 @@
   "total": "登録件数",
   "member": "申請者数",
   "pre-register": "メール登録者数",
+  "preregisters": {
+    "list": "申込一覧",
+    "expires_at": "有効期限",
+    "verified_at": "申込完了"
+  },
   "actions": {
     "action": "操 作",
     "save": "保 存",

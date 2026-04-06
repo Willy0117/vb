@@ -51,6 +51,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('permissions/assign', [\App\Http\Controllers\Admin\PermissionController::class, 'assign'])->name('permissions.assign');
         // user
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+        Route::resource('registers', \App\Http\Controllers\Admin\RegisterController::class);
 
         Route::prefix('member')->name('member.')->group(function () {
             Route::get('/', [AdminMemberController::class, 'index'])->name('index');

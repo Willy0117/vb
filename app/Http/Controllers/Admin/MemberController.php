@@ -1363,7 +1363,7 @@ logger()->error('BASE DIR DEBUG', [
             // =====================
             if (in_array($field, $memberFields)) {
 
-                $query->where($field, 'like', "%{$keyword}%");
+                $query->where("members.$field", 'like', "%{$keyword}%");
 
             }
 
