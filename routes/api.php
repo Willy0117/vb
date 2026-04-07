@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\BankController;
 use App\Http\Controllers\Api\BankCategoryController;
 
-use App\Models\PreRegister;
+use App\Models\PreUser;
 use App\Models\Member;
 use Illuminate\Support\Carbon;
 
@@ -36,8 +36,8 @@ Route::get('/zipcode/{zip}', function ($zip) {
 });
 
 Route::get('/dashboard-counts', function() {
-    $preRegisterToday = PreRegister::whereDate('created_at', Carbon::today())->count();
-    $preRegisterMonth = PreRegister::whereMonth('created_at', Carbon::now()->month)
+    $preRegisterToday = PreUser::whereDate('created_at', Carbon::today())->count();
+    $preRegisterMonth = PreUser::whereMonth('created_at', Carbon::now()->month)
                                    ->whereYear('created_at', Carbon::now()->year)
                                    ->count();
 
