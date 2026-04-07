@@ -44,7 +44,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="preregister in page.props.preregisters?.data" :key="preregister.id" class="odd:bg-white even:bg-gray-100">
+          <tr v-for="preregister in props.preregisters?.data" :key="preregister.id" class="odd:bg-white even:bg-gray-100">
 
             <td class="px-3 py-2">{{ preregister.agent === 1 ? '代理申請' : '本人申請' }}</td>
             <td class="px-3 py-2">{{ preregister.email ?? '-' }}</td>
@@ -56,7 +56,7 @@
       </table>
 
       <!-- ページネーション -->
-      <Pagination :paginator="page.props.preregisters" :onPageChange="goPage" :startItem="startItem" :endItem="endItem"/>
+      <Pagination :paginator="props.preregisters" :onPageChange="goPage" :startItem="startItem" :endItem="endItem"/>
     </div>
   </AppLayout>
 </template>
@@ -77,32 +77,43 @@ import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { ArrowDownTrayIcon, PencilIcon, EyeIcon, MagnifyingGlassIcon, DocumentPlusIcon} from '@heroicons/vue/24/outline'
 
-const page = usePage()
+const { t } = useI18n()
 
-console.log(page.props)
+const page = usePage()
 
 const user = page.props.auth.user
 
-const { t } = useI18n()
-
 const isSuperAdmin = computed(() =>
-  props.user?.roles?.some(r => r.name.toLowerCase() === 'super_admin')
+  user?.roles?.some(r => r.name.toLowerCase() === 'super_admin')
 )
-// 複数検索用に reactive 拡張
-const form = useForm({
+
+const props = defineProps({
+  preregisters: Object, 
+  filters: Object,
 })
+
+const form = useForm({
+  per_page: props.filters?.per_page || 20,
+  sort_by: props.filters?.sort_by || 'created_at', 
+  sort_dir: props.filters?.sort_dir || 'desc',
+})
+
+console.log(props)
 
 // persistQueryに各検索項目を追加
 const persistQuery = () => ({
+  per_page: form.per_page,
+  sort_by: form.sort_by,
+  sort_dir: form.sort_dir,
 })
   
 
 
 const submitSearch = () => {
   console.log(form)
+  console.log(persistQuery())
   router.get(route('admin.registers.index'), { ...persistQuery(), page: 1 }, {
     preserveState: false,
-    replace: true,
   })
 }
 
@@ -110,7 +121,6 @@ const submitSearch = () => {
 const goPage = (page) => {
   router.get(route('admin.registers.index'), { ...persistQuery(), page }, {
     preserveState: false,
-    replace: true,
   })
 }
 

@@ -23,7 +23,7 @@ class RegisterController extends Controller
 
         $sortBy  = $request->input('sort_by', 'created_at');
         $sortDir = $request->input('sort_dir', 'desc');
-var_dump($sortBy);
+
         $allowedSorts = ['agent','email', 'created_at', 'expires_at','verified_at'];
 
         if (!in_array($sortBy, $allowedSorts)) {
@@ -42,6 +42,11 @@ var_dump($sortBy);
 
         return Inertia::render('Admin/Registers/Index', [
             'preregisters'     => $PreRegister,
+            'filters' => [
+                'per_page'     => $request->per_page ?? 20,
+                'sort_by'      => $request->sort_by ?? 'created_at',  // ← 初期値
+                'sort_dir'     => $request->sort_dir ?? 'desc',       // ← 初期値
+            ],
         ]);
     }
 }
