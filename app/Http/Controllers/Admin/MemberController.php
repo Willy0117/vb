@@ -560,7 +560,7 @@ class MemberController extends Controller
             'company_kana'  => 'required|string',
             'rep_last_kana' => 'required|string',
             'rep_first_kana'=> 'required|string',
-            'company_type_prefix' => 'required|string',
+            'company_type_prefix' => 'nullable|string',
             'company_name'  => 'required|string',
             'company_type_suffix' => 'nullable|string',
             'rep_last_name' => 'required|string',
@@ -673,7 +673,7 @@ class MemberController extends Controller
     {
        $rules = [
             'company_kana' => 'required|string',
-            'company_type_prefix' => 'required|string',
+            'company_type_prefix' => 'nullable|string',
             'company_name' => 'required|string',
             'company_type_suffix' => 'nullable|string',
             // ===== 郵送先（mail）=====
@@ -749,7 +749,7 @@ class MemberController extends Controller
             'agent.company_name' => 'required|string',
             'agent.postal_code' => 'required|string',
             'agent.address1' => 'required|string',
-            'agent.address2' => 'nullable|string',
+            'agent.address2' => 'required|string',
             'agent.address3' => 'nullable|string',
             'agent.tel' => 'required|string',
             'agent.fax' => 'nullable|string',

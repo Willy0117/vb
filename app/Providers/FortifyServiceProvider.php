@@ -59,7 +59,7 @@ class FortifyServiceProvider extends ServiceProvider
                 return '/admin/dashboard';
             }
 
-            return '/dashboard';
+            return '/admin/dashboard';//将来的にMyPage機能が必要になれば→'/dashboard'　戻す
         });
 
     }
