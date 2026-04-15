@@ -446,6 +446,13 @@ class MemberController extends Controller
             ]);
         }
         // 法人：履歴事項全部証明書
+        $rules = array_merge($rules, [
+            'history_certificate' => [
+                'nullable',
+                'file',
+                'mimes:pdf',
+            ],
+        ]);
 
         $rules = array_merge($rules, [
             'history_certificate_path' => [
@@ -493,8 +500,15 @@ class MemberController extends Controller
             ],
         ]); 
 */
-
         // 郵送先が別：郵送先確認資料
+        $rules = array_merge($rules, [
+            'mail_address_certificate' => [
+                'nullable',
+                'file',
+                'mimes:pdf',
+            ],
+        ]);
+
         $rules = array_merge($rules, [
             'mail_address_certificate_path' => [
                 function ($attr, $value, $fail) use ($request) {
