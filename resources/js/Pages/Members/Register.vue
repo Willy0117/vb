@@ -1114,6 +1114,10 @@ if (form.corp) {
   return Object.keys(errors.value).length === 0
 }
 
+const isPdf = (file) => {
+  return file.type === 'application/pdf'
+}
+
 const historyCertificateInput = ref(null)
 
 const triggerFileSelect = () => {
@@ -1123,12 +1127,23 @@ const triggerFileSelect = () => {
 const handleFileSelect = (e) => {
   const file = e.target.files[0]
   if (!file) return
+
+  if (!isPdf(file)) {
+    alert('PDFファイルのみアップロード可能です')
+    e.target.value = ''
+    return
+  }
   form.history_certificate = file
 }
 
 const handleDrop = (e) => {
   const file = e.dataTransfer.files[0]
   if (!file) return
+
+  if (!isPdf(file)) {
+    alert('PDFファイルのみアップロード可能です')
+    return
+  }
   form.history_certificate = file
 }
 
@@ -1144,6 +1159,13 @@ const triggerMailCertSelect = () => {
 const handleMailCertSelect = (e) => {
   const file = e.target.files?.[0]
   if (!file) return
+
+  if (!isPdf(file)) {
+    alert('PDFファイルのみアップロード可能です')
+    e.target.value = ''
+    return
+  }
+
   form.mail_address_certificate = file
 }
 
@@ -1151,6 +1173,11 @@ const handleMailCertSelect = (e) => {
 const handleMailCertDrop = (e) => {
   const file = e.dataTransfer.files?.[0]
   if (!file) return
+  
+  if (!isPdf(file)) {
+    alert('PDFファイルのみアップロード可能です')
+    return
+  }
   form.mail_address_certificate = file
 }  
 
