@@ -278,7 +278,8 @@ class MemberController extends Controller
             'mobile'       => $corpOrg->mobile,
             'email'        => $corpOrg->email,
             'position'     => $corpOrg->position,
-            'contact_name' => $corpOrg->contact_name,
+            'last_name'    => $corpOrg->last_name,
+            'first_name'   => $corpOrg->first_name,
             'note'         => $corpOrg->note,
         ] : null;
         // 郵送先

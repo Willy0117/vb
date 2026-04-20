@@ -1304,6 +1304,7 @@ watch(
   }
 )
 // 会社情報の代表者名が入力されたら,corp.にも入れる
+/*
 watch(
   () => [form.rep_last_name, form.rep_first_name],
   ([last, first]) => {
@@ -1316,7 +1317,7 @@ watch(
   },
   { immediate: true }
 )
-
+*/
 
 //銀行コードまたは支店コードを半角数字化
 const toHalfWidthNumber = (value) => {
