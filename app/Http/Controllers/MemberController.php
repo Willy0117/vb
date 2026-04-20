@@ -264,11 +264,17 @@ class MemberController extends Controller
  
             });
         } catch (\Exception $e) {
-            throw $e;
-                    // DB登録失敗 → 拒否画面に飛ばす
-            return Inertia::render('Members/Reject', [
-                'message' => '登録処理に失敗しました。もう一度メールに記載のURLから登録し直してください。',
+
+            Log::error('Member registration failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'input' => $form,
             ]);
+
+            return Inertia::render('Members/Reject', [
+                'message' => '登録処理に失敗しました。もう一度やり直してください。',
+            ]);
+
         }
         // 完了メール送信
         $this->sendCompletedMails($member, $preUser, $corp, $agent);
