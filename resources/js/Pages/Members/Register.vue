@@ -81,7 +81,7 @@
                       'border-red-500': getError('company_name'),
                       'border-gray-300': !getError('company_name')
                     }"
-                    class="flex-1"
+                    class="w-full"
                     placeholder="〇〇建設"
                   />
                   <InputError :message="form.errors?.company_name" />
@@ -123,6 +123,12 @@
          <!-- 右カラム：代表者/担当者 -->
           <div class="space-y-4">
             <h3 class="text-lg font-semibold mb-2">代表者</h3>
+                      <!-- 肩書き -->
+            <div class="flex-1">
+                <InputLabel :value="t('registers.position')" class="h-5" />
+                <TextInput v-model="form.corp.position" class="w-full" />
+            </div>
+
             <div>
              <InputLabel value="代表者名" />
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
@@ -212,7 +218,7 @@
                   'border-red-500': getError('corp.address1'),
                   'border-gray-300': !getError('corp.address1')
                 }"
-                class="w-full"
+                class="w-full" placeholder="○○県△△市xx区"
               />
               <InputError :message="form.errors['corp.address1']" />
             </div>
@@ -223,15 +229,15 @@
                   'border-red-500': getError('corp.address2'),
                   'border-gray-300': !getError('corp.address2')
                 }"
-                class="w-full" />
+                class="w-full" placeholder="○○丁目○○番地" />
               <InputError :message="form.errors['corp.address2']" />
             </div>
             <div class="flex-1">
               <InputLabel :value="t('registers.address3')" />
-              <TextInput v-model="form.corp.address3" class="w-full" />
+              <TextInput v-model="form.corp.address3" class="w-full" placeholder="xxxビル○○F" />
             </div>
         </div>
-        <div class="mb-4 grid grid-cols-4 gap-x-1 gap-y-3 sm:flex-row sm:items-start">
+        <div class="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-1 gap-y-3 items-start">
             <div>
               <InputLabel :value="t('registers.tel')" />
               <TextInput
@@ -278,10 +284,7 @@
               </p>
             </div>
             <div v-if="form.is_agent">
-              <InputLabel>
-                {{ t('registers.email') }}
-              </InputLabel>
-
+              <InputLabel :value="t('registers.email')" />
               <TextInput v-model="form.corp.email" class="w-full" />
               <p v-if="form.errors['corp.email']" class="text-red-500 text-sm mt-1" >
                 {{ form.errors['corp.email'] }}
@@ -291,18 +294,24 @@
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
           <!-- 肩書き -->
           <div class="flex-1">
+            <span class="text-xs text-gray-500">
+              ■ 法人代表者情報（履歴事項全部証明書通りに記載）<br>
+              ※担当者の名前は記入しないでください.</span>
+<!--
               <InputLabel :value="t('registers.position')" class="h-5" />
               <TextInput v-model="form.corp.position" class="w-full" />
+-->              
           </div>
           <!-- 氏名 -->
           <div class="flex-1">
-              <InputLabel :value="t('registers.staff')" class="h-5" />
+              <!-- InputLabel :value="t('registers.staff')" class="h-5" / -->
+              <InputLabel value="代表者名" class="h-5" />
               <TextInput v-model="form.corp.last_name"
                   :class="{
                     'border-red-500': getError('corp.last_name'),
                     'border-gray-300': !getError('corp.last_name')
                     }"
-                    class="w-full" />
+                    class="w-full" :placeholder="t('registers.last_name')" />
               <InputError :message="form.errors['corp.last_name']" />
           </div>          
           <div class="flex-1">
@@ -312,13 +321,13 @@
                     'border-red-500': getError('corp.first_name'),
                     'border-gray-300': !getError('corp.first_name')
                   }"
-                  class="w-full" />
+                  class="w-full" :placeholder="t('registers.first_name')" />
               <InputError :message="form.errors['corp.first_name']" />
           </div>
         </div>
         <div class="p-4 bg-green-50 border-l-4 border-green-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.mail') }}</h3>
-          <p class="text-sm text-blue-700 mt-1">郵送先と現住所が違う場合は、こちらを入力してください</p>
+          <p class="text-sm text-blue-700 mt-1">郵送先と現住所が違う。または、ご担当者が違う場合は、こちらを入力してください</p>
         </div>                
         <!--     -->                  
         <div class="mb-4">
@@ -424,30 +433,30 @@
               </p>
             </div>
         </div>            
+      </div>
+      <div>
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <!-- 肩書き -->
             <div class="flex-1">
-              <div>
-                <InputLabel :value="t('registers.position')" />
-                <TextInput v-model="form.mail.position" class="w-full" />
-              </div>
+              <InputLabel :value="t('registers.position')" />
+              <TextInput v-model="form.mail.position" class="w-full" />
               <InputError :message="form.errors['mail.position']" />
             </div>
-
             <!-- 氏名 -->
             <div class="flex-1">
-              <div>
-                <InputLabel :value="t('registers.staff')" />
-                <div class="flex gap-2">
-                  <TextInput v-model="form.mail.last_name" class="w-full" />
-                  <TextInput v-model="form.mail.first_name" class="w-full" />
-                </div>
-              </div>
+              <InputLabel :value="t('registers.staff')" />
+              <TextInput v-model="form.mail.last_name" class="w-full" :placeholder="t('registers.last_name')" />
               <InputError :message="form.errors['mail.last_name']" />
+            </div>
+            <!-- 氏名 -->
+            <div class="flex-1">
+              <InputLabel value="　" />
+              <TextInput v-model="form.mail.first_name" class="w-full" :placeholder="t('registers.first_name')" />
               <InputError :message="form.errors['mail.first_name']" />
             </div>
         </div>
       </div>        
+        
         <!-- ここから代理人-->
         <div v-if="form.is_agent">
 
@@ -569,12 +578,12 @@
               <!-- 氏名 -->
               <div class="flex-1">
                   <InputLabel :value="t('registers.staff')"  class="h-5" />
-                  <TextInput v-model="form.agent.last_name" class="w-full" />
+                  <TextInput v-model="form.agent.last_name" class="w-full" :placeholder="t('registers.last_name')" />
                   <InputError :message="form.errors['agent.last_name']" />
               </div>
               <div class="flex-1">
                 <InputLabel value="　" class="h-5"/>
-                <TextInput v-model="form.agent.first_name" class="w-full" />
+                <TextInput v-model="form.agent.first_name" class="w-full" :placeholder="t('registers.first_name')" />
                 <InputError :message="form.errors['agent.first_name']" />
               </div>
           </div>
@@ -591,7 +600,7 @@
 
             <!-- 銀行選択 -->
             <InputLabel :value="t('banks.bank_category')" />
-            <div class="grid grid-cols-4 gap-2 mb-3">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
               <button
                 v-for="c in bankCategories"
                 :key="c.id"
@@ -607,9 +616,12 @@
                 {{ c.label }}
               </button>
             </div>
+            <p v-if="form.errors?.bank_type" class="text-red-500 text-sm mt-1">
+              {{ form.errors?.bank_type }}
+            </p>
 
             <!-- 銀行名 + 銀行コード -->
-            <div class="grid grid-cols-2 gap-4 mb-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
               <div>
                 <Autocomplete
                   :key="bankKey"
@@ -632,7 +644,7 @@
             </div>
 
             <!-- 支店名 + 支店コード -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
               <!-- 支店名（通常銀行のみ） -->
               <div>
@@ -1307,7 +1319,7 @@ const submitPDF = () => {
     onError: (errors) => {
       // errors は自動で form.errors に入る
       console.log(errors)
-      alert('PDFの作成に失敗しました。もう一度入力フォームを全て確認してください。')
+//      alert('PDFの作成に失敗しました。もう一度入力フォームを全て確認してください。')
     },
   })
 }

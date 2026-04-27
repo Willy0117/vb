@@ -2,7 +2,7 @@
   <AppLayout>
     <template #header>{{ t('members.member_list') }}</template>
     <div class="p-6">
-      <div class="grid grid-cols-1 md:grid-cols-5 items-center gap-2 mb-4">
+      <div class="mb-4 flex flex-wrap items-center gap-2">
         <div>
           <select
             v-model.number="form.per_page"
@@ -12,12 +12,21 @@
             <option v-for="n in [10,20,30,50]" :key="n" :value="n">{{ n }}</option>
           </select>
         </div>
-        <div class="flex items-center space-x-2">
+        <div>
+          <Link
+            :href="route('admin.member.create', persistQuery())"
+            class="px-4 h-10 bg-green-500 text-white rounded hover:bg-green-600 flex items-center justify-center"
+          >
+            <PlusIcon class="w-4 h-4"/>
+            <span>{{ t('members.create') }}</span>
+          </Link>
+        </div>
+        <div class="flex items-center space-x-2 flex-1 min-w-[300px]">
 
           <!-- フィールド選択 -->
           <select
             v-model="form.field"
-            class="h-10 border border-gray-300 rounded-md px-3 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="h-10 border border-gray-300 rounded-md px-3 text-sm bg-white"
           >
             <optgroup label="会員情報">
               <option value="number">外国人番号</option>
@@ -41,13 +50,12 @@
           <TextInput
             v-model="form.keyword"
             type="text"
-            class="border rounded px-2 py-2 w-128"
+            class="border rounded px-2 py-2"
             placeholder="検索キーワード"
             @keyup.enter="search"
           />
 
         </div>
-        <div></div>
         <div>
           <SecondaryButton
             type="button"
@@ -58,7 +66,7 @@
             CSV
           </SecondaryButton> 
         </div>
-        <div class="md:text-right whitespace-nowrap">
+        <div class="ml-auto whitespace-nowrap">
           {{ t('total') }} : {{ props.members.total }}
         </div>
       </div>

@@ -54,17 +54,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('registers', \App\Http\Controllers\Admin\RegisterController::class);
 
         Route::prefix('member')->name('member.')->group(function () {
-            Route::get('/', [AdminMemberController::class, 'index'])->name('index');
+//            Route::get('/', [AdminMemberController::class, 'index'])->name('index');
             Route::get('/csv', [AdminMemberController::class, 'csv'])->name('csv');
             Route::get('/export', [AdminMemberController::class, 'export'])->name('export');
 
             Route::post('/check-number', [AdminMemberController::class, 'checkNumber']);
 
             Route::get('/pdf/{id}', [AdminMemberController::class, 'pdfPreview'])->name('pdf.preview');
+            /*
             Route::get('/{member}', [AdminMemberController::class, 'show'])->name('show');
             Route::get('/{member}/edit', [AdminMemberController::class, 'edit'])->name('edit');
             Route::put('/{member}', [AdminMemberController::class, 'update'])->name('update');
-
+            */
             // routes/admin.php
             Route::get('{member}/status/edit', [AdminMemberController::class, 'editStatus'])
                 ->name('editStatus');
@@ -81,7 +82,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('{member}/save-basic',[AdminMemberController::class, 'saveBasic']);    
             Route::post('{member}/save-mail',[AdminMemberController::class, 'saveMail']);    
             Route::post('{member}/save-agent',[AdminMemberController::class, 'saveAgent']);    
-            Route::post('{member}/save-bank',[AdminMemberController::class, 'saveBank']);    
+            Route::post('{member}/save-bank',[AdminMemberController::class, 'saveBank']);  
+
+            Route::resource('', AdminMemberController::class)
+                ->parameters(['' => 'member']);
               
         });
     });

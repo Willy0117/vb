@@ -165,6 +165,7 @@
     "member_deleted": "会員を削除しました。",
     "selected_members_deleted": "選択した会員を削除しました。",
     "edit": "会員編集",
+    "create": "会員登録",
     "type": "会社区分",
     "agent": "申請区分",
     "member_code": "会員ID",

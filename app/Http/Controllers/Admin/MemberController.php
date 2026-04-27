@@ -17,6 +17,8 @@ use App\Models\OrganizationDocument;
 use App\Http\Resources\MemberResource;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Helpers\DateHelper;
 use App\Models\OperationLog;
@@ -39,7 +41,7 @@ class MemberController extends Controller
             ->get();
 
         $paginated = $query
-            ->with(['organization.documents', 'status', 'progress'])
+            ->with(['organizations.documents', 'status', 'progress'])
             ->paginate($perPage)
             ->withQueryString();
 
@@ -111,12 +113,207 @@ class MemberController extends Controller
     // 保存
     public function store(Request $request)
     {
-        $validated = $request->validate([
-        ]);
+       $rules = [
+            // ===== 基本情報 =====
+            'type' => 'required|string',
+            'desired_join_month' => 'required|string',
+            'company_kana' => 'required|string',
+            'rep_last_kana' => 'required|string',
+            'rep_first_kana' => 'required|string',
+            'company_type_prefix' => 'nullable|string',
+            'company_name' => 'required|string',
+            'company_type_suffix' => 'nullable|string',
+            'rep_last_name' => 'required|string',
+            'rep_first_name' => 'required|string',
+            'same_as_corp' => 'boolean',
+            'is_agent' => 'boolean',
 
-        Member::create($validated);
+            // ===== 法人（corp）=====
+            'corp' => 'required|array',
+            'corp.type' => 'required|integer',
+            'corp.postal_code' => 'required|string',
+            'corp.address1' => 'required|string',
+            'corp.address2' => 'required|string',
+            'corp.address3' => 'nullable|string',
+            'corp.tel' => 'required|string',
+            'corp.fax' => 'nullable|string',
+            'corp.mobile' => 'nullable|string',
+            'corp.email' => 'required|string',
+            'corp.position' => 'required|string',
+            'corp.last_name' => 'required|string',
+            'corp.first_name' => 'required|string',
 
-        return redirect()->route('admin.members.index')
+            // ===== 郵送先（mail）=====
+            'mail' => 'required|array',
+            'mail.type' => 'required|integer',
+            'mail.postal_code' => 'nullable|string',
+            'mail.address1' => 'required|string',
+            'mail.address2' => 'required|string',
+            'mail.address3' => 'nullable|string',
+            'mail.tel' => 'required|string',
+            'mail.fax' => 'nullable|string',
+            'mail.mobile' => 'nullable|string',
+//            'mail.email' => 'nullable|email',
+            'mail.position' => 'nullable|string',
+            'mail.last_name' => 'nullable|string',
+            'mail.first_name' => 'nullable|string',
+
+            // ===== 銀行 =====
+            'bank_type' => 'required|integer',
+            'bank_name' => 'required|string',
+            'bank_code' => 'required|string',
+            'branch_code' => 'required|string',
+            'account_type' => 'required|string',
+            'account_no' => 'required|string',
+            'account_kana' => 'nullable|string',
+            'account_name' => 'nullable|string',
+
+        ];
+
+        if ($request->bank_code !== '9900') {
+            $rules['branch_name'] = 'required|string';
+        }
+
+        if ($request->boolean('is_agent')) {
+            $rules = array_merge($rules, [
+                'corp.email' => 'required|email',
+                'agent' => 'required|array',
+                'agent.type' => 'required|integer',
+                'agent.company_name' => 'required|string',
+                'agent.postal_code' => 'required|string',
+                'agent.address1' => 'required|string',
+                'agent.address2' => 'required|string',
+                'agent.address3' => 'nullable|string',
+                'agent.tel' => 'required|string',
+                'agent.fax' => 'nullable|string',
+                'agent.mobile' => 'nullable|string',
+                'agent.position' => 'required|string',
+                'agent.last_name' => 'required|string',
+                'agent.first_name' => 'nullable|string',
+            ]);
+
+        }
+
+        $form = $request->validate($rules);
+        $member = null;
+        $corp = null;
+        $agent = null;
+
+        try {
+            DB::transaction(function () use ($form, $request, &$member, &$corp, &$agent) {
+      
+                $isAgent = (bool) ($form['is_agent'] ?? false);
+
+                // members
+                $member = Member::create([
+                    'application_type' => Member::TYPE_PAPER,
+                    'last_name'  => $form['rep_last_name'],
+                    'first_name' => $form['rep_first_name'],
+                    'last_name_kana'  => $form['rep_last_kana'],
+                    'first_name_kana' => $form['rep_first_kana'],
+                    'agree' => 1,
+                    'affiliate' => 1,
+                    'agreed_at' => now(),
+                    'status' => 1,
+                    'progress' => 1,
+                    'agent' => $isAgent,
+                    'type' => $form['type'],
+                    'desired_join_month' => $form['desired_join_month'] ? $form['desired_join_month'] . '-01' : null,
+                ]);
+                // bank_accounts
+                $member->bankAccount()->create([
+                    'bank_type' => $form['bank_type'],
+                    'bank_name' => $form['bank_name'],
+                    'bank_code' => $form['bank_code'] ?? null,
+                    'branch_name' => $form['branch_name'],
+                    'branch_code' => $form['branch_code'] ?? null,
+                    'account_type' => $form['account_type'],
+                    'account_no' => $form['account_no'],
+                    'account_kana' => $form['account_kana'],
+                    'account_name' => $form['account_name'],
+                ]);
+
+                $corp = $form['corp'];
+
+                $corpOrg = $member->organizations()->create([    
+                    'type' => 1,
+                    'name' => $form['company_name'],
+                    'name_kana' => $form['company_kana'],
+                    'name_prefix' => $form['company_type_prefix'],
+                    'name_suffix' => $form['company_type_suffix'],
+                    'postal_code' => $corp['postal_code'],
+                    'address1' => $corp['address1'],
+                    'address2' => $corp['address2'],
+                    'address3' => $corp['address3'],
+                    'tel' => $corp['tel'],
+                    'fax' => $corp['fax'],
+                    'mobile' => $corp['mobile'],
+                    'email' => $corp['email'],
+                    'position'  => $corp['position'],
+                    'last_name' => $corp['last_name'],
+                    'first_name' => $corp['first_name'],
+                ]);
+
+                $mail = $form['mail'];
+
+                $mailOrg = $member->organizations()->create([    
+                    'type' => 2,
+                    'name' => $form['company_name'],
+                    'name_kana' => $form['company_kana'],
+                    'name_prefix' => $form['company_type_prefix'],
+                    'name_suffix' => $form['company_type_suffix'],
+                    'postal_code' => $mail['postal_code'],
+                    'address1' => $mail['address1'],
+                    'address2' => $mail['address2'],
+                    'address3' => $mail['address3'],
+                    'tel' => $mail['tel'],
+                    'fax' => $mail['fax'],
+                    'mobile' => $mail['mobile'],
+                    //'email' => $mail['email'],
+                    'position'  => $mail['position'],
+                    'last_name' => $mail['last_name'],
+                    'first_name' => $mail['first_name'],
+                ]);
+
+                if ($isAgent) {
+
+                    $agent = $form['agent'];
+
+                    $agentOrg = $member->organizations()->create([    
+                        'type' => 3,
+                        'name' => $agent['company_name'],
+                        'name_kana' => '',
+                        'postal_code' => $agent['postal_code'],
+                        'address1' => $agent['address1'],
+                        'address2' => $agent['address2'],
+                        'address3' => $agent['address3'],
+                        'tel' => $agent['tel'],
+                        'fax' => $agent['fax'],
+                        'mobile' => $agent['mobile'],
+                        //'email' => $agent['email'],
+                        'position'  => $agent['position'],
+                        'last_name' => $agent['last_name'],
+                        'first_name' => $agent['first_name'],
+                    ]); 
+                }               
+                // member 登録
+                $member->verified_at = now();
+                $member->save();
+
+            });
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error('Member registration failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return Inertia::render('Admin/Members/Create', [
+                'message' => '登録処理に失敗しました。もう一度やり直してください。',
+            ]);
+
+        }
+        return redirect()->route('admin.member.index')
             ->with('success', __('member_created'));
     }
 
@@ -128,7 +325,7 @@ class MemberController extends Controller
             'region',
             'organizations',
             'organizations.documents', // documents はここで取得するだけ
-            'applicationOrganization',
+            'applicationOrganizations',
             'updatedByUser',
             'statusHistories.user',
             'progressHistories.user',
@@ -252,6 +449,7 @@ class MemberController extends Controller
         ]);
 
         $orgs = $member->organizations->keyBy('type');
+
         // 書類は type ごとに全部取得
         $documents = $member->organizations
             ->flatMap(fn ($org) => $org->documents)
@@ -334,14 +532,14 @@ class MemberController extends Controller
                 'progress_id' => $member->progress_id,
                 'is_agent'    => $member->agent,
                 'type'        => $member->type ?? 'corporation',
-                'company_kana'=> $corp['name_kana'],
+                'company_kana'=> $corp['name_kana'] ?? '',
                 'rep_last_kana' => $member->last_name_kana,
                 'rep_first_kana' => $member->first_name_kana,
                 'joined_at'   => $member->joined_at,
                 'withdrawn_at'=> $member->withdrawn_at,
-                'company_type_prefix' => $corp['prefix'],
-                'company_name'=> $corp['name'],
-                'company_type_suffix' => $corp['suffix'],
+                'company_type_prefix' => $corp['prefix'] ?? '',
+                'company_name'=> $corp['name'] ?? '',
+                'company_type_suffix' => $corp['suffix'] ?? '',
                 'aplus_customer_no'   => $member->aplus_customer_no,
                 'jac_certification_no'=> $member->jac_certification_no,
                 'corp'        => $corp,
@@ -616,7 +814,7 @@ class MemberController extends Controller
             'updated_by'  => auth()->id(),
         ]);
 
-        $member->invoice()->updateOrCreate(
+        $member->invoices()->updateOrCreate(
             [],
             [
                 'issued_at' => $form['issued_at'] ?? null,
@@ -1322,8 +1520,8 @@ logger()->error('BASE DIR DEBUG', [
             ->with([
                 'status',
                 'progress',
-                'organization' => fn ($q) => $q->where('type', 1),
-                'organization.documents',// => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
+                'organizations' => fn ($q) => $q->where('type', 1),
+                'organizations.documents',// => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
             ])
             ->when(request('status_id'), function ($q, $status_id) {
                 $q->where('status_id', $status_id);
@@ -1373,7 +1571,7 @@ logger()->error('BASE DIR DEBUG', [
             // =====================
             elseif (in_array($field, $organizationFields)) {
 
-                $query->whereHas('organization', function ($q) use ($field, $keyword) {
+                $query->whereHas('organizations', function ($q) use ($field, $keyword) {
 
                     $q->where('type', 1);
 

@@ -27,7 +27,7 @@ class MemberController extends Controller
     public function showRegistrationForm(Request $request,$token)
     {
         $preUser = PreUser::where('token', $token)->first();
-
+        
         if (!$preUser || Carbon::now()->greaterThan($preUser->expires_at)) {
             return redirect()
                 ->route('members.resend');
@@ -37,6 +37,12 @@ class MemberController extends Controller
 
         if ($sessionToken !== $request->token) {
             $request->session()->forget('member_form');
+        }
+        
+        if (is_null($preUser->agreed_at)) {
+            $preUser->update([
+                'agreed_at' => now(),
+            ]);
         }
 
         return Inertia::render('Members/AgreeAndAffiliates', [
@@ -129,7 +135,7 @@ class MemberController extends Controller
                 $email = $preUser->email;
                 if ($isAgent) $email = $corp['email'];
 
-                $corpOrg = $member->organization()->create([    
+                $corpOrg = $member->organizations()->create([    
                     'type' => 1,
                     'name' => $form['company_name'],
                     'name_kana' => $form['company_kana'],
@@ -148,7 +154,7 @@ class MemberController extends Controller
                     'first_name' => $corp['first_name'],
                 ]);
 
-                $appCorpOrg = $member->applicationOrganization()->create([
+                $appCorpOrg = $member->applicationOrganizations()->create([
                     'type' => 1,
                     'name' => $form['company_name'],
                     'name_kana' => $form['company_kana'],
@@ -169,7 +175,7 @@ class MemberController extends Controller
 
                 $mail = $form['mail'];
 
-                $mailOrg = $member->organization()->create([    
+                $mailOrg = $member->organizations()->create([    
                     'type' => 2,
                     'name' => $form['company_name'],
                     'name_kana' => $form['company_kana'],
@@ -188,7 +194,7 @@ class MemberController extends Controller
                     'first_name' => $mail['first_name'],
                 ]);
 
-                $appMailOrg = $member->applicationOrganization()->create([    
+                $appMailOrg = $member->applicationOrganizations()->create([    
                     'type' => 2,
                     'name' => $form['company_name'],
                     'name_kana' => $form['company_kana'],
@@ -213,7 +219,7 @@ class MemberController extends Controller
 
                     $agent = $form['agent'];
 
-                    $agentOrg = $member->organization()->create([    
+                    $agentOrg = $member->organizations()->create([    
                         'type' => 3,
                         'name' => $agent['company_name'],
                         'name_kana' => '',

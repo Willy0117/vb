@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Member extends Model
 {
+    const TYPE_WEB = 'web';
+    const TYPE_PAPER = 'paper';
+
     protected $fillable = [
         'type',
         'last_name',
@@ -27,6 +30,7 @@ class Member extends Model
         'jac_certification_no', 
         'updated_by',
         'desired_join_month',
+        'application_type',
     ];
 
     protected $casts = [
@@ -56,16 +60,16 @@ class Member extends Model
         return $this->belongsTo(Progress::class, 'progress_id'); 
     }
 
-    public function organization()
-    {
-        return $this->hasOne(Organization::class);
-    }
-
     public function organizations()
     {
         return $this->hasMany(Organization::class);
     }
-
+/*
+    public function organization()
+    {
+        return $this->hasOne(Organization::class)->latestOfMany();
+    }
+*/
     public function corpOrg()
     {
         return $this->hasOne(Organization::class)->where('type', 1);
@@ -81,26 +85,29 @@ class Member extends Model
     }
 
 
-    public function applicationOrganization()
-    {
-        return $this->hasOne(ApplicationOrganization::class);
-    }
-
     public function applicationOrganizations()
     {
         return $this->hasMany(ApplicationOrganization::class);
     }
-
+/*
+    public function applicationOrganization()
+    {
+        return $this->hasOne(ApplicationOrganization::class)->latestOfMany();
+    }
+*/
+     // 複数取得用
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
     }
-    
+
+    // 1件取得用（最新の1件を取得する場合）
     public function invoice()
     {
-        return $this->hasOne(Invoice::class);
+        // latestOfMany() を付けることで、常に「最新の1件」を返す1対1のリレーションになります
+        return $this->hasOne(Invoice::class)->latestOfMany();
     }
-    
+
     public function getFullNameAttribute()
     {
         return trim($this->last_name . ' ' . $this->first_name);

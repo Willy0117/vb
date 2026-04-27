@@ -11,12 +11,14 @@ class PreUser extends Model
         'token',
         'agent',
         'expires_at',
-        'verified_at'
+        'verified_at',
+        'agreed_at'
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
         'verified_at' => 'datetime',
+        'agreed_at' => 'datetime',
     ];
 
     protected function serializeDate(\DateTimeInterface $date)
