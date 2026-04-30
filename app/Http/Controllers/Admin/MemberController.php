@@ -435,9 +435,9 @@ class MemberController extends Controller
                     'updated_at' => $latestStatusHistory->created_at,
                     'user_name'  => $latestStatusHistory->user->name ?? null,
                 ] : null,
-                'issued_at' => $member->invoice->issued_at ? DateHelper::withWareki($member->invoice->issued_at) : null,
-                'due_date' => $member->invoice-> due_date ? DateHelper::withWareki($member->invoice->due_date) : null,
-                'paid_at' => $member->invoice-> paid_at ? DateHelper::withWareki($member->invoice->paid_at) : null,
+                'issued_at' => $member->invoice?->issued_at ? DateHelper::withWareki($member->invoice->issued_at) : null,
+                'due_date' => $member->invoice?-> due_date ? DateHelper::withWareki($member->invoice->due_date) : null,
+                'paid_at' => $member->invoice?-> paid_at ? DateHelper::withWareki($member->invoice->paid_at) : null,
                 'amount' => number_format(optional($member->invoice)->amount ?? 0),
                 'note' => optional($member->organizations->first())->note,
 

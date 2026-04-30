@@ -32,5 +32,19 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (TokenMismatchException $e, $request) {
+
+            // InertiaリクエストならJSONで返す
+            if ($request->header('X-Inertia')) {
+                return response()->json([
+                    'message' => 'セッションが切れました'
+                ], 419);
+            }
+
+            // 通常リクエストはログインへ
+            return redirect()->route('login')
+                ->with('message', 'セッションが切れました。再ログインしてください。');
+        });
+
         //
     })->create();
