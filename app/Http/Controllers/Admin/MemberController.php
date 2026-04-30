@@ -103,10 +103,15 @@ class MemberController extends Controller
     }
 
     // 作成画面
-    public function create()
+    public function create(Request $request)
     {
+
+        $regions = DB::table('regions')->select('id', 'name')->orderBy('sort_order')->get();
+
         return Inertia::render('Admin/Members/Create', [
-            'member' => null
+            'member' => null,
+            'regions' => $regions,
+            'filters' => $request->only(['company_name', 'name', 'tel', 'per_page', 'sort_by', 'sort_dir','status_id']),
         ]);
     }
 
@@ -127,6 +132,14 @@ class MemberController extends Controller
             'rep_first_name' => 'required|string',
             'same_as_corp' => 'boolean',
             'is_agent' => 'boolean',
+            'joined_at'     => 'nullable|date',
+            'withdrawn_at'  => 'nullable|date',
+            'aplus_customer_no' => 'nullable|string',
+            'jac_certification_no' => 'nullable|string',
+            'same_as_corp'  => 'boolean',
+            'issued_at' => 'nullable|string',
+            'paid_at' => 'nullable|string',
+            'amount' => 'nullable|integer',
 
             // ===== 法人（corp）=====
             'corp' => 'required|array',
@@ -142,6 +155,7 @@ class MemberController extends Controller
             'corp.position' => 'required|string',
             'corp.last_name' => 'required|string',
             'corp.first_name' => 'required|string',
+            'corp.note' => 'nullable|string',
 
             // ===== 郵送先（mail）=====
             'mail' => 'required|array',
@@ -185,6 +199,7 @@ class MemberController extends Controller
                 'agent.address2' => 'required|string',
                 'agent.address3' => 'nullable|string',
                 'agent.tel' => 'required|string',
+                'agent.email' => 'required|string',
                 'agent.fax' => 'nullable|string',
                 'agent.mobile' => 'nullable|string',
                 'agent.position' => 'required|string',
@@ -219,7 +234,23 @@ class MemberController extends Controller
                     'agent' => $isAgent,
                     'type' => $form['type'],
                     'desired_join_month' => $form['desired_join_month'] ? $form['desired_join_month'] . '-01' : null,
+                    'number'      => $form['number'] ?? null,
+                    'joined_at'   => $form['joined_at'] ?? null,
+                    'withdrawn_at'=> $form['withdrawn_at'] ?? null,
+                    'aplus_customer_no' => $form['aplus_customer_no'] ?? null,
+                    'jac_certification_no' => $form['jac_certification_no'] ?? null,
                 ]);
+                        // 口座番号の補正
+                $accountNo = $form['account_no'];
+
+                if ($form['bank_code'] === '9900') {
+                    $accountNo = str_pad($accountNo, 8, '0', STR_PAD_LEFT);
+                } else {
+                    $accountNo = str_pad($accountNo, 7, '0', STR_PAD_LEFT);
+                }
+
+                $form['account_no'] = $accountNo;
+                
                 // bank_accounts
                 $member->bankAccount()->create([
                     'bank_type' => $form['bank_type'],
@@ -231,6 +262,12 @@ class MemberController extends Controller
                     'account_no' => $form['account_no'],
                     'account_kana' => $form['account_kana'],
                     'account_name' => $form['account_name'],
+                ]);
+
+                $member->invoices()->create([
+                        'issued_at' => $form['issued_at'] ?? null,
+                        'paid_at'   => $form['paid_at'] ?? null,
+                        'amount'    => $form['amount'] ?? 0,
                 ]);
 
                 $corp = $form['corp'];
@@ -252,6 +289,7 @@ class MemberController extends Controller
                     'position'  => $corp['position'],
                     'last_name' => $corp['last_name'],
                     'first_name' => $corp['first_name'],
+                    'note' => $corp['note'],
                 ]);
 
                 $mail = $form['mail'];
@@ -290,7 +328,7 @@ class MemberController extends Controller
                         'tel' => $agent['tel'],
                         'fax' => $agent['fax'],
                         'mobile' => $agent['mobile'],
-                        //'email' => $agent['email'],
+                        'email' => $agent['email'],
                         'position'  => $agent['position'],
                         'last_name' => $agent['last_name'],
                         'first_name' => $agent['first_name'],
@@ -329,6 +367,9 @@ class MemberController extends Controller
             'updatedByUser',
             'statusHistories.user',
             'progressHistories.user',
+            'bankAccount',
+            'applicationBankAccount',
+            'invoice',
         ]);
         // persistQuery() 用に現在のクエリを保持
         $queryParams = $request->only([
@@ -394,6 +435,11 @@ class MemberController extends Controller
                     'updated_at' => $latestStatusHistory->created_at,
                     'user_name'  => $latestStatusHistory->user->name ?? null,
                 ] : null,
+                'issued_at' => $member->invoice->issued_at ? DateHelper::withWareki($member->invoice->issued_at) : null,
+                'due_date' => $member->invoice-> due_date ? DateHelper::withWareki($member->invoice->due_date) : null,
+                'paid_at' => $member->invoice-> paid_at ? DateHelper::withWareki($member->invoice->paid_at) : null,
+                'amount' => number_format(optional($member->invoice)->amount ?? 0),
+                'note' => optional($member->organizations->first())->note,
 
                 'progress_meta' => $latestProgressHistory ? [
                     'updated_at' => $latestProgressHistory->created_at,
@@ -425,6 +471,27 @@ class MemberController extends Controller
                     'email'        => $o->email,
                     'contact_name' => $o->contact_name,
                 ]),
+                'bank_account' => $member->bankAccount ? [
+                    'bank_name'    => $member->bankAccount->bank_name,
+                    'bank_code'    => $member->bankAccount->bank_code,
+                    'branch_name'  => $member->bankAccount->branch_name,
+                    'branch_code'  => $member->bankAccount->branch_code,
+                    'account_type' => $member->bankAccount->account_type,
+                    'account_no'   => $member->bankAccount->account_no,
+                    'account_name' => $member->bankAccount->account_name,
+                    'account_kana' => $member->bankAccount->account_kana,
+                ] : null,
+
+                'application_bank_account' => $member->applicationBankAccount ? [
+                    'bank_name'    => $member->applicationBankAccount->bank_name,
+                    'bank_code'    => $member->applicationBankAccount->bank_code,
+                    'branch_name'  => $member->applicationBankAccount->branch_name,
+                    'branch_code'  => $member->applicationBankAccount->branch_code,
+                    'account_type' => $member->applicationBankAccount->account_type,
+                    'account_no'   => $member->applicationBankAccount->account_no,
+                    'account_name' => $member->applicationBankAccount->account_name,
+                    'account_kana' => $member->applicationBankAccount->account_kana,
+                ] : null,
                 // 書類は独立
                 'documents' => $documents,
 
@@ -542,6 +609,7 @@ class MemberController extends Controller
                 'company_type_suffix' => $corp['suffix'] ?? '',
                 'aplus_customer_no'   => $member->aplus_customer_no,
                 'jac_certification_no'=> $member->jac_certification_no,
+                'desired_join_month'=> $member->desired_join_month,
                 'corp'        => $corp,
                 'mail'        => $mail,
                 'agent'       => $agent,
@@ -1207,7 +1275,7 @@ logger()->error('BASE DIR DEBUG', [
                     '',
 
                     // 外国人受入支援番号
-                    $member->number,
+                    "=\"" . ($member->number) . "\"",
 
                     // 会社名
                     ($corp->name_prefix ?? '') . ($corp->name ?? '') . ($corp->name_suffix ?? ''),
@@ -1219,7 +1287,7 @@ logger()->error('BASE DIR DEBUG', [
                     $corp->position ?? '',
 
                     // 郵便番号
-                    $corp->postal_code ?? '',
+                    "=\"" . ($corp->postal_code ?? '') . "\"",
 
                     // 所在地1（統合）
                     $corpAddress,
@@ -1227,13 +1295,13 @@ logger()->error('BASE DIR DEBUG', [
                     $corp->address3 ?? '',
 
                     // 電話
-                    $corp->tel ?? '',
+                    "=\"" . ($corp->tel ?? '') . "\"",
 
                     // FAX
-                    $corp->fax ?? '',
+                    "=\"" . ($corp->fax ?? '') . "\"",
 
                     // 携帯番号
-                    $corp->mobile ?? '',
+                    "=\"" . ($corp->mobile ?? '') . "\"",
 
                     // E-mail
                     $corp->email ?? '',
@@ -1265,35 +1333,36 @@ logger()->error('BASE DIR DEBUG', [
                     // 申込担当者
                     $corp->Representative ?? '',
                     // ===== 指定郵送先（type=2）=====
-                    $mail->postal_code ?? '',
+                    "=\"" . ($mail->postal_code ?? '') . "\"",
                     $mailAddress,
-                    $mail->tel ?? '',
-                    $mail->fax ?? '',
-                    $mail->mobile ?? '',
+                    "=\"" . ($mail->tel ?? '') . "\"",
+                    "=\"" . ($mail->fax ?? '') . "\"",
+                    "=\"" . ($mail->mobile ?? '') . "\"",
                     trim(($mail->last_name ?? '') . ' ' . ($mail->first_name ?? '')),
 
                     // ===== 代理申込（type=3）=====
                     $agent->name ?? '',
-                    $agent->tel ?? '',
+                    "=\"" . ($agent->tel ?? '') . "\"",
                     $agentAddress,
                     trim(($agent->last_name ?? '') . ' ' . ($agent->first_name ?? '')),
                     $agent->mobile ?? '',
-                    $agent->fax ?? '',
+                    "=\"" . ($agent->fax ?? '') . "\"",
                     $agent->email ?? '',
 
                     // ===== 口座 =====
                     optional($member->bankAccount)->bank_name ?? '',
-                    optional($member->bankAccount)->bank_code ?? '',
+                    "=\"" . (optional($member->bankAccount)->bank_code ?? '') . "\"",
                     optional($member->bankAccount)->branch_name ?? '',
-                    optional($member->bankAccount)->branch_code ?? '',
+                    "=\"" . (optional($member->bankAccount)->branch_code ?? '') . "\"",
                     optional($member->bankAccount)->account_type ?? '',
-                    optional($member->bankAccount)->account_no ?? '',
+                    "=\"" . (optional($member->bankAccount)->account_no ?? '') . "\"",
                     optional($member->bankAccount)->account_name ?? '',
-                    optional($member->bankAccount)->account_kana ?? '',
+//                    optional($member->bankAccount)->account_kana ?? '',
+                    mb_convert_kana(optional($member->bankAccount)->account_kana ?? '', 'ask'),
 
                     // 追加
-                    $member->aplus_customer_no ?? '',
-                    $member->jac_certification_no ?? '',
+                    "=\"" . ($member->aplus_customer_no ?? '') . "\"",
+                    "=\"" . ($member->jac_certification_no ?? '') . "\"",
                 ]);
             }
 

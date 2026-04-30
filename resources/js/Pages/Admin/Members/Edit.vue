@@ -117,6 +117,19 @@
           </div>
 
         </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="mt-4">
+          </div>
+          <div class="mt-4">
+            <InputLabel :value="t('registers.desired_join_month')" /> 
+            <select v-model="form.desired_join_month" class="border rounded px-2 py-1 w-full">
+              <option v-for="opt in joinMonthOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+            <InputError :message="form.errors?.desired_join_month" />
+          </div>
+        </div>
         <!-- 2カラム -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!--  ここから会社情報　-->
@@ -181,6 +194,10 @@
 
          <!-- 右カラム：代表者/担当者 -->
           <div class="space-y-4">
+            <div class="flex-1">
+              <InputLabel :value="t('registers.position')" class="h-5" />
+              <TextInput v-model="form.corp.position" class="w-full" />
+            </div>
             <div>
              <InputLabel value="代表者名" />
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -277,7 +294,7 @@
               <TextInput v-model="form.corp.address3" class="w-full" />
             </div>
         </div>
-        <div class="mb-4 grid grid-cols-4 gap-x-1 gap-y-3 sm:flex-row sm:items-start">
+        <div class="mb-4 grid grid-cols-3 gap-x-1 gap-y-3 sm:flex-row sm:items-start">
             <div>
               <InputLabel :value="t('registers.tel')" />
               <TextInput
@@ -323,21 +340,18 @@
                 携帯電話は 090-1234-5678 の形式で入力してください
               </p>
             </div>
-            <div>
-              <InputLabel>{{ t('registers.email') }}</InputLabel>
 
-              <TextInput v-model="form.corp.email" class="w-full" />
-              <p v-if="form.errors['corp.email']" class="text-red-500 text-sm mt-1" >
-                {{ form.errors['corp.email'] }}
-              </p>
-            </div>
         </div>
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
-          <!-- 肩書き -->
-          <div class="flex-1">
-              <InputLabel :value="t('registers.position')" class="h-5" />
-              <TextInput v-model="form.corp.position" class="w-full" />
+          <div>
+            <InputLabel>{{ t('registers.email') }}</InputLabel>
+
+            <TextInput v-model="form.corp.email" class="w-full" />
+            <p v-if="form.errors['corp.email']" class="text-red-500 text-sm mt-1" >
+              {{ form.errors['corp.email'] }}
+            </p>
           </div>
+
           <!-- 氏名 -->
           <div class="flex-1">
               <InputLabel :value="t('registers.staff')" class="h-5" />
@@ -456,6 +470,7 @@
               <TextInput
                 v-model="form.mail.tel"
                 maxlength="20"
+                class="w-full"
                 @input="e => onPhoneInput('mail', 'tel', e)"
                 placeholder="03-1234-5678"
               />
@@ -469,6 +484,7 @@
               <InputLabel :value="t('registers.fax')" />
               <TextInput
                 v-model="form.mail.fax"
+                class="w-full"
                 maxlength="20"
                 @input="e => onPhoneInput('mail', 'fax', e)"
                 placeholder="03-1234-5678"
@@ -495,8 +511,8 @@
               </p>
             </div>
         </div>            
+<!--
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
-            <!-- 肩書き -->
             <div class="flex-1">
               <div>
                 <InputLabel :value="t('registers.position')" />
@@ -505,7 +521,6 @@
               <InputError :message="form.errors['mail.position']" />
             </div>
 
-            <!-- 氏名 -->
             <div class="flex-1">
               <div>
                 <InputLabel :value="t('registers.staff')" />
@@ -518,6 +533,8 @@
               <InputError :message="form.errors['mail.first_name']" />
             </div>
         </div>
+-->
+
           <div class="flex justify-end space-x-3 items-center mt-6">
             <!-- 更新ボタン -->
             <PrimaryButton
@@ -605,6 +622,7 @@
                 <InputLabel :value="t('registers.tel')" />
                 <TextInput
                   v-model="form.agent.tel"
+                  class="w-full"
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'tel', e)"
                   placeholder="03-1234-5678"
@@ -620,6 +638,7 @@
                 <InputLabel :value="t('registers.fax')" />
                 <TextInput
                   v-model="form.agent.fax"
+                  class="w-full"
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'fax', e)"
                   placeholder="03-1234-5678"
@@ -645,7 +664,17 @@
                   携帯電話は 090-1234-5678 の形式で入力してください
                 </p>
               </div>
-          </div>            
+          </div>
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
+            <div>
+              <InputLabel>{{ t('registers.email') }}</InputLabel>
+
+              <TextInput v-model="form.agent.email" class="w-full" />
+              <p v-if="form.errors['agent.email']" class="text-red-500 text-sm mt-1" >
+                {{ form.errors['agent.email'] }}
+              </p>
+            </div>
+          </div>  
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
               <!-- 肩書き -->
               <div class="flex-1">
@@ -968,6 +997,7 @@ const form = useForm({
   issued_at: page.props.form?.invoice?.issued_at ? page.props.form?.invoice?.issued_at.slice(0, 10) : '',
   paid_at: page.props.form?.invoice?.paid_at ? page.props.form?.invoice?.paid_at.slice(0, 10) : '',
   amount: page.props.form?.invoice?.amount ?? 0,
+  desired_join_month: page.props.form?.desired_join_month.slice(0, 7) ?? '',
 
   corp: {
     type: 1,
@@ -1539,4 +1569,34 @@ const normalizeNumber = async (value) => {
 const handleNumberBlur = async () => {
   form.number = await normalizeNumber(form.number)
 }
+
+const joinMonthOptions = computed(() => {
+  const today = new Date()
+  const day = today.getDate()
+
+  const base = new Date(today.getFullYear(), today.getMonth(), 1)
+
+  const addMonth = (date, n) => {
+    return new Date(date.getFullYear(), date.getMonth() + n, 1)
+  }
+
+  const format = (date) => {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    return `${y}-${m}`
+  }
+
+  if (day <= 20) {
+    return [
+      { label: format(base), value: format(base) },           // 当月
+      { label: format(addMonth(base, 1)), value: format(addMonth(base, 1)) } // 翌月
+    ]
+  } else {
+    return [
+      { label: format(addMonth(base, 1)), value: format(addMonth(base, 1)) }, // 翌月
+      { label: format(addMonth(base, 2)), value: format(addMonth(base, 2)) }  // 翌々月
+    ]
+  }
+})
+
 </script>

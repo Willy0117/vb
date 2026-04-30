@@ -117,8 +117,21 @@ class MemberController extends Controller
                     'type' => $form['type'],
                     'desired_join_month' => $form['desired_join_month'] ? $form['desired_join_month'] . '-01' : null,
                 ]);
+ 
                 // bank_accounts
                 $member->bankAccount()->create([
+                    'bank_type' => $form['bank_type'],
+                    'bank_name' => $form['bank_name'],
+                    'bank_code' => $form['bank_code'] ?? null,
+                    'branch_name' => $form['branch_name'],
+                    'branch_code' => $form['branch_code'] ?? null,
+                    'account_type' => $form['account_type'],
+                    'account_no' => $form['account_no'],
+                    'account_kana' => $form['account_kana'],
+                    'account_name' => $form['account_name'],
+                ]);
+
+                $member->applicationBankAccount()->create([
                     'bank_type' => $form['bank_type'],
                     'bank_name' => $form['bank_name'],
                     'bank_code' => $form['bank_code'] ?? null,
@@ -220,6 +233,23 @@ class MemberController extends Controller
                     $agent = $form['agent'];
 
                     $agentOrg = $member->organizations()->create([    
+                        'type' => 3,
+                        'name' => $agent['company_name'],
+                        'name_kana' => '',
+                        'postal_code' => $agent['postal_code'],
+                        'address1' => $agent['address1'],
+                        'address2' => $agent['address2'],
+                        'address3' => $agent['address3'],
+                        'tel' => $agent['tel'],
+                        'fax' => $agent['fax'],
+                        'mobile' => $agent['mobile'],
+                        'email' => $preUser->email,
+                        'position'  => $agent['position'],
+                        'last_name' => $agent['last_name'],
+                        'first_name' => $agent['first_name'],
+                    ]);
+
+                    $appAgentOrg = $member->applicationOrganizations()->create([ 
                         'type' => 3,
                         'name' => $agent['company_name'],
                         'name_kana' => '',
@@ -573,7 +603,16 @@ class MemberController extends Controller
 
         $form['mail_address_certificate_path'] = $mailPath;
         $form['mail_address_certificate_thumbnail'] = $mailThumb;
+        // 口座番号の補正
+        $accountNo = $form['account_no'];
 
+        if ($form['bank_code'] === '9900') {
+            $accountNo = str_pad($accountNo, 8, '0', STR_PAD_LEFT);
+        } else {
+            $accountNo = str_pad($accountNo, 7, '0', STR_PAD_LEFT);
+        }
+
+        $form['account_no'] = $accountNo;
 
         // session に保存
         session([

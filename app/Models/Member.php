@@ -41,7 +41,7 @@ class Member extends Model
         'joined_at' => 'datetime',
         'canceled_at' => 'datetime',
         'withdrawn_at' => 'datetime',
-        'desired_join_month' => 'date',
+//        'desired_join_month' => 'date',
     ];
 
     protected function serializeDate(\DateTimeInterface $date)
@@ -117,6 +117,12 @@ class Member extends Model
     {
         return $this->hasOne(BankAccount::class);
     }
+    
+    public function applicationBankAccount()
+    {
+        return $this->hasOne(ApplicationBankAccount::class);
+    }
+
 
     public function region()
     {

@@ -5,12 +5,11 @@
     <div class="max-w-5xl mx-auto bg-white p-8 rounded shadow">
 
       <form @submit.prevent="submitForm" class="space-y-8" @keydown.enter="focusNext">
-        <!-- 2カラム -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="mt-4">
+                <div class="mt-4 grid grid-cols-8 gap-4 items-start">
+          <!-- 会社種類（2W） -->
+          <div class="col-span-2">
             <InputLabel :value="t('registers.applicant')" class="mb-2" />
-
-            <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex gap-4">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -31,11 +30,95 @@
                 <span>{{ t('registers.sole') }}</span>
               </label>
             </div>
+            <p v-if="errors.type" class="text-red-500 text-sm mt-1">{{ errors.type }}</p>
+          </div>
+          <!-- 入会日（1W） -->
+          <div class="col-span-2">
+            <InputLabel :value="t('members.joined_at')" class="mb-1" />
+            <TextInput type="date" v-model="form.joined_at" class="w-full" />
+          </div>
 
-            <p v-if="form.errors.type" class="text-red-500 text-sm mt-1">
-              {{ form.errors.business_type }}
-            </p>
+          <!-- 退会日（1W） -->
+          <div class="col-span-2">
+            <InputLabel :value="t('members.withdrawn_at')" class="mb-1" />
+            <TextInput type="date" v-model="form.withdrawn_at" class="w-full" />
+          </div>
 
+        </div>
+
+        <div class="mt-4 grid grid-cols-8 gap-4 items-end">
+          <!-- Region（1W） -->
+          <div class="col-span-1">
+            <InputLabel :value="t('members.region')" class="mb-1" />
+            <select v-model="form.region_id" class="border rounded px-3 py-2 w-full">
+              <option value="">{{ t('select region') }}</option>
+              <option v-for="region in regions" :key="region.id" :value="region.id">
+                {{ region.name }}
+              </option>
+            </select>
+          </div>
+          <div class="col-span-1">
+            <InputLabel value=" " class="mb-1" />
+            <div class="border rounded px-3 py-2 bg-gray-100 text-center">
+              50
+            </div>
+          </div>
+          <!-- 5桁番号（1W） -->
+          <div class="col-span-2">
+            <InputLabel :value="t('members.number')" class="mb-1" />
+            <TextInput
+              v-model="form.number"
+              @blur="handleNumberBlur"
+              maxlength="5"
+              placeholder="A0000"
+              :class="{
+                'border-red-500': getError('number'),
+                'border-gray-300': !getError('number')
+              }"
+              class="w-full"
+            />
+            <p v-if="getError('number')" class="text-red-500 text-sm mt-1">{{ getError('number') }}</p>
+            <p v-if="numberError" class="text-red-500 text-sm mt-1">{{ numberError }}</p>
+          </div>
+          <!-- アプラス顧客番号 -->
+          <div class="col-span-2">
+            <InputLabel :value="t('members.aplus_customer_no')" class="mb-1" />
+            <TextInput v-model="form.aplus_customer_no" class="w-full" />
+          </div>
+
+          <!-- JAC認定番号 -->
+          <div class="col-span-2">
+            <InputLabel :value="t('members.jac_certification_no')" class="mb-1" />
+            <TextInput v-model="form.jac_certification_no" class="w-full" />
+          </div>
+
+        </div>
+        <div class="mt-4 grid grid-cols-8 gap-4 items-end">
+                    <!-- 入会日（1W） -->
+          <div class="col-span-2">
+            <InputLabel :value="t('members.issued_at')" class="mb-1" />
+            <TextInput type="date" v-model="form.issued_at" class="w-full" />
+          </div>
+
+          <!-- 退会日（1W） -->
+          <div class="col-span-2">
+            <InputLabel :value="t('members.paid_at')" class="mb-1" />
+            <TextInput type="date" v-model="form.paid_at" class="w-full" />
+          </div>
+          <!-- 入会金額 -->
+          <div class="col-span-1">
+            <InputLabel :value="t('members.amount')" class="mb-1" />
+            <TextInput
+              v-model="form.amount"
+              class="w-full"
+              @input="onAmountInput"
+            />
+          </div>
+
+        </div>
+        <!-- 2カラム -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="mt-4">
           </div>
           <div class="mt-4">
             <InputLabel :value="t('registers.desired_join_month')" /> 
@@ -236,7 +319,7 @@
             </div>
         </div>
         <div class="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-1 gap-y-3 items-start">
-            <div>
+            <div class="flex-1" >
               <InputLabel :value="t('registers.tel')" />
               <TextInput
                 v-model="form.corp.tel"
@@ -244,6 +327,7 @@
                   'border-red-500': getError('corp.tel'),
                   'border-gray-300': !getError('corp.tel')
                 }"
+                class="w-full"
                 maxlength="20"
                 @input="e => onPhoneInput('corp', 'tel', e)"
                 placeholder="03-1234-5678"
@@ -255,10 +339,11 @@
               </p>
             </div>
 
-            <div>
+            <div class="flex-1">
               <InputLabel :value="t('registers.fax')" />
               <TextInput
                 v-model="form.corp.fax"
+                class="w-full"
                 maxlength="20"
                 @input="e => onPhoneInput('corp', 'fax', e)"
                 placeholder="03-1234-5678"
@@ -267,7 +352,7 @@
                 FAX番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
-            <div>
+            <div class="flex-1">
               <InputLabel :value="t('registers.mobile')" />
               <TextInput
                 v-model="form.corp.mobile"
@@ -281,29 +366,18 @@
                 携帯電話は 090-1234-5678 の形式で入力してください
               </p>
             </div>
-            <div>
+        </div>
+        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
+          <div class="flex-1">
               <InputLabel :value="t('registers.email')" />
               <TextInput v-model="form.corp.email" class="w-full" />
               <p v-if="form.errors['corp.email']" class="text-red-500 text-sm mt-1" >
                 {{ form.errors['corp.email'] }}
               </p>
-            </div>
-        </div>
-        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
-          <!-- 肩書き -->
-          <div class="flex-1">
-            <span class="text-xs text-gray-500">
-              ■ 法人代表者情報（履歴事項全部証明書通りに記載）<br>
-              ※担当者の名前は記入しないでください.</span>
-<!--
-              <InputLabel :value="t('registers.position')" class="h-5" />
-              <TextInput v-model="form.corp.position" class="w-full" />
--->              
           </div>
           <!-- 氏名 -->
           <div class="flex-1">
-              <!-- InputLabel :value="t('registers.staff')" class="h-5" / -->
-              <InputLabel value="代表者名" class="h-5" />
+              <InputLabel :value="t('registers.staff')" class="h-5" />
               <TextInput v-model="form.corp.last_name"
                   :class="{
                     'border-red-500': getError('corp.last_name'),
@@ -323,9 +397,17 @@
               <InputError :message="form.errors['corp.first_name']" />
           </div>
         </div>
+        <div class="mb-4 flex">
+            <InputLabel :value="t('registers.note')" />
+            <textarea
+                v-model="form.corp.note"
+                class="w-full border rounded px-3 py-2"
+                rows="3"
+            ></textarea>
+            <InputError :message="form.errors.note" />
+        </div>
         <div class="p-4 bg-green-50 border-l-4 border-green-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.mail') }}</h3>
-          <p class="text-sm text-blue-700 mt-1">郵送先と現住所が違う場合は、こちらを入力してください</p>
         </div>                
         <!--     -->                  
         <div class="mb-4">
@@ -387,10 +469,11 @@
             </div>
         </div>            
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
-            <div>
+            <div class="flex-1">
               <InputLabel :value="t('registers.tel')" />
               <TextInput
                 v-model="form.mail.tel"
+                class="w-full"
                 maxlength="20"
                 @input="e => onPhoneInput('mail', 'tel', e)"
                 placeholder="03-1234-5678"
@@ -401,10 +484,11 @@
                 電話番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
-            <div>
+            <div class="flex-1">
               <InputLabel :value="t('registers.fax')" />
               <TextInput
                 v-model="form.mail.fax"
+                class="w-full"
                 maxlength="20"
                 @input="e => onPhoneInput('mail', 'fax', e)"
                 placeholder="03-1234-5678"
@@ -415,7 +499,7 @@
                 FAX番号は 03-1234-5678 の形式で入力してください
               </p>
             </div>
-            <div>
+            <div class="flex-1">
               <InputLabel :value="t('registers.mobile')" />
               <TextInput
                 v-model="form.mail.mobile"
@@ -431,31 +515,29 @@
               </p>
             </div>
         </div>            
+<!--
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
-            <!-- 肩書き -->
             <div class="flex-1">
               <InputLabel :value="t('registers.position')" />
               <TextInput v-model="form.mail.position" class="w-full" />
               <InputError :message="form.errors['mail.position']" />
             </div>
-            <!-- 氏名 -->
             <div class="flex-1">
               <InputLabel :value="t('registers.staff')" />
               <TextInput v-model="form.mail.last_name" class="w-full" />
               <InputError :message="form.errors['mail.last_name']" />
             </div>
-            <!-- 氏名 -->
             <div class="flex-1">
               <InputLabel value="　" />
               <TextInput v-model="form.mail.first_name" class="w-full" />
               <InputError :message="form.errors['mail.first_name']" />
             </div>
         </div>
+-->
       </div>
 
       <div class="p-4 bg-orange-50 border-l-4 border-orange-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.agent') }}</h3>
-          <p class="text-sm text-blue-700 mt-1">代理申請する場合はこちらを入力してください</p>
       </div>                
 
       <div class="mb-4">
@@ -533,6 +615,7 @@
                 <InputLabel :value="t('registers.tel')" />
                 <TextInput
                   v-model="form.agent.tel"
+                  class="w-full"
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'tel', e)"
                   placeholder="03-1234-5678"
@@ -548,6 +631,7 @@
                 <InputLabel :value="t('registers.fax')" />
                 <TextInput
                   v-model="form.agent.fax"
+                  class="w-full"
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'fax', e)"
                   placeholder="03-1234-5678"
@@ -573,6 +657,17 @@
                   携帯電話は 090-1234-5678 の形式で入力してください
                 </p>
               </div>
+          </div>            
+          <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
+              <div class="flex-1">
+                <InputLabel :value="t('registers.email')" />
+                <TextInput v-model="form.agent.email" class="w-full" />
+                <p v-if="form.errors['agent.email']" class="text-red-500 text-sm mt-1" >
+                  {{ form.errors['agent.email'] }}
+                </p>
+              </div>
+              <div class="flex-1"></div>
+              <div class="flex-1"></div>
           </div>            
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
               <!-- 肩書き -->
@@ -769,6 +864,12 @@ const bankInput = ref(null)
 
 console.log(page.props) // ← ここで form が見える
 
+const regions = page.props.regions || []
+
+const persistQuery = () => {
+  return { ...page.props.filters }
+}
+
 const form = useForm({
   type: page.props.form?.type ?? 'corporation',
   desired_join_month:page.props.form?.desired_join_month ?? '',
@@ -782,6 +883,15 @@ const form = useForm({
   rep_first_name: page.props.form?.rep_first_name ?? '',
   same_as_corp: Boolean(Number(page.props.form?.same_as_corp)),
   is_agent: page.props.form?.is_agent,
+  region_id: page.props.form?.region_id,
+  number: page.props.form?.number,
+  joined_at: page.props.form?.joined_at ? page.props.form.joined_at.slice(0, 10) : '',
+  withdrawn_at: page.props.form?.withdrawn_at ? page.props.form?.withdrawn_at.slice(0, 10) : '',
+  aplus_customer_no: page.props.form?.aplus_customer_no ?? '',
+  jac_certification_no: page.props.form?.jac_certification_no ?? '',
+  issued_at: page.props.form?.invoice?.issued_at ? page.props.form?.invoice?.issued_at.slice(0, 10) : '',
+  paid_at: page.props.form?.invoice?.paid_at ? page.props.form?.invoice?.paid_at.slice(0, 10) : '',
+  amount: page.props.form?.invoice?.amount ?? 0,
 
   corp: {
     type: 1,
@@ -796,6 +906,7 @@ const form = useForm({
     position: page.props.form?.corp?.position ?? '代表取締役',
     last_name: page.props.form?.corp?.last_name ?? '',
     first_name: page.props.form?.corp?.first_name ?? '',
+    note:page.props.form?.corp?.note ?? '',
   },
 
   mail: {
@@ -814,7 +925,7 @@ const form = useForm({
   },
 
   agent: {
-    type: 4,
+    type: 3,
     company_name: page.props.form?.agent?.company_name ?? '',
     postal_code: page.props.form?.agent?.postal_code ?? '',
     address1: page.props.form?.agent?.address1 ?? '',

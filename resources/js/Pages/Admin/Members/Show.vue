@@ -45,6 +45,13 @@
           <p>{{ t('members.issued_at') }} : {{ props.member?.issued_at }}</p>
           <P>{{ t('members.paid_at') }} : {{ props.member?.paid_at }}</p>
        </div>   
+        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <p>{{ t('members.amount') }} : {{ props.member?.amount }}</p>
+       </div>   
+
+       <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <p>{{ t('registers.note') }} : {{ props.member?.note }}</p>
+       </div>   
 
       </section>
 
@@ -69,6 +76,7 @@
           </div>
 
           <div class="flex gap-6">
+            
             <!-- 左：現状 -->
             <div
               :class="isCompare ? 'w-1/2' : 'w-full'"
@@ -164,6 +172,69 @@
           </div>
         </div>
 
+      </div>
+      <div class="space-y-6">
+      <div class="border rounded shadow p-4 overflow-hidden">  
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold">{{ t('banks.bank') }}</h3>
+        </div>
+        <div class="flex gap-6">
+        <!-- 左：現在 -->
+        <div
+              :class="isCompare ? 'w-1/2' : 'w-full'"
+              class="transition-all duration-300 space-y-6"
+            >
+          <p :class="{ 'text-red-500 font-semibold': isDiff(member.bank_account?.bank_name, member.application_bank_account?.bank_name) }">
+            {{ t('banks.bank_name') }}：{{ member.bank_account?.bank_name }}
+          </p>
+
+          <p :class="{ 'text-red-500 font-semibold': isDiff(member.bank_account?.bank_code, member.application_bank_account?.bank_code) }">
+            {{ t('banks.bank_code') }}：{{ member.bank_account?.bank_code }}
+          </p>
+
+          <p :class="{ 'text-red-500 font-semibold': isDiff(member.bank_account?.branch_name, member.application_bank_account?.branch_name) }">
+            {{ t('banks.branch_name') }}：{{ member.bank_account?.branch_name }}
+          </p>
+
+          <p :class="{ 'text-red-500 font-semibold': isDiff(member.bank_account?.branch_code, member.application_bank_account?.branch_code) }">
+            {{ t('banks.branch_name') }}：{{ member.bank_account?.branch_code }}
+          </p>
+
+          <p :class="{ 'text-red-500 font-semibold': isDiff(member.bank_account?.account_type, member.application_bank_account?.account_type) }">
+            {{ t('banks.account_type') }}：{{ member.bank_account?.account_type }}
+          </p>
+
+          <p :class="{ 'text-red-500 font-semibold': isDiff(member.bank_account?.account_no, member.application_bank_account?.account_no) }">
+            {{ t('banks.account_no') }}：{{ member.bank_account?.account_no }}
+          </p>
+
+          <p :class="{ 'text-red-500 font-semibold': isDiff(member.bank_account?.account_name, member.application_bank_account?.account_name) }">
+            {{ t('banks.account_name') }}：{{ member.bank_account?.account_name }}
+          </p>
+
+          <p :class="{ 'text-red-500 font-semibold': isDiff(member.bank_account?.account_kana, member.application_bank_account?.account_kana) }">
+            {{ t('banks.account_kana') }}：{{ member.bank_account?.account_kana }}
+          </p>
+        </div>
+
+        <!-- 右：申請 -->
+        <transition name="slide-right">
+          <div
+            v-if="isCompare"
+              class="w-1/2 bg-blue-50 p-4 rounded space-y-6"
+          >
+            <p>{{ t('banks.bank_name') }}：{{ member.application_bank_account?.bank_name }}</p>
+            <p>{{ t('banks.bank_code') }}：{{ member.application_bank_account?.bank_code }}</p>
+            <p>{{ t('banks.branch_name') }}：{{ member.application_bank_account?.branch_name }}</p>
+            <p>{{ t('banks.branch_code') }}：{{ member.application_bank_account?.branch_code }}</p>
+            <p>{{ t('banks.account_type') }}：{{ member.application_bank_account?.account_type }}</p>
+            <p>{{ t('banks.account_no') }}：{{ member.application_bank_account?.account_no }}</p>
+            <p>{{ t('banks.account_name') }}：{{ member.application_bank_account?.account_name }}</p>
+            <p>{{ t('banks.account_kana') }}：{{ member.application_bank_account?.account_kana }}</p>
+          </div>
+        </transition>
+      </div>
+      </div>
       </div>
     </section>
 
@@ -310,6 +381,8 @@ const getAppByType = (type) => {
 
 const isDifferent = (current, app, field) =>
   (current?.[field] ?? '') !== (app?.[field] ?? '')
+
+const isDiff = (a, b) => (a ?? '') !== (b ?? '')
 
 </script>
 <style lang="css">

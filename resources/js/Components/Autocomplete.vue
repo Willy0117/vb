@@ -1,6 +1,6 @@
 <template>
   <div class="relative w-full">
-    <label class="block text-sm font-medium mb-1">{{ label }}</label>
+    <label class="block text-sm font-medium mb-1">{{ label }}<span v-if="required" class="text-red-500 ml-1 text-xs">{{ t('require') }}</span></label>
     <div class="relative flex items-center">
       <input
         type="text"
@@ -36,6 +36,9 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   modelValue: [String, Number],
@@ -43,6 +46,7 @@ const props = defineProps({
   label: String,
   placeholder: String,
   fetchUrl: String,
+  required: Boolean,
   extraParams: { type: Object, default: () => ({}) }
 })
 
