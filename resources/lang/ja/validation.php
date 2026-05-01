@@ -34,10 +34,12 @@ return [
         'corp.last_name' => '姓',
         'corp.first_name' => '名',
 
+        'mail.postal_code' => '郵便番号', 
         'mail.email' => 'メールアドレス', 
         'mail.address1' => '市町村区', 
         'mail.address2' => '番地',
         'mail.tel' => 'TEL',  
+        'agent.postal_code' => '郵便番号', 
         'agent.email' => 'メールアドレス', 
         'agent.address1' => '市町村区', 
         'agent.address2' => '番地',

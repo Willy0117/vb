@@ -197,7 +197,7 @@
           </p>
 
           <p :class="{ 'text-red-500 font-semibold': isDiff(member.bank_account?.branch_code, member.application_bank_account?.branch_code) }">
-            {{ t('banks.branch_name') }}：{{ member.bank_account?.branch_code }}
+            {{ t('banks.branch_code') }}：{{ member.bank_account?.branch_code }}
           </p>
 
           <p :class="{ 'text-red-500 font-semibold': isDiff(member.bank_account?.account_type, member.application_bank_account?.account_type) }">

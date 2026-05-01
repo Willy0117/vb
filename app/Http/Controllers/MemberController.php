@@ -123,7 +123,7 @@ class MemberController extends Controller
                     'bank_type' => $form['bank_type'],
                     'bank_name' => $form['bank_name'],
                     'bank_code' => $form['bank_code'] ?? null,
-                    'branch_name' => $form['branch_name'],
+                    'branch_name' => $form['branch_name'] ?? null,
                     'branch_code' => $form['branch_code'] ?? null,
                     'account_type' => $form['account_type'],
                     'account_no' => $form['account_no'],
@@ -135,7 +135,7 @@ class MemberController extends Controller
                     'bank_type' => $form['bank_type'],
                     'bank_name' => $form['bank_name'],
                     'bank_code' => $form['bank_code'] ?? null,
-                    'branch_name' => $form['branch_name'],
+                    'branch_name' => $form['branch_name'] ?? null,
                     'branch_code' => $form['branch_code'] ?? null,
                     'account_type' => $form['account_type'],
                     'account_no' => $form['account_no'],
@@ -443,7 +443,7 @@ class MemberController extends Controller
             // ===== 郵送先（mail）=====
             'mail' => 'required|array',
             'mail.type' => 'required|integer',
-            'mail.postal_code' => 'nullable|string',
+            'mail.postal_code' => 'required|string',
             'mail.address1' => 'required|string',
             'mail.address2' => 'required|string',
             'mail.address3' => 'nullable|string',
@@ -509,39 +509,7 @@ class MemberController extends Controller
                 },
             ],
         ]);
-/*        
-        $rules = array_merge($rules, [
-            'history_certificate' => [
-                'nullable',
-                'file',
-                'mimes:pdf',
-                function ($attr, $value, $fail) use ($request) {
-                    if (
-                        $request->input('type') === 'corporation'
-                        && !$request->file('history_certificate')
-                        && !$request->input('history_certificate_path')
-                    ) {
-                    }
-                },
-            ],
-        ]);
-        // 郵送先が別：郵送先確認資料
-        $rules = array_merge($rules, [
-            'mail_address_certificate' => [
-                'file',
-                'mimes:pdf',
-                function ($attr, $value, $fail) use ($request) {
-                    if (
-                        !$request->boolean('same_as_corp')
-                        && !$request->file('mail_address_certificate')
-                        && !$request->input('mail_address_certificate_path')
-                    ) {
-                        $fail('郵送先確認書類は必須です。');
-                    }
-                },
-            ],
-        ]); 
-*/
+
         // 郵送先が別：郵送先確認資料
         $rules = array_merge($rules, [
             'mail_address_certificate' => [

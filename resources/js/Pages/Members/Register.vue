@@ -356,7 +356,7 @@
           }"
         > 
         <div>
-            <InputLabel :value="t('registers.zip_code')" />
+            <InputLabel :value="t('registers.zip_code')" required />
             <TextInput
               v-model="form.mail.postal_code"
               placeholder="000-0000"
@@ -375,7 +375,7 @@
                 {{ candidate.label }}
               </li>
             </ul>
-            <InputError :message="form.errors['mail.post_zip']" />
+            <InputError :message="form.errors['mail.postal_code']" />
         </div>
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div class="flex-1">
@@ -473,7 +473,7 @@
         <div class="">
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div class="flex-1">
-              <InputLabel :value="t('registers.zip_code')" />
+              <InputLabel :value="t('registers.zip_code')" required />
               <TextInput
                 v-model="form.agent.postal_code"
                 placeholder="000-0000"
@@ -492,10 +492,11 @@
                   {{ candidate.label }}
                 </li>
               </ul>
+              <InputError :message="form.errors['agent.postal_code']" />
             </div>
             <div class="flex-[2]">
                 <!-- 会社名 -->
-                <InputLabel :value="t('registers.company_name')" /> 
+                <InputLabel :value="t('registers.company_name')" required /> 
                 <TextInput
                   v-model="form.agent.company_name"
                   :class="{
@@ -527,7 +528,7 @@
           </div>            
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
               <div class="flex-1">
-                <InputLabel :value="t('registers.tel')" />
+                <InputLabel :value="t('registers.tel')" required />
                 <TextInput
                   v-model="form.agent.tel"
                   maxlength="20"
@@ -682,6 +683,7 @@
                   :value="form.bank_code === '9900'
                     ? '記号'
                     : t('banks.branch_code')"
+                    required
                 />
 
                 <TextInput
@@ -725,7 +727,7 @@
             </div>
                          <!-- 注意文言 -->
             <div>
-                <InputLabel :value="t('account_name')" />
+                <InputLabel :value="t('banks.account_name')" />
                 <TextInput v-model="form.account_name" class="w-full" />
                 <InputError :message="form.errors.account_name" />
             </div>
@@ -812,8 +814,8 @@
                 @change="handleMailCertSelect"
               />
             </div>
-
             <InputError :message="form.errors.mail_address_certificate" />
+            <InputError :message="form.errors.mail_address_certificate_path" />
           </div>
 
         </div>

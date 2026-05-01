@@ -256,7 +256,7 @@ class MemberController extends Controller
                     'bank_type' => $form['bank_type'],
                     'bank_name' => $form['bank_name'],
                     'bank_code' => $form['bank_code'] ?? null,
-                    'branch_name' => $form['branch_name'],
+                    'branch_name' => $form['branch_name'] ?? null,
                     'branch_code' => $form['branch_code'] ?? null,
                     'account_type' => $form['account_type'],
                     'account_no' => $form['account_no'],
@@ -1327,11 +1327,11 @@ logger()->error('BASE DIR DEBUG', [
                     // 顧客地域
                     optional($member->region)->name ?? '',
                     // 会社名フリガナ
-                    $corp->name_kana ?? '',
+                    mb_convert_kana($corp->name_kana ?? '', 'askV'),
                     // 代表者フリガナ（member側）
-                    trim(($member->last_name_kana ?? '') . ' ' . ($member->first_name_kana ?? '')),
+                    mb_convert_kana(trim(($member->last_name_kana ?? '') . ' ' . ($member->first_name_kana ?? '')),'askV'),
                     // 申込担当者
-                    $corp->Representative ?? '',
+                    trim(($corp->last_name ?? '') . ' ' . ($corp->first_name ?? '')),
                     // ===== 指定郵送先（type=2）=====
                     "=\"" . ($mail->postal_code ?? '') . "\"",
                     $mailAddress,
@@ -1354,7 +1354,7 @@ logger()->error('BASE DIR DEBUG', [
                     "=\"" . (optional($member->bankAccount)->bank_code ?? '') . "\"",
                     optional($member->bankAccount)->branch_name ?? '',
                     "=\"" . (optional($member->bankAccount)->branch_code ?? '') . "\"",
-                    optional($member->bankAccount)->account_type ?? '',
+                    optional($member->bankAccount)->account_type === '普通' ? 1 : 2,
                     "=\"" . (optional($member->bankAccount)->account_no ?? '') . "\"",
                     optional($member->bankAccount)->account_name ?? '',
 //                    optional($member->bankAccount)->account_kana ?? '',
