@@ -1214,7 +1214,6 @@ logger()->error('BASE DIR DEBUG', [
                     '指定郵送先電話番号',
                     '指定郵送先FAX',
                     '指定郵送先携帯番号',
-                    '指定郵送先担当者',
                     '代理申込名前',
                     '代理申込電話番号',
                     '代理申込住所',
@@ -1222,9 +1221,11 @@ logger()->error('BASE DIR DEBUG', [
                     '代理申込携帯',
                     '代理申込FAX',
                     '代理申込メール',
-                    '口座振替銀行名',
+                    '口座振替銀行名(漢字)',
+                    '口座振替銀行名(カナ)',
                     '口座振替銀行コード',
-                    '口座振替支店名',
+                    '口座振替支店名(漢字)',
+                    '口座振替支店名(カナ)',
                     '口座振替支店コード',
                     '口座振替口座種別',
                     '口座振替口座番号',
@@ -1338,7 +1339,7 @@ logger()->error('BASE DIR DEBUG', [
                     "=\"" . ($mail->tel ?? '') . "\"",
                     "=\"" . ($mail->fax ?? '') . "\"",
                     "=\"" . ($mail->mobile ?? '') . "\"",
-                    trim(($mail->last_name ?? '') . ' ' . ($mail->first_name ?? '')),
+//                    trim(($mail->last_name ?? '') . ' ' . ($mail->first_name ?? '')),  郵送先担当者
 
                     // ===== 代理申込（type=3）=====
                     $agent->name ?? '',
@@ -1351,13 +1352,14 @@ logger()->error('BASE DIR DEBUG', [
 
                     // ===== 口座 =====
                     optional($member->bankAccount)->bank_name ?? '',
+                    '',
                     "=\"" . (optional($member->bankAccount)->bank_code ?? '') . "\"",
                     optional($member->bankAccount)->branch_name ?? '',
+                    '',
                     "=\"" . (optional($member->bankAccount)->branch_code ?? '') . "\"",
                     optional($member->bankAccount)->account_type === '普通' ? 1 : 2,
                     "=\"" . (optional($member->bankAccount)->account_no ?? '') . "\"",
                     optional($member->bankAccount)->account_name ?? '',
-//                    optional($member->bankAccount)->account_kana ?? '',
                     mb_convert_kana(optional($member->bankAccount)->account_kana ?? '', 'ask'),
 
                     // 追加
