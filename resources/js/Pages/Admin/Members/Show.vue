@@ -8,8 +8,8 @@
       <section class="bg-white rounded shadow p-4">
         <h2 class="font-bold mb-2">申請者</h2>
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
-          <p class="col-1 text-blue-700">{{ t('registers.desired_join_month')}} ： {{ props.member.desired_join_month ? dayjs(props.member.desired_join_month).format('YYYY年MM月') : '-' }} </p>
-          <p class="col-1"></p>
+          <p class="col-1 text-blue-700">{{ t('members.joined_at') }} : {{ props.member?.joined_at ?? '-' }}</p>
+          <p class="col-1">{{ t('registers.desired_join_month')}} ： {{ props.member.desired_join_month ? dayjs(props.member.desired_join_month).format('YYYY年MM月') : '-' }} </p>
         </div>
 
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
@@ -32,9 +32,8 @@
           <p class="col-1">{{ t('members.number') }}: {{ props.member?.number }}</p>
         </div>  
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
-          <p class="col-1">{{ t('members.joined_at') }} : {{ props.member?.joined_at ?? '-' }}</p>
           <p class="col-1">{{ t('members.withdrawn_at') }} : {{ props.member?.withdrawn_at ?? '-' }}</p>
-
+          <p class="col-1"></p>
         </div>
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
           <!-- アプラス顧客番号 -->

@@ -91,7 +91,7 @@
               {{ t('members.number') }}
               <span v-if="form.sort_by==='number'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
             </th>            
-            <th class="px-3 py-2 cursor-pointer" @click="sortBy('company_name')">
+            <th class="px-3 py-2 cursor-pointer min-w-[300px]" @click="sortBy('company_name')">
               {{ t('members.company_name') }}
               <span v-if="form.sort_by==='company_name'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
             </th>
@@ -107,9 +107,14 @@
               {{ t('members.address') }}
               <span v-if="form.sort_by==='address'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
             </th>
-            <th class="px-3 py-2 cursor-pointer" @click="sortBy('created_at')">
-              {{ t('updated_at') }}
-              <span v-if="form.sort_by==='created_at'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+            <th
+              class="px-3 py-2 cursor-pointer"
+              @click="sortBy(sortField)"
+            >
+              {{ dateLabel }}
+              <span v-if="form.sort_by === sortField">
+                {{ form.sort_dir === 'asc' ? '▲' : '▼' }}
+              </span>
             </th>
             <th class="px-3 py-2 text-center cursor-pointer" @click="sortBy('status_id')">
               {{ t('members.status') }}
@@ -135,7 +140,7 @@
             <td class="px-3 py-2">{{ member.type ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.agent ?? '-' }}</td>
             <td v-if="form.status_id == null || [0,2,3].includes(Number(form.status_id))" class="px-3 py-2">{{ member.number ?? '-' }}</td>
-            <td class="px-3 py-2">{{ member.organization?.name ?? '-' }}</td>
+            <td class="px-3 py-2 min-w-[300px]">{{ member.organization?.name ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.name ?? '-' }}</td>
             <!-- td class="px-3 py-2">{{ member.tel ?? '-' }}</td -->
             <td class="px-3 py-2">{{ member.address ?? '-' }}</td>
@@ -784,5 +789,37 @@ const handleClick = (member, typeId) => {
   if (!cert?.path) return
   openPdf(cert.path)
 }
+
+const dateLabel = computed(() => {
+  switch (Number(form.status_id)) {
+    case 2:
+      return '入会日'
+
+    case 3:
+      return '退会日'
+
+    case 4:
+      return '取消日'
+
+    default:
+      return '登録日'
+  }
+})
+
+const sortField = computed(() => {
+  switch (Number(form.status_id)) {
+    case 2:
+      return 'joined_at'
+
+    case 3:
+      return 'withdrawn_at'
+
+    case 4:
+      return 'canceled_at'
+
+    default:
+      return 'created_at'
+  }
+})
 
 </script>

@@ -83,7 +83,7 @@ class MemberController extends Controller
                     'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
                 ]),
                 'created_at' => $member->created_at,
-                'display_date' => $date ? DateHelper::withWareki($date) : null,
+                'display_date' => $date ? str_replace('（', '<br>（', DateHelper::withWareki($date)) : null,
             ];
         });
 
@@ -602,8 +602,8 @@ class MemberController extends Controller
                 'company_kana'=> $corp['name_kana'] ?? '',
                 'rep_last_kana' => $member->last_name_kana,
                 'rep_first_kana' => $member->first_name_kana,
-                'joined_at'   => $member->joined_at,
-                'withdrawn_at'=> $member->withdrawn_at,
+                'joined_at'   => optional($member->joined_at)?->format('Y-m-d'),
+                'withdrawn_at'=> optional($member->withdrawn_at)?->format('Y-m-d'),
                 'company_type_prefix' => $corp['prefix'] ?? '',
                 'company_name'=> $corp['name'] ?? '',
                 'company_type_suffix' => $corp['suffix'] ?? '',
@@ -1265,8 +1265,8 @@ logger()->error('BASE DIR DEBUG', [
 
                 // ===== 氏名結合 =====
                 $corpRepresentative = trim(
-                    ($corp->last_name ?? '') . ' ' .
-                    ($corp->first_name ?? '')
+                    ($member->last_name ?? '') . ' ' .
+                    ($member->first_name ?? '')
                 );
                 // ===== 会費（最新1件想定）=====
                 $invoice = $member->invoice;
@@ -1591,8 +1591,8 @@ logger()->error('BASE DIR DEBUG', [
             ->with([
                 'status',
                 'progress',
-                'organizations' => fn ($q) => $q->where('type', 1),
-                'organizations.documents',// => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
+                'organization',
+                'organization.documents',// => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
             ])
             ->when(request('status_id'), function ($q, $status_id) {
                 $q->where('status_id', $status_id);
@@ -1642,9 +1642,7 @@ logger()->error('BASE DIR DEBUG', [
             // =====================
             elseif (in_array($field, $organizationFields)) {
 
-                $query->whereHas('organizations', function ($q) use ($field, $keyword) {
-
-                    $q->where('type', 1);
+                $query->whereHas('organization', function ($q) use ($field, $keyword) {
 
                     if ($field === 'company_name') {
                         $q->where('name', 'like', "%{$keyword}%");
@@ -1698,6 +1696,10 @@ logger()->error('BASE DIR DEBUG', [
             'company_name',
             'representative',            
             'created_at',
+            'number',
+            'joined_at',
+            'withdrawn_at',
+            'canceled_at',
         ];
 
         if (! in_array($sortBy, $allowedSorts)) {

@@ -1571,32 +1571,35 @@ const handleNumberBlur = async () => {
 }
 
 const joinMonthOptions = computed(() => {
-  const today = new Date()
-  const day = today.getDate()
+    const today = new Date()
 
-  const base = new Date(today.getFullYear(), today.getMonth(), 1)
+    const base = new Date(today.getFullYear(), today.getMonth(), 1)
 
-  const addMonth = (date, n) => {
-    return new Date(date.getFullYear(), date.getMonth() + n, 1)
-  }
+    const addMonth = (date, n) => {
+        return new Date(date.getFullYear(), date.getMonth() + n, 1)
+    }
 
-  const format = (date) => {
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    return `${y}-${m}`
-  }
+    const format = (date) => {
+        const y = date.getFullYear()
+        const m = String(date.getMonth() + 1).padStart(2, '0')
 
-  if (day <= 20) {
+        return `${y}-${m}`
+    }
+
     return [
-      { label: format(base), value: format(base) },           // 当月
-      { label: format(addMonth(base, 1)), value: format(addMonth(base, 1)) } // 翌月
+        {
+            label: format(base),
+            value: format(base)
+        },
+        {
+            label: format(addMonth(base, 1)),
+            value: format(addMonth(base, 1))
+        },
+        {
+            label: format(addMonth(base, 2)),
+            value: format(addMonth(base, 2))
+        }
     ]
-  } else {
-    return [
-      { label: format(addMonth(base, 1)), value: format(addMonth(base, 1)) }, // 翌月
-      { label: format(addMonth(base, 2)), value: format(addMonth(base, 2)) }  // 翌々月
-    ]
-  }
 })
 
 </script>

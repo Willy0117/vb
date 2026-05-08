@@ -23,7 +23,7 @@ class DateHelper
 
         $seireki = $date->format('Y/m/d');
 
-        return "{$seireki}（{$wareki}）";
+        return "{$seireki} ({$wareki}）";
     }
 
 }

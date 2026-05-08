@@ -70,6 +70,12 @@ class Member extends Model
         return $this->hasOne(Organization::class)->latestOfMany();
     }
 */
+    public function organization()
+    {
+        return $this->hasOne(Organization::class)
+            ->where('type', 1);
+    }
+    
     public function corpOrg()
     {
         return $this->hasOne(Organization::class)->where('type', 1);
