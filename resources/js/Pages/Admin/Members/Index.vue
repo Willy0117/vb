@@ -144,7 +144,10 @@
             <td class="px-3 py-2">{{ member.name ?? '-' }}</td>
             <!-- td class="px-3 py-2">{{ member.tel ?? '-' }}</td -->
             <td class="px-3 py-2">{{ member.address ?? '-' }}</td>
-            <td class="px-3 py-2">{{ member.display_date }}</td>
+            <td
+              class="px-3 py-2 leading-tight"
+              v-html="member.display_date"
+            ></td>
             <td class="px-3 py-2">
               <span
                 :class="[

@@ -83,7 +83,7 @@ class MemberController extends Controller
                     'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
                 ]),
                 'created_at' => $member->created_at,
-                'display_date' => $date ? str_replace('（', '<br>（', DateHelper::withWareki($date)) : null,
+                'display_date' => $date ? str_replace('(', '<br>(', DateHelper::withWareki($date)) : null,
             ];
         });
 
