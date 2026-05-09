@@ -436,7 +436,11 @@ class MemberController extends Controller
             'corp.tel' => 'required|string',
             'corp.fax' => 'nullable|string',
             'corp.mobile' => 'nullable|string',
-            'corp.position' => 'required|string',
+            'corp.position' => [
+                'nullable',
+                'string',
+                Rule::requiredIf(fn () => request('type') !== 'sole'),
+            ],
             'corp.last_name' => 'required|string',
             'corp.first_name' => 'required|string',
 

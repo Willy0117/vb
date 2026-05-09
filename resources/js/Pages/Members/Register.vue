@@ -614,7 +614,7 @@
                 @click="selectCategory(c)"
                 :class="[
                   'px-4 py-1 rounded border text-sm',
-                  selectedCategory === c.value
+                  form.bank_type == c.value
                     ? 'bg-blue-600 text-white border-blue-600'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 ]"
@@ -1251,9 +1251,7 @@ const bankCategory = ref('')
 const bankKey = ref(0)
 
 const selectCategory = async (category) => {
-    console.log(category.value)
-  // カテゴリ確定
-  selectedCategory.value = category.value
+  console.log(category.value)
   form.bank_type = category.value
 
   selectedBank.value = null
