@@ -26,6 +26,7 @@ return [
         'rep_first_name' => '名',
         'desired join month' => '入会希望月', 
         'agent.company_name' => '代理店名',
+        'corp.position' => '代表者肩書', 
         'corp.postal_code' => '郵便番号', 
         'corp.email' => 'メールアドレス', 
         'corp.address1' => '市町村区', 

@@ -129,8 +129,9 @@
             <h3 class="text-lg font-semibold mb-2">代表者</h3>
                       <!-- 肩書き -->
             <div class="flex-1">
-                <InputLabel :value="t('registers.position')" class="h-5" />
+                <InputLabel :value="t('registers.position')" class="h-5" :required="form.type !== 'sole'" />
                 <TextInput v-model="form.corp.position" class="w-full" />
+                <InputError :message="form.errors['corp.position']" />
             </div>
 
             <div>
