@@ -4,6 +4,7 @@ return [
 
     'required' => ':attribute が未入力または形式が間違っています。',
     'required_if' => ':attribute が未入力またはファイルが選択されていません。',
+    'required_unless' => ':attribute が未入力または形式が間違っています。',
 
     'attributes' => [
         'company_name'=> '会社名',
@@ -49,5 +50,13 @@ return [
         'agent.last_name' => '姓',
         'agent.first_name' => '名',
         'desired_join_month' => '入会希望日',
+        'bank.bank_name' => '銀行名',
+        'bank.bank_code' => '銀行コード',
+        'bank.bank_type' => '金融機関種別',
+        'bank.branch_name' => '支店名',
+        'bank.branch_code' => '支店コード',
+        'bank.account_no' => '口座番号',
+        'bank.account_name' => '口座名',
+        'bank.account_kana' => '口座名(カナ)',
     ],
 ];

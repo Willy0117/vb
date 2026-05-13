@@ -31,7 +31,7 @@
                 <span>{{ t('registers.sole') }}</span>
               </label>
             </div>
-            <p v-if="errors.type" class="text-red-500 text-sm mt-1">{{ errors.type }}</p>
+            <p v-if="form.errors.type" class="text-red-500 text-sm mt-1">{{ form.errors.type }}</p>
           </div>
           <!-- 入会日（1W） -->
           <div class="col-span-2">
@@ -195,12 +195,13 @@
          <!-- 右カラム：代表者/担当者 -->
           <div class="space-y-4">
             <div class="flex-1">
-              <InputLabel :value="t('registers.position')" class="h-5" />
+              <InputLabel :value="t('registers.position')" class="h-5" :required="form.type !== 'sole'" />
               <TextInput v-model="form.corp.position" class="w-full" />
+              <InputError :message="form.errors['corp.position']" />
             </div>
             <div>
-             <InputLabel value="代表者名" />
-              <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+             <InputLabel value="代表者名" :required />
+              <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
                 <div class="flex-1">
                   <TextInput v-model="form.rep_last_name"
                     :class="{
@@ -208,6 +209,7 @@
                       'border-gray-300': !getError('rep_last_name')
                     }"
                     class="w-full" :placeholder="t('registers.last_name')" />
+                    <InputError :message="form.errors.rep_last_name" />
                 </div>
                 <div class="flex-1">  
                   <TextInput v-model="form.rep_first_name"
@@ -216,12 +218,13 @@
                       'border-gray-300': !getError('rep_first_name')
                     }"
                     class="w-full" :placeholder="t('registers.first_name')" />
+                    <InputError :message="form.errors.rep_first_name" />
                 </div>
               </div>
             </div>
             <div>
-              <InputLabel value="代表者名（フリガナ）" />
-              <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+              <InputLabel value="代表者名（フリガナ）" :required />
+              <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
                 <div class="flex-1">
                   <TextInput v-model="form.rep_last_kana"
                     :class="{
@@ -229,6 +232,7 @@
                       'border-gray-300': !getError('rep_last_kana')
                     }"
                    class="w-full" :placeholder="t('registers.last_name_kana')" />
+                  <InputError :message="form.errors.rep_last_kana" />
                 </div>  
                 <div class="flex-1">
                   <TextInput v-model="form.rep_first_kana"
@@ -237,6 +241,7 @@
                       'border-gray-300': !getError('rep_first_kana')
                     }"
                     class="w-full" :placeholder="t('registers.first_name_kana')" />
+                  <InputError :message="form.errors.rep_first_kana" />
                 </div>
               </div>
 
@@ -264,7 +269,7 @@
               {{ candidate.label }}
             </li>
           </ul>
-          <InputError :message="form.errors['corp.postal_code']" />
+          <InputError :message="page.props.errors['corp.postal_code']" />
         </div>
 
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
@@ -461,7 +466,7 @@
             <div class="flex-1">
               <InputLabel :value="t('registers.address3')" />
               <TextInput v-model="form.mail.address3" class="w-full" placeholder="xxxビル○○F" />
-              <InputError :message="form.errors?.mail?.address3" />
+              <InputError :message="form.errors['mail.address3']" />
             </div>
         </div>            
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
@@ -728,7 +733,7 @@
           <div class="space-y-4 max-w-xl mx-auto p-2">
 
             <!-- 銀行選択 -->
-            <InputLabel :value="bankCategories.select_bank" />
+            <InputLabel :value="bankCategories.select_bank" :requred />
             <div class="grid grid-cols-4 gap-2 mb-3">
               <button
                 v-for="c in bankCategories"
@@ -745,6 +750,7 @@
                 {{ c.label }}
               </button>
             </div>
+            <InputError :message="form.errors['bank.bank_type']" />
 
             <!-- 銀行名 + 銀行コード -->
             <div class="grid grid-cols-2 gap-4 mb-2">
@@ -757,14 +763,14 @@
                   :extra-params="form.bank.bank_type ? { category: form.bank.bank_type } : {}"
                   :initial="form.bank.bank_name"
                   @selected="handleBankSelected"
+                  :required 
                 />
-                <p v-if="errors.bank_name" class="text-red-500 text-sm mt-1">
-                  {{ errors.bank_name }}
-                </p>
-              </div>
+                <InputError :message="form.errors['bank.bank_name']" />
+             </div>
               <div>
-                <InputLabel :value="t('banks.bank_code')" />
+                <InputLabel :value="t('banks.bank_code')" :requred />
                 <TextInput v-model="form.bank.bank_code" class="w-full" />
+                <InputError :message="form.errors['bank.bank_code']" />
               </div>
             </div>
 
@@ -800,7 +806,7 @@
                 <InputLabel
                   :value="form.bank.bank_code === '9900'
                     ? '記号'
-                    : t('banks.branch_code')"
+                    : t('banks.branch_code')" :required 
                 />
 
                 <TextInput
@@ -811,10 +817,7 @@
                     ? '記号（5桁）'
                     : '支店コード（3桁）'"
                 />
-
-                <p v-if="errors.branch_code" class="text-red-500 text-sm mt-1">
-                  {{ errors.branch_code }}
-                </p>
+                <InputError :message="form.errors['bank.branch_code']" />
               </div>
 
             </div>
@@ -834,25 +837,25 @@
             </div>
 
             <div>
-              <InputLabel value="口座番号" />
+              <InputLabel value="口座番号" :required  />
               <TextInput
                 v-model="form.bank.account_no"
                 :maxlength="bankAccountMaxLength"
                 @input="validateAccountNo"
                 class="w-full"
               />
-              <p v-if="accountNoError" class="text-red-500 text-sm mt-1">{{ accountNoError }}</p>
+              <InputError :message="form.errors['bank.account_no']" />
             </div>
 
             <div>
-                <InputLabel value="口座名義（フリガナ）" />
+                <InputLabel value="口座名義（フリガナ）" :required />
                 <TextInput v-model="form.bank.account_kana" class="w-full" />
-                <InputError :message="form.errors.account_kana" />
+                <InputError :message="form.errors['bank.account_kana']" />
             </div>
             <div>
-                <InputLabel value="口座名義" />
+                <InputLabel value="口座名義" :required  />
                 <TextInput v-model="form.bank.account_name" class="w-full" />
-                <InputError :message="form.errors.account_name" />
+                <InputError :message="form.errors['bank.account_name']" />
             </div>
                 <!-- 注意文言 -->
             <p class="text-xs text-gray-500 mt-2">
@@ -1049,8 +1052,10 @@ const form = useForm({
     bank_type: page.props.form?.bank_account?.bank_type ?? '',
     bank_name: page.props.form?.bank_account?.bank_name ?? '',
     bank_code: page.props.form?.bank_account?.bank_code ?? '',
+    bank_name_kana: page.props.form?.bank_account?.bank_name_kana ?? '',
     branch_name: page.props.form?.bank_account?.branch_name ?? '',
     branch_code: page.props.form?.bank_account?.branch_code ?? '',  
+    branch_name_kana: page.props.form?.bank_account?.branch_name_kana ?? '',
     account_type: page.props.form?.bank_account?.account_type ?? '普通',
     account_no: page.props.form?.bank_account?.account_no ?? '',
     account_kana: page.props.form?.bank_account?.account_kana ?? '',
@@ -1290,7 +1295,6 @@ watch(
   ],
   () => {
     // ===== 口座名義（フリガナ） =====
-    // ===== 口座名義（フリガナ） =====
     const prefixKana = getCompanyTypeKana(form.company_type_prefix)
     const suffixKana = getCompanyTypeKana(form.company_type_suffix)
 
@@ -1405,8 +1409,10 @@ const selectCategory = async (category) => {
   selectedBank.value = null
   form.bank.bank_name = ''
   form.bank.bank_code = ''
+  form.bank.bank_name_kana = ''
   form.bank.branch_name = ''
   form.bank.branch_code = ''
+  form.bank.branch_name_kana = ''
 
   if (category.value === 7) {
     selectedBank.value = {
@@ -1431,6 +1437,7 @@ const handleBankSelected = (item) => {
   form.bank.bank_name = item.label          // form に銀行名を反映
   form.bank.bank_id = item.id               // form に銀行 id を反映
   form.bank.bank_code = item.bank_code
+  form.bank.bank_name_kana = item.name_kana
   // 支店は必ずリセット
   selectedBranch.value = null
   form.bank.branch_name = ''
@@ -1443,6 +1450,7 @@ const handleBranchSelected = (branch) => {
 
   form.bank.branch_name = branch.label
   form.bank.branch_code = branch.branch_code
+  form.bank.branch_name_kana = branch.name_kana
 //  console.log(branch,form.branch_name);
 }
 
@@ -1520,7 +1528,7 @@ const saveAgent = () => {
 }
 
 const saveBank = () => {
-  router.post(`/admin/member/${page.props.form.id}/save-bank`, form.bank, {
+  form.post(`/admin/member/${page.props.form.id}/save-bank`, {
     preserveScroll: true,
     onSuccess: () => alert('銀行情報を保存しました'),
   })

@@ -17,7 +17,7 @@
             :href="route('admin.member.create', persistQuery())"
             class="px-4 h-10 bg-green-500 text-white rounded hover:bg-green-600 flex items-center justify-center"
           >
-            <PlusIcon class="w-4 h-4"/>
+            <UserIcon class="w-4 h-4"/>
             <span>{{ t('members.create') }}</span>
           </Link>
         </div>
@@ -405,7 +405,7 @@ import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch} from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
-import { ArrowDownTrayIcon, PencilIcon, EyeIcon, MagnifyingGlassIcon, DocumentPlusIcon} from '@heroicons/vue/24/outline'
+import { ArrowDownTrayIcon, PencilIcon, EyeIcon, MagnifyingGlassIcon, DocumentPlusIcon, PlusIcon, UserIcon} from '@heroicons/vue/24/outline'
 
 const { props } = usePage()
 
@@ -691,6 +691,7 @@ const documentTypes = [
   { id: 2, name: '郵送先確認書' },
   { id: 3, name: '口座振替依頼書' },
   { id: 4, name: '委任状' },
+  { id: 5, name: '会員証明書' },
 ]
 
 const shortName = (name) => {
@@ -709,6 +710,7 @@ const typeBgClass = (typeId) => {
     2: 'bg-green-50 border-green-200',
     3: 'bg-yellow-50 border-yellow-200',
     4: 'bg-purple-50 border-purple-200',
+    5: 'bg-cyan-50 border-cyan-200',
   }
   return map[typeId] ?? 'bg-gray-50 border-gray-200'
 }
@@ -773,6 +775,7 @@ const submitUpload = async () => {
     
   } catch (err) {
     console.error(err)
+    console.log(err.response.data)
     alert('アップロード失敗')
   }
 }
