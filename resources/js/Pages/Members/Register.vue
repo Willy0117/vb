@@ -577,7 +577,7 @@
               <!-- 肩書き -->
               <div class="flex-1">
                 <div>
-                  <InputLabel :value="t('registers.position')" class="h-5" required />
+                  <InputLabel :value="t('registers.position')" class="h-5" />
                   <TextInput v-model="form.agent.position" class="w-full" />
                 </div>
                 <InputError :message="form.errors['agent.position']" />
@@ -722,8 +722,7 @@
                 <TextInput v-model="form.account_no" class="w-full" maxlength="8" />
                 <InputError :message="form.errors.account_no" />
                 <p class="text-xs text-gray-500 mt-1">
-                    口座番号は7桁、ゆうちょ銀行は8桁で入力して下さい！<br>
-                    7桁に満たない口座番号の場合は、左側に「0」を1234->0001234
+                    口座番号は7桁、ゆうちょ銀行は8桁で入力して下さい!
                 </p>
             </div>
                          <!-- 注意文言 -->
@@ -1566,6 +1565,7 @@ watch(
   }
 )
 // 会社情報の代表者名が入力されたら,corp.にも入れる
+/*
 watch(
   () => [form.rep_last_name, form.rep_first_name],
   ([last, first]) => {
@@ -1578,7 +1578,7 @@ watch(
   },
   { immediate: true }
 )
-
+*/
 
 //銀行コードまたは支店コードを半角数字化
 const toHalfWidthNumber = (value) => {

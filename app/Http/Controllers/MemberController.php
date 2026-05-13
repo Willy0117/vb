@@ -492,7 +492,7 @@ class MemberController extends Controller
                 'agent.tel' => 'required|string',
                 'agent.fax' => 'nullable|string',
                 'agent.mobile' => 'nullable|string',
-                'agent.position' => 'required|string',
+                'agent.position' => 'nullable|string',
                 'agent.last_name' => 'required|string',
                 'agent.first_name' => 'nullable|string',
             ]);
