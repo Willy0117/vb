@@ -123,8 +123,10 @@ class MemberController extends Controller
                     'bank_type' => $form['bank_type'],
                     'bank_name' => $form['bank_name'],
                     'bank_code' => $form['bank_code'] ?? null,
+                    'bank_name_kana' => $form['bank_name_kana'] ?? null,
                     'branch_name' => $form['branch_name'] ?? null,
                     'branch_code' => $form['branch_code'] ?? null,
+                    'branch_name_kana' => $form['branch_name_kana'] ?? null,
                     'account_type' => $form['account_type'],
                     'account_no' => $form['account_no'],
                     'account_kana' => $form['account_kana'],
@@ -135,8 +137,10 @@ class MemberController extends Controller
                     'bank_type' => $form['bank_type'],
                     'bank_name' => $form['bank_name'],
                     'bank_code' => $form['bank_code'] ?? null,
+                    'bank_name_kana' => $form['bank_name_kana'] ?? null,
                     'branch_name' => $form['branch_name'] ?? null,
                     'branch_code' => $form['branch_code'] ?? null,
+                    'branch_name_kana' => $form['branch_name_kana'] ?? null,
                     'account_type' => $form['account_type'],
                     'account_no' => $form['account_no'],
                     'account_kana' => $form['account_kana'],
@@ -468,6 +472,8 @@ class MemberController extends Controller
             'account_no' => 'required|string',
             'account_kana' => 'nullable|string',
             'account_name' => 'nullable|string',
+            'bank_name_kana' => 'nullable|string',
+            'branch_name_kana' => 'nullable|string',
         ];
 
         if ($request->bank_code !== '9900') {

@@ -46,6 +46,7 @@ class BankController extends Controller
                 'name as label',
                 'bank_code',
                 'name',
+                'name_kana',
                 'bank_category',
             ]);
     }
@@ -78,6 +79,7 @@ class BankController extends Controller
                 'id' => $b->branch_code,
                 'label' => $b->name,
                 'branch_code' => $b->branch_code,
+                'name_kana' => $b->name_kana,
             ]);
     }
 

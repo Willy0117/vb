@@ -19,6 +19,8 @@ class BankAccount extends Model
         'account_no',
         'account_kana',
         'account_name',
+        'bank_name_kana',
+        'branch_name_kana',
     ];
 
     public function member()

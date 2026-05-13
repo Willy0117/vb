@@ -954,8 +954,10 @@ const form = useForm({
   bank_type: page.props.form?.bank_type ?? '',
   bank_name: page.props.form?.bank_name ?? '',
   bank_code: page.props.form?.bank_code ?? '',
+  bank_name_kana: page.props.form?.bank_name_kana ?? '',
   branch_name: page.props.form?.branch_name ?? '',
   branch_code: page.props.form?.branch_code ?? '',  
+  branch_name_kana: page.props.form?.branch_name_kana ?? '',
   account_type: page.props.form?.account_type ?? '普通',
   account_no: page.props.form?.account_no ?? '',
   account_kana: page.props.form?.account_kana ?? '',
@@ -1258,8 +1260,10 @@ const selectCategory = async (category) => {
   selectedBank.value = null
   form.bank_name = ''
   form.bank_code = ''
+  form.bank_name_kana = ''
   form.branch_name = ''
   form.branch_code = ''
+  form.branch_name_kana = ''
 
   if (category.value === 7) {
     selectedBank.value = {
@@ -1269,6 +1273,7 @@ const selectCategory = async (category) => {
     }
     form.bank_code = '9900'
     form.bank_name = 'ゆうちょ銀行'
+    form.bank_name_kana = 'ﾕｳﾁｮｷﾞﾝｺｳ'
 
   } else {
     form.bank = null
@@ -1284,6 +1289,7 @@ const handleBankSelected = (item) => {
   form.bank_name = item.label          // form に銀行名を反映
   form.bank_id = item.id               // form に銀行 id を反映
   form.bank_code = item.bank_code
+  form.bank_name_kana = item.name_kana
   // 支店は必ずリセット
   selectedBranch.value = null
   form.branch_name = ''
@@ -1296,6 +1302,7 @@ const handleBranchSelected = (branch) => {
 
   form.branch_name = branch.label
   form.branch_code = branch.branch_code
+  form.branch_name_kana = branch.name_kana
 //  console.log(branch,form.branch_name);
 }
 
