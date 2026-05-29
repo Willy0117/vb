@@ -77,17 +77,23 @@ class MemberController extends Controller
                     'name' => $member->organization?->full_name,
                 ],
                 'address' => $member->organization?->full_address,
-                'documents' => $member->organization?->documents?->map(fn($doc) => [
-                    'type' => $doc->type,
-                    'path' => $doc->file_path ? Storage::url($doc->file_path) : null,
-                    'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
-                ]),
-                'created_at' => $member->created_at,
+                'documents' => $member->organization
+                    ?->documents
+                    ?->sortByDesc('created_at')
+                    ->groupBy('type')
+                    ->map(fn($docs) => $docs->first())
+                    ->values()
+                    ->map(fn($doc) => [
+                        'id'             => $doc->id,
+                        'type'           => $doc->type,
+                        'type_name'      => $documentTypeNames[$doc->type] ?? '不明',
+                        'path'           => $doc->file_path ? Storage::url($doc->file_path) : null,
+                        'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
+                    ]),
+                'created_at' => $member->created_at->format('Y年m月d日 H:i'),//$member->created_at,
                 'display_date' => $date ? str_replace('(', '<br>(', DateHelper::withWareki($date)) : null,
             ];
         });
-
-
 
         return Inertia::render('Admin/Members/Index', [
             'members' => $members,
@@ -522,11 +528,20 @@ class MemberController extends Controller
 
         $orgs = $member->organizations->keyBy('type');
 
+        $documentTypeNames = [
+            1 => '履歴事項全部証明書',
+            2 => '郵送先確認書',
+            3 => '口座振替依頼書',
+            4 => '委任状',
+            5 => '会員証明書',
+        ];
         // 書類は type ごとに全部取得
         $documents = $member->organizations
             ->flatMap(fn ($org) => $org->documents)
             ->map(fn ($doc) => [
+                'id'             => $doc->id,
                 'type'           => $doc->type,
+                'type_name'      => $documentTypeNames[$doc->type] ?? '不明',
                 'path'           => $doc->file_path ? Storage::url($doc->file_path) : null,
                 'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
             ]);
@@ -680,10 +695,10 @@ class MemberController extends Controller
     public function editStatus(Member $member)
     {
         $allowedMap = [
-            1 => [1,2,4],
-            2 => [2,3],
-            3 => [],
-            4 => [],
+            1 => [1,2,3,4],
+            2 => [1,2,3,4],
+            3 => [1,2,3,4],
+            4 => [1,2,3,4],
         ];
 
         $allowedIds = $allowedMap[$member->status_id] ?? [];
@@ -736,6 +751,21 @@ class MemberController extends Controller
         }
 
         $member->update($data);
+        // ログ記録
+        \DB::table('operation_logs')->insert([
+            'user_id'    => auth()->id(),
+            'action'     => 'member.updateStatus',
+            'message'    => "ステータス変更: {$member->id}",
+            'data'       => json_encode([
+                'member_id'  => $member->id,
+                'status_id'  => $statusId,
+                'date'       => $dt->toDateTimeString(),
+                'before'     => $member->getOriginal('status_id'),
+                'after'      => $statusId,
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
         // JSONで更新済み member を返す
         return response()->json(['member' => $member->fresh()]);
 
@@ -761,9 +791,26 @@ class MemberController extends Controller
             'progress_id' => ['required', 'exists:progresses,id'],            
         ]);
 
+        $dt = \Carbon\Carbon::parse($request->date)->second(0);
+
         $member->update([
             'progress_id' => $request->progress_id,
             'updated_by' => auth()->id(),
+        ]);
+        // ログ記録
+        \DB::table('operation_logs')->insert([
+            'user_id'    => auth()->id(),
+            'action'     => 'member.updateProgress',
+            'message'    => "状況変更: {$member->id}",
+            'data'       => json_encode([
+                'member_id'  => $member->id,
+                'progress_id'  => $request->progress_id,
+                'date'       => $dt->toDateTimeString(),
+                'before'     => $member->getOriginal('progress_id'),
+                'after'      => $request->progress_id,
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
         // JSONで更新済み member を返す
         return response()->json(['member' => $member->fresh()]);
@@ -803,6 +850,7 @@ class MemberController extends Controller
         );
 
         // DB保存（organization_documents）
+        /*
         OrganizationDocument::updateOrCreate(
             [
                 'organization_id' => $organizationId,
@@ -814,12 +862,33 @@ class MemberController extends Controller
                 'verified_at' => null,
             ]
         );
-
+        */
+        OrganizationDocument::create([
+            'organization_id' => $organizationId,
+            'type'            => $request->type_id,
+            'file_path'       => $filePath,
+            'thumbnail_path'  => $thumbPath,
+            'verified_at'     => null,
+        ]);
         return response()->json([
             'success' => true,
             'file_url' => Storage::url($filePath),
             'thumbnail_url' => $thumbPath ? Storage::url($thumbPath) : null,
         ]);
+    }
+
+    public function destroyDocument(OrganizationDocument $document)
+    {
+        if (Storage::exists($document->file_path)) {
+            Storage::delete($document->file_path);
+        }
+        if ($document->thumbnail_path && Storage::exists($document->thumbnail_path)) {
+            Storage::delete($document->thumbnail_path);
+        }
+
+        $document->delete();
+
+        return back();
     }
 
     public function saveBasic(Request $request, Member $member)
@@ -1409,11 +1478,11 @@ logger()->error('BASE DIR DEBUG', [
                 'status',
                 'progress',
                 'organization',
-                'organization.documents',// => fn ($q) => $q->where('type', 1), // 履歴事項全部証明書
             ])
             ->when(request('status_id'), function ($q, $status_id) {
                 $q->where('status_id', $status_id);
             });
+
         // =====================
         // フィールド指定検索（NEW）
         // =====================
@@ -1507,6 +1576,7 @@ logger()->error('BASE DIR DEBUG', [
 
         $allowedSorts = [
             'id',
+            'agent',
             'status_id',
             'progress_id',
             'address',

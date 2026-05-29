@@ -1,6 +1,10 @@
 <template>
   <AppLayout>
-    <template #header>{{ t('members.member_list') }}</template>
+    <template #header>{{ t('members.member_list') }}
+      <span v-if="form.status_id">
+      {{{ 1: '> 申請中', 2: '> 入会', 3: '> 退会', 4: '> キャンセル' }[form.status_id] }}
+  </span>
+    </template>
     <div class="p-6">
       <div class="mb-4 flex flex-wrap items-center gap-2">
         <div>
@@ -75,69 +79,96 @@
       <table class="min-w-full table-auto border-collapse border border-gray-300 text-sm">
         <thead>
           <tr class="bg-gray-200">
-            <th class="px-3 py-2">
-              <input type="checkbox" :checked="selectAll" @change="toggleSelectAll($event.target.checked)" />
-            </th>
             <th v-if="isSuperAdmin">{{ t('tenant') }}</th>
-            <th class="px-3 py-2 cursor-pointer" @click="sortBy('type')">
-              {{ t('members.type') }}
-              <span v-if="form.sort_by==='type'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
-            </th>            
             <th class="px-3 py-2 cursor-pointer" @click="sortBy('agent')">
+              <div class="flex items-center gap-1">
               {{ t('members.agent') }}
-              <span v-if="form.sort_by==='agent'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+              <component
+                :is="form.sort_by === 'agent' ? (form.sort_dir === 'asc' ? ChevronUpIcon : ChevronDownIcon) : ChevronUpDownIcon"
+                class="w-4 h-4"
+              /></div>
             </th>            
             <th v-if="form.status_id == null || [2,3].includes(Number(form.status_id))" class="px-3 py-2 cursor-pointer" @click="sortBy('number')">
+              <div class="flex items-center gap-1">
               {{ t('members.number') }}
-              <span v-if="form.sort_by==='number'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+              <component
+                :is="form.sort_by === 'number' ? (form.sort_dir === 'asc' ? ChevronUpIcon : ChevronDownIcon) : ChevronUpDownIcon"
+                class="w-4 h-4"
+              />
+              </div>
             </th>            
             <th class="px-3 py-2 cursor-pointer min-w-[300px]" @click="sortBy('company_name')">
+              <div class="flex items-center gap-1">
               {{ t('members.company_name') }}
-              <span v-if="form.sort_by==='company_name'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+              <component
+                :is="form.sort_by === 'company_name' ? (form.sort_dir === 'asc' ? ChevronUpIcon : ChevronDownIcon) : ChevronUpDownIcon"
+                class="w-4 h-4"
+              />
+              </div>
             </th>
             <th class="px-3 py-2 cursor-pointer" @click="sortBy('representative')">
-              {{ t('members.applicant') }}
-              <span v-if="form.sort_by==='representative'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+              <div class="flex items-center gap-1">
+              {{ t('members.representative') }}
+              <component
+                :is="form.sort_by === 'representative' ? (form.sort_dir === 'asc' ? ChevronUpIcon : ChevronDownIcon) : ChevronUpDownIcon"
+                class="w-4 h-4"
+              />
+              </div>
             </th>
             <!-- 02.06 TEL 不要　th class="px-3 py-2 cursor-pointer" @click="sortBy('tel')">
               {{ t('members.tel') }}
               <span v-if="form.sort_by==='tel'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
             </th -->
             <th class="px-3 py-2 cursor-pointer" @click="sortBy('address')">
+              <div class="flex items-center gap-1">
               {{ t('members.address') }}
-              <span v-if="form.sort_by==='address'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+              <component
+                :is="form.sort_by === 'address' ? (form.sort_dir === 'asc' ? ChevronUpIcon : ChevronDownIcon) : ChevronUpDownIcon"
+                class="w-4 h-4"
+              />
+              </div>
             </th>
             <th
               class="px-3 py-2 cursor-pointer"
               @click="sortBy(sortField)"
             >
+              <div class="flex items-center gap-1">
               {{ dateLabel }}
-              <span v-if="form.sort_by === sortField">
-                {{ form.sort_dir === 'asc' ? '▲' : '▼' }}
-              </span>
+              <component
+                :is="form.sort_by === sortField ? (form.sort_dir === 'asc' ? ChevronUpIcon : ChevronDownIcon) : ChevronUpDownIcon"
+                class="w-4 h-4"
+              />
+              </div>
             </th>
             <th class="px-3 py-2 text-center cursor-pointer" @click="sortBy('status_id')">
+              <div class="flex items-center gap-1">
               {{ t('members.status') }}
-              <span v-if="form.sort_by==='status_id'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+              <component
+                :is="form.sort_by === 'status_id' ? (form.sort_dir === 'asc' ? ChevronUpIcon : ChevronDownIcon) : ChevronUpDownIcon"
+                class="w-4 h-4"
+              />
+              </div>
             </th>  
             <th v-if="props.filters?.status_id == 1" class="px-3 py-2 text-center cursor-pointer" @click="sortBy('progress_id')">
+              <div class="flex items-center gap-1">
               {{ t('members.progress') }}
-              <span v-if="form.sort_by==='progress_id'">{{ form.sort_dir==='asc'?'▲':'▼' }}</span>
+              <component
+                :is="form.sort_by === 'progress_id' ? (form.sort_dir === 'asc' ? ChevronUpIcon : ChevronDownIcon) : ChevronUpDownIcon"
+                class="w-4 h-4"
+              />
+              </div>
             </th>
             <th class="px-3 py-2 text-center">{{ t('members.documents') }}</th>
+            <th class="px-3 py-2 text-center">{{ t('members.created_at') }}</th>
             <th class="px-3 py-2 text-center">{{ t('actions.action') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="member in props.members?.data" :key="member.id" class="odd:bg-white even:bg-gray-100">
 
-            <td class="px-3 py-2">
-              <input type="checkbox" :value="member.id" v-model="selectedIds" />
-            </td>
             <td v-if="isSuperAdmin">
               {{ tenants.find(t => t.id === member.tenant_id)?.name || '-' }}
             </td>            
-            <td class="px-3 py-2">{{ member.type ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.agent ?? '-' }}</td>
             <td v-if="form.status_id == null || [0,2,3].includes(Number(form.status_id))" class="px-3 py-2">{{ member.number ?? '-' }}</td>
             <td class="px-3 py-2 min-w-[300px]">{{ member.organization?.name ?? '-' }}</td>
@@ -209,8 +240,7 @@
                 </template>
               </div>
             </td>
-
-
+            <td class="px-3 py-2">{{ member.created_at ?? '-' }}</td>
             <td class="px-3 py-2 text-center flex justify-center space-x-1">
               <Link :href="route('admin.member.show', { member: member.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
                 <EyeIcon class="w-4 h-4"/>
@@ -405,8 +435,7 @@ import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { ref, reactive, computed, watch} from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
-import { ArrowDownTrayIcon, PencilIcon, EyeIcon, MagnifyingGlassIcon, DocumentPlusIcon, PlusIcon, UserIcon} from '@heroicons/vue/24/outline'
-
+import { ArrowDownTrayIcon, PencilIcon, EyeIcon, MagnifyingGlassIcon, DocumentPlusIcon, PlusIcon, UserIcon, ChevronUpIcon, ChevronDownIcon, ChevronUpDownIcon } from '@heroicons/vue/24/outline'
 const { props } = usePage()
 
 console.log(props)

@@ -1,16 +1,11 @@
 <template>
   <GuestLayout>
-    <RegisterStep current="bank" />
-    <Head title="PDF確認" />
+    <RegisterStep current="confirm" />
+    <Head title="会員登録（確認）" />
+
     <div class="max-w-5xl mx-auto bg-white p-8 rounded shadow">
       <h2 class="text-2xl font-bold mb-2">{{ t('registers.members') }}</h2>
-      <p class="text-sm text-gray-500 mb-8">
-        <ul class="text-sm text-gray-600 mb-8 bg-yellow-50 border border-yellow-200 rounded p-4 pl-8 space-y-1" style="list-style-type: disc;">
-          <li>以下の入力情報をご確認ください。こちらの内容で登録いたします。内容に相違がある場合は、「訂正」ボタンを押下し、修正してください。</li>
-          <li>登録完了後は、内容の確認はできません。登録内容を保管されたい場合は、プリントアウト等していただき、保管をお願いいたします。</li>
-          <li>口座振替依頼書PDFを必ずダウンロードしてください。</li>
-        </ul>
-      </p>
+      <p class="text-sm text-gray-500 mb-8">以下の内容をご確認の上、「送信する」ボタンを押してください。</p>
 
       <!-- 申込種別 / 入会希望月 -->
       <ConfirmSection :title="t('registers.applicant') + ' / ' + t('registers.desired_join_month')">
@@ -91,6 +86,7 @@
 
       <!-- 銀行情報 -->
       <ConfirmSection :title="t('registers.bank')">
+        <ConfirmRow :label="t('banks.bank_category')">{{ form.bank_type }}</ConfirmRow>
         <ConfirmRow label="銀行名">
           {{ form.bank_name }}（{{ form.bank_code }}）
         </ConfirmRow>
@@ -103,96 +99,47 @@
         <ConfirmRow :label="t('banks.account_name')" v-if="form.account_name">{{ form.account_name }}</ConfirmRow>
         <ConfirmRow :label="t('banks.account_kana')" v-if="form.account_kana">{{ form.account_kana }}</ConfirmRow>
       </ConfirmSection>
-      <div class="flex gap-4 items-center">
-        <button
-          @click="goBack"
-          class="mt-6 h-10 px-4 flex items-center justify-center rounded bg-gray-300"
-        >
-          {{ t('revise') }}
-        </button>
-      </div>
-    </div>
-    <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
-      <h2 class="text-xl font-bold mb-4">口座振替申請書 確認</h2>
 
-      <div
-        id="pdf-container"
-        class="space-y-6 overflow-y-auto max-h-[80vh] border p-4 bg-gray-50"
-      ></div>
+      <!-- 必要書類 -->
+      <ConfirmSection title="必要書類">
+        <ConfirmRow label="履歴事項全部証明書" v-if="form.type !== 'sole'">
+          <span class="text-green-600 font-medium">✓ アップロード済み</span>
+        </ConfirmRow>
+        <ConfirmRow label="郵送先確認資料" v-if="!form.same_as_corp">
+          <span class="text-green-600 font-medium">✓ アップロード済み</span>
+        </ConfirmRow>
+      </ConfirmSection>
 
-      <div class="space-y-3 mt-6">
-        <label class="flex items-center gap-2">
-          <input type="checkbox" v-model="confirmed" />
-          <span>記載内容に相違ありません。</span>
-        </label>
-
-        <label class="flex items-center gap-2">
-          <input type="checkbox" v-model="downloaded" />
-          <span>口座振替申請書PDFをダウンロードしました。</span>
-        </label>
-      </div>
-
-      <div class="flex gap-4 items-center">
-        <button
-          @click="goBack"
-          class="mt-6 h-10 px-4 flex items-center justify-center rounded bg-gray-300"
-        >
-          {{ t('revise') }}
-        </button>
-
-        <a
-          :href="confirmed ? pdfUrl : null"
-          download
-          class="mt-6 h-10 px-4 flex items-center justify-center rounded text-white"
-          :class="confirmed
-            ? 'bg-blue-600 cursor-pointer'
-            : 'bg-gray-400 cursor-not-allowed pointer-events-none'
-          "
-        >
-          口座振替申請書を{{ t('download') }}
-        </a>
+      <!-- ボタン -->
+      <div class="flex items-center justify-between mt-10">
+        <SecondaryButton type="button" @click="goBack" :disabled="processing">
+          ← 戻る
+        </SecondaryButton>
         <PrimaryButton
           type="button"
-          class="mt-6 h-10 px-4 flex items-center justify-center"
-          :disabled="!canSubmit"
-          @click="submitRegister"
+          :disabled="processing"
+          class="bg-blue-600 hover:bg-blue-700"
+          @click="submit"
         >
-          データ登録
+          <span v-if="processing">送信中...</span>
+          <span v-else>送信する</span>
         </PrimaryButton>
-
       </div>
-      <p class="text-red-500 text-sm mt-6">
-      ※口座振替依頼書は、口座名義人（フリガナ含む）の記入と
-      押印（金融機関お届け印）をしたものをご郵送いただきますようお願いいたします。
-      </p>
     </div>
   </GuestLayout>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, defineComponent, h } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { ref, defineComponent, h } from 'vue'
+import { Head, router, usePage } from '@inertiajs/vue3'
+import { useI18n } from 'vue-i18n'
+
 import GuestLayout from '@/Layouts/GuestLayout.vue'
-import RegisterStep from '@/Components/RegisterStep.vue'    
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { useI18n } from 'vue-i18n';
+import RegisterStep from '@/Components/RegisterStep.vue'
+import SecondaryButton from '@/Components/SecondaryButton.vue'
+import PrimaryButton from '@/Components/PrimaryButton.vue'
 
-const { t } = useI18n();
-
-const canvas = ref(null)
-const page = usePage()
-const pdfUrl = usePage().props.pdfUrl
-
-console.log('page.props:', page.props)
-console.log('form:', page.props.form)
-
-const confirmed = ref(false)
-const downloaded = ref(false)
-
-const canSubmit = computed(() => {
-  return confirmed.value && downloaded.value
-})
-
+// ── 確認用インラインコンポーネント ──────────────────────────────────────────
 const ConfirmSection = defineComponent({
   props: { title: String },
   setup(props, { slots }) {
@@ -216,56 +163,17 @@ const ConfirmRow = defineComponent({
       ])
   }
 })
+// ─────────────────────────────────────────────────────────────────────────────
+
+const { t } = useI18n()
+const page = usePage()
 
 // confirm() でセッションから渡された表示用データ
 const form = page.props.form ?? {}
 
 const processing = ref(false)
 
-onMounted(async () => {
-  const pdfjsLib = window.pdfjsLib
-
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
-
-  const pdf = await pdfjsLib.getDocument({
-    url: pdfUrl,
-    cMapUrl: '/cmaps/',
-    cMapPacked: true,
-  }).promise
-
-  const container = document.getElementById('pdf-container')
-
-  // 全ページ描画
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum)
-
-    const viewport = page.getViewport({ scale: 1.5 })
-    const canvas = document.createElement('canvas')
-    const context = canvas.getContext('2d')
-
-    canvas.width = viewport.width
-    canvas.height = viewport.height
-    canvas.classList.add('shadow', 'mx-auto')
-
-    container.appendChild(canvas)
-
-    await page.render({
-      canvasContext: context,
-      viewport,
-      renderInteractiveForms: true,
-    }).promise
-  }
-})
-
-const submitRegister = () => {
-  router.get(
-    route('members.completeRegistration', {
-      token: page.props.token,
-    })
-  )
-}
-
+/** 入力画面（register）へ戻る */
 const goBack = () => {
   router.get(
     route('members.register.register', { token: page.props.token }),
@@ -275,5 +183,24 @@ const goBack = () => {
       preserveScroll: true,
     }
   )
+}
+
+/**
+ * 送信：pdfGenerate へ POST
+ * ファイルはすでに confirm() でストレージ保存済み → パスのみ送る
+ */
+function submit() {
+  processing.value = true
+
+  router.post(
+    route('members.pdfgenerate', { token: page.props.token }),
+    {},   // データはセッションから取るので空でOK
+    {
+      preserveScroll: true,
+      onError: () => { processing.value = false },
+      onFinish: () => { processing.value = false },
+    }
+  )
+
 }
 </script>

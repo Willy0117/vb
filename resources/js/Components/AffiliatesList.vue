@@ -16,7 +16,7 @@
     <!-- 専門工事業団体 -->
     <div class="mb-6">
       <h3 class="font-semibold mb-2">● 専門工事業団体</h3>
-      <div class="grid grid-cols-2 gap-2 text-sm leading-relaxed">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm leading-relaxed">
         <div v-for="item in affiliates2" :key="item" class="flex items-start">
           <span class="mr-1">■</span>
           <span>{{ item }}</span>
@@ -27,7 +27,7 @@
     <!-- 元請けゼネコン他 -->
     <div class="mb-6">
       <h3 class="font-semibold mb-2">● 元請けゼネコン他</h3>
-      <div class="grid grid-cols-2 gap-2 text-sm leading-relaxed">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm leading-relaxed">
         <div v-for="item in affiliates3" :key="item" class="flex items-start">
           <span class="mr-1">■</span>
           <span>{{ item }}</span>

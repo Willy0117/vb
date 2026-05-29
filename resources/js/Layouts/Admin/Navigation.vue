@@ -56,7 +56,7 @@
         :class="isActive('members.index') ? 'bg-gray-300 font-semibold' : ''"
       >
         <UsersIcon class="w-5 h-5"/>
-        <span v-if="!collapsed" class="ml-2">{{ t('members.member') }}</span>
+        <span v-if="!collapsed" class="ml-2">{{ t('members.member') }}（全データ）</span>
       </Link>
       <div class="mt-2">
         <button

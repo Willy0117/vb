@@ -118,15 +118,13 @@
 
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="mt-4">
-          </div>
-          <div class="mt-4">
-            <InputLabel :value="t('registers.desired_join_month')" /> 
-            <select v-model="form.desired_join_month" class="border rounded px-2 py-1 w-full">
-              <option v-for="opt in joinMonthOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+          <div class="mt-4"></div>
+            <div class="mt-4">
+            <InputLabel :value="t('registers.join_month')" />
+            <div class="border rounded px-2 py-1 w-full bg-gray-100 text-gray-500">
+              {{ form.desired_join_month }}
+            </div>
+            <input type="hidden" v-model="form.desired_join_month" />
             <InputError :message="form.errors?.desired_join_month" />
           </div>
         </div>
@@ -469,7 +467,7 @@
               <InputError :message="form.errors['mail.address3']" />
             </div>
         </div>            
-        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
+        <!-- div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div>
               <InputLabel :value="t('registers.tel')" />
               <TextInput
@@ -515,7 +513,7 @@
                 携帯電話は 090-1234-5678 の形式で入力してください
               </p>
             </div>
-        </div>            
+        </div -->            
 <!--
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div class="flex-1">
@@ -781,7 +779,6 @@
               <div>
                 <template v-if="form.bank.bank_code !== '9900'">
                   <Autocomplete
-                    v-if="form.bank.bank_code"
                     :model-value="selectedBranch"
                     :label="t('banks.branch_name')"
                     fetch-url="/api/branches"
@@ -883,39 +880,28 @@
         </div> 
       </div>
                    
-
-
       <section class="bg-white rounded shadow p-4">
-          <h2 class="font-bold mb-2">提出書類</h2>
-          <div class="flex gap-4">
-              <div v-for="d in form.documents" :key="d.type + d.path">
-              <img
-                  v-if="d.thumbnail_path"
-                  :src="d.thumbnail_path"
-                  class="w-24 cursor-pointer"
-                  @click="openPdf(d.path)"
-              />
-              </div>
+        <h2 class="font-bold mb-2">提出書類</h2>
+        <div class="flex gap-4">
+          <div v-for="d in form.documents" :key="d.id" class="relative">
+            <p class="text-xs text-center text-gray-600 mb-1">{{ d.type_name }}</p>
+            <img
+              v-if="d.thumbnail_path"
+              :src="d.thumbnail_path"
+              class="w-32 cursor-pointer"
+              @click="openPdf(d.path)"
+            />
+            <button
+              type="button"
+              class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-700"
+              @click="deleteDocument(d)"
+            >
+              ×
+            </button>
           </div>
-      </section>  
-<!--
-      <div class="flex space-x-3 items-center mt-6">
-        <PrimaryButton
-          type="button"
-          class="bg-blue-600 hover:bg-blue-700"
-          @click="submitForm"
-        >
-          {{ t('update') }}
-        </PrimaryButton>
-
-        <SecondaryButton>
-          <Link :href="route('admin.member.index', persistQuery())" class="inline-flex items-center">
-            <ArrowLeftIcon class="w-4 h-4 mr-2"/>
-            {{ t('actions.cancel') }}
-          </Link>
-        </SecondaryButton>
-      </div>
--->      
+        </div>
+      </section>
+  
 
       </form>
 
@@ -1609,5 +1595,19 @@ const joinMonthOptions = computed(() => {
         }
     ]
 })
+
+const deleteDocument = (doc) => {
+  console.log(doc)
+  if (!confirm('削除してよろしいですか？')) return
+    router.delete(route('admin.member.documentDestroy', { document: doc.id }), {
+      preserveScroll: true,
+      onSuccess: () => {
+        form.documents = form.documents.filter(d => d.id !== doc.id)
+      },
+      onError: () => {
+        alert('削除に失敗しました')
+      }
+  })
+}
 
 </script>

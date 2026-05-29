@@ -41,7 +41,9 @@
           </div>
           <div class="mt-4">
             <InputLabel :value="t('registers.desired_join_month')" required /> 
-            <select v-model="form.desired_join_month" class="border rounded px-2 py-1 w-full">
+            <select v-model="form.desired_join_month" class="border rounded px-2 py-1 w-full" 
+              @change="form.clearErrors('desired_join_month')"
+            >
               <option v-for="opt in joinMonthOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </option>
@@ -83,9 +85,10 @@
                     }"
                     class="w-full"
                     placeholder="〇〇建設"
-                    @blur="form.clearErrors('company_name')"
+                    @input="form.clearErrors('company_name')"
                   />
                   <InputError :message="form.errors?.company_name" />
+                  <p class="text-xs text-gray-500 mt-1">カタカナのみ入力可能</p>
                 </div>
                 <div class="flex-1">
                 <!-- 後 -->
@@ -111,8 +114,8 @@
                 v-model="form.company_kana"
                 @blur="
                   form.company_kana = normalizeKana(form.company_kana);
-                  form.clearErrors('company_kana');
                 "
+                @input="form.clearErrors('company_kana')"
                 :class="{
                   'border-red-500': getError('company_kana'),
                   'border-gray-300': !getError('company_kana')
@@ -120,6 +123,7 @@
                 class="w-full"
               />
               <InputError :message="form.errors?.company_kana" />
+              <p class="text-xs text-gray-500 mt-1">カタカナのみ入力可能</p>
            </div>
 
           </div>
@@ -130,7 +134,9 @@
                       <!-- 肩書き -->
             <div class="flex-1">
                 <InputLabel :value="t('registers.position')" class="h-5" :required="form.type !== 'sole'" />
-                <TextInput v-model="form.corp.position" class="w-full" />
+                <TextInput v-model="form.corp.position" class="w-full"
+                    @input="form.clearErrors('corp.position')"
+                 />
                 <InputError :message="form.errors['corp.position']" />
             </div>
 
@@ -144,7 +150,7 @@
                       'border-gray-300': !getError('rep_last_name')
                     }"
                     class="w-full" :placeholder="t('registers.last_name')"
-                    @blur="form.clearErrors('rep_last_name')"
+                    @input="form.clearErrors('rep_last_name')"
                   />
                   <InputError :message="form.errors?.rep_last_name" />
                 </div>
@@ -155,7 +161,7 @@
                       'border-gray-300': !getError('rep_first_name')
                     }"
                     class="w-full" :placeholder="t('registers.first_name')"
-                    @blur="form.clearErrors('rep_first_name')"
+                    @input="form.clearErrors('rep_first_name')"
                   />
                   <InputError :message="form.errors?.rep_first_name" />
                 </div>
@@ -171,8 +177,10 @@
                       'border-red-500': getError('rep_last_kana'),
                       'border-gray-300': !getError('rep_last_kana')
                     }"
+                    @input="form.clearErrors('rep_last_kana')"
                    class="w-full" :placeholder="t('registers.last_name_kana')" />
                   <InputError :message="form.errors?.rep_last_kana" />
+                  <p class="text-xs text-gray-500 mt-1">カタカナのみ入力可能</p>
                 </div>  
                 <div class="flex-1">
                   <TextInput v-model="form.rep_first_kana"
@@ -181,6 +189,7 @@
                       'border-red-500': getError('rep_first_kana'),
                       'border-gray-300': !getError('rep_first_kana')
                     }"
+                    @input="form.clearErrors('rep_first_kana')"
                     class="w-full" :placeholder="t('registers.first_name_kana')" />
                   <InputError :message="form.errors?.rep_first_kana" />
                 </div>
@@ -203,6 +212,7 @@
             placeholder="000-0000"
             maxlength="8"
             @input="onAddressZipInput"
+            @blur="form.clearErrors('corp.postal_code')"
             @keydown.enter.prevent
           />
 
@@ -227,6 +237,7 @@
                   'border-red-500': getError('corp.address1'),
                   'border-gray-300': !getError('corp.address1')
                 }"
+                @input="form.clearErrors('corp.address1')"
                 class="w-full" placeholder="○○県△△市xx区"
               />
               <InputError :message="form.errors['corp.address1']" />
@@ -238,6 +249,7 @@
                   'border-red-500': getError('corp.address2'),
                   'border-gray-300': !getError('corp.address2')
                 }"
+                @input="form.clearErrors('corp.address2')"
                 class="w-full" placeholder="○○丁目○○番地" />
               <InputError :message="form.errors['corp.address2']" />
             </div>
@@ -257,6 +269,8 @@
                 }"
                 maxlength="20"
                 @input="e => onPhoneInput('corp', 'tel', e)"
+                @blur="form.clearErrors('corp.tel')"
+
                 placeholder="03-1234-5678"
               />
               <InputError :message="form.errors['corp.tel']" />
@@ -272,6 +286,7 @@
                 v-model="form.corp.fax"
                 maxlength="20"
                 @input="e => onPhoneInput('corp', 'fax', e)"
+                @blur="form.clearErrors('corp.fax')"
                 placeholder="03-1234-5678"
               />
               <p v-if="form.corp.fax" class="text-xs text-gray-500 mt-1">
@@ -286,6 +301,7 @@
                 placeholder="090-xxxx-xxxx"
                 maxlength="20"
                 @input="e => onPhoneInput('corp', 'mobile', e)"
+                @blur="form.clearErrors('corp.mobile')"
               />
               <p v-if="form.corp.mobile"
                 class="text-xs text-gray-500 mt-1">
@@ -294,7 +310,10 @@
             </div>
             <div v-if="form.is_agent">
               <InputLabel :value="t('registers.email')" required />
-              <TextInput v-model="form.corp.email" class="w-full" />
+              <TextInput v-model="form.corp.email" class="w-full"
+                @input="form.clearErrors('corp.email')"
+                @blur="validateEmail"
+              />
               <p v-if="form.errors['corp.email']" class="text-red-500 text-sm mt-1" >
                 {{ form.errors['corp.email'] }}
               </p>
@@ -318,7 +337,8 @@
                     'border-red-500': getError('corp.last_name'),
                     'border-gray-300': !getError('corp.last_name')
                     }"
-                    class="w-full" :placeholder="t('registers.last_name')" />
+                  @input="form.clearErrors('corp.last_name')"
+                  class="w-full" :placeholder="t('registers.last_name')" />
               <InputError :message="form.errors['corp.last_name']" />
           </div>          
           <div class="flex-1">
@@ -328,6 +348,7 @@
                     'border-red-500': getError('corp.first_name'),
                     'border-gray-300': !getError('corp.first_name')
                   }"
+                  @input="form.clearErrors('corp.first_name')"
                   class="w-full" :placeholder="t('registers.first_name')" />
               <InputError :message="form.errors['corp.first_name']" />
           </div>
@@ -363,6 +384,7 @@
               placeholder="000-0000"
               maxlength="8"
               @input="onPostZipInput"
+              @blur="form.clearErrors('mail.postal_code')"
               @keydown.enter.prevent
             />
             <!-- 候補が2件以上ある場合は選択させる -->
@@ -381,20 +403,27 @@
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div class="flex-1">
               <InputLabel :value="t('registers.address1')" required />
-              <TextInput v-model="form.mail.address1" class="w-full" placeholder="○○県△△市xx区" />
+              <TextInput v-model="form.mail.address1" class="w-full" placeholder="○○県△△市xx区"
+                @input="form.clearErrors('mail.address1')"
+               />
               <InputError :message="form.errors['mail.address1']" />
             </div>
             <div class="flex-1">
               <InputLabel :value="t('registers.address2')" required />
-              <TextInput v-model="form.mail.address2" class="w-full" placeholder="○○丁目○○番地" />
+              <TextInput v-model="form.mail.address2" class="w-full" placeholder="○○丁目○○番地"
+              @input="form.clearErrors('mail.address2')"
+              />
               <InputError :message="form.errors['mail.address2']" />
             </div>
             <div class="flex-1">
               <InputLabel :value="t('registers.address3')" />
-              <TextInput v-model="form.mail.address3" class="w-full" placeholder="xxxビル○○F" />
+              <TextInput v-model="form.mail.address3" class="w-full" placeholder="xxxビル○○F"
+              @input="form.clearErrors('mail.address3')"
+               />
               <InputError :message="form.errors?.mail?.address3" />
             </div>
-        </div>            
+        </div>
+        <!--                 
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div>
               <InputLabel :value="t('registers.tel')" required />
@@ -402,6 +431,7 @@
                 v-model="form.mail.tel"
                 maxlength="20"
                 @input="e => onPhoneInput('mail', 'tel', e)"
+                @blur="form.clearErrors('mail.tel')"
                 placeholder="03-1234-5678"
               />
               <InputError :message="form.errors['mail.tel']" />
@@ -417,6 +447,7 @@
                 maxlength="20"
                 @input="e => onPhoneInput('mail', 'fax', e)"
                 placeholder="03-1234-5678"
+                @blur="form.clearErrors('mail.fax')"
               />
               <InputError :message="form.errors['mail.fax']" />
               <p v-if="form.mail.fax"
@@ -432,6 +463,7 @@
                 placeholder="090-xxxx-xxxx"
                 maxlength="20"
                 @input="e => onPhoneInput('mail', 'mobile', e)"
+                @blur="form.clearErrors('mail.mobile')"
               />
               <InputError :message="form.errors['mail.mobile']" />
               <p v-if="form.mail.mobile"
@@ -439,7 +471,8 @@
                 携帯電話は 090-1234-5678 の形式で入力してください
               </p>
             </div>
-        </div>            
+        </div>
+        -->            
       </div>
       <!-- 
       
@@ -481,6 +514,8 @@
                 maxlength="8"
                 @input="onAgentZipInput"
                 @keydown.enter.prevent
+                @blur="form.clearErrors('agent.postal_code')"
+
               />
               <!-- 候補が2件以上ある場合は選択させる -->
               <ul v-if="candidates.length > 1" class="border rounded bg-white">
@@ -506,6 +541,8 @@
                   }"
                   class="w-full"
                   placeholder="○○協同組合"
+                  @input="form.clearErrors('agent.company_name')"
+
                 />
                 <InputError :message="form.errors['agent.company_name']" />
             </div>
@@ -513,17 +550,23 @@
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
               <div class="flex-1">
                 <InputLabel :value="t('registers.address1')" required />
-                <TextInput v-model="form.agent.address1" class="w-full" placeholder="○○県△△市xx区" />
+                <TextInput v-model="form.agent.address1" class="w-full" placeholder="○○県△△市xx区"
+                  @input="form.clearErrors('agent.address1')"
+                />
                 <InputError :message="form.errors['agent.address1']" />
               </div>
               <div class="flex-1">
                 <InputLabel :value="t('registers.address2')" required />
-                <TextInput v-model="form.agent.address2" class="w-full" placeholder="○○丁目○○番地" />
+                <TextInput v-model="form.agent.address2" class="w-full" placeholder="○○丁目○○番地"
+                  @input="form.clearErrors('agent.address2')"
+                />
                 <InputError :message="form.errors['agent.address2']" />
               </div>
               <div class="flex-1">
                 <InputLabel :value="t('registers.address3')" />
-                <TextInput v-model="form.agent.address3" class="w-full" placeholder="xxxビル○○F" />
+                <TextInput v-model="form.agent.address3" class="w-full" placeholder="xxxビル○○F"
+                  @input="form.clearErrors('agent.address3')"
+                />
                 <InputError :message="form.errors['agent.address3']" />
               </div>
           </div>            
@@ -535,6 +578,7 @@
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'tel', e)"
                   placeholder="03-1234-5678"
+                  @blur="form.clearErrors('agent.tel')"
                 />
                 <InputError :message="form.errors['agent.tel']" />
                 <p v-if="form.agent.tel"
@@ -550,6 +594,7 @@
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'fax', e)"
                   placeholder="03-1234-5678"
+                  @blur="form.clearErrors('agent.fax')"
                 />
                 <InputError :message="form.errors['agent.fax']" />
                 <p v-if="form.agent.fax"
@@ -565,6 +610,7 @@
                   placeholder="090-xxxx-xxxx"
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'mobile', e)"
+                  @blur="form.clearErrors('agent.mobile')"
                 />
                 <InputError :message="form.errors['agent.mobile']" />
                 <p v-if="form.agent.mobile"
@@ -578,19 +624,25 @@
               <div class="flex-1">
                 <div>
                   <InputLabel :value="t('registers.position')" class="h-5" />
-                  <TextInput v-model="form.agent.position" class="w-full" />
+                  <TextInput v-model="form.agent.position" class="w-full"
+                    @input="form.clearErrors('agent.position')"
+                   />
                 </div>
                 <InputError :message="form.errors['agent.position']" />
               </div>
               <!-- 氏名 -->
               <div class="flex-1">
                   <InputLabel :value="t('registers.staff')"  class="h-5" required />
-                  <TextInput v-model="form.agent.last_name" class="w-full" :placeholder="t('registers.last_name')" />
+                  <TextInput v-model="form.agent.last_name" class="w-full" :placeholder="t('registers.last_name')"
+                    @input="form.clearErrors('agent.last_name')"
+                   />
                   <InputError :message="form.errors['agent.last_name']" />
               </div>
               <div class="flex-1">
                 <InputLabel value="　" class="h-5"/>
-                <TextInput v-model="form.agent.first_name" class="w-full" :placeholder="t('registers.first_name')" />
+                <TextInput v-model="form.agent.first_name" class="w-full" :placeholder="t('registers.first_name')"
+                    @input="form.clearErrors('agent.first_name')"
+                 />
                 <InputError :message="form.errors['agent.first_name']" />
               </div>
           </div>
@@ -646,7 +698,9 @@
               </div>
               <div>
                 <InputLabel :value="t('banks.bank_code')" required />
-                <TextInput v-model="form.bank_code" class="w-full" />
+                <TextInput v-model="form.bank_code" class="w-full" 
+                  @input="form.clearErrors('bank_code')"
+                />
                 <InputError :message="form.errors?.bank_code" />
               </div>
             </div>
@@ -658,7 +712,6 @@
               <div>
                 <template v-if="form.bank_code !== '9900'">
                   <Autocomplete
-                    v-if="form.bank_code"
                     :model-value="selectedBranch"
                     required
                     :label="t('banks.branch_name')"
@@ -694,6 +747,7 @@
                   :placeholder="form.bank_code === '9900'
                     ? '記号（5桁）'
                     : '支店コード（3桁）'"
+                  @input="form.clearErrors('bank.branch_code')"
                 />
 
                 <p v-if="form.errors.branch_code" class="text-red-500 text-sm mt-1">
@@ -719,21 +773,27 @@
 
             <div>
                 <InputLabel :value="t('banks.account_no')" required />
-                <TextInput v-model="form.account_no" class="w-full" maxlength="8" />
+                <TextInput v-model="form.account_no" class="w-full" maxlength="8"
+                  @input="form.clearErrors('account_no')"
+                />
                 <InputError :message="form.errors.account_no" />
-                <p class="text-xs text-gray-500 mt-1">
+                <!--p class="text-xs text-gray-500 mt-1">
                     口座番号は7桁、ゆうちょ銀行は8桁で入力して下さい!
-                </p>
+                </p -->
             </div>
                          <!-- 注意文言 -->
             <div>
                 <InputLabel :value="t('banks.account_name')" />
-                <TextInput v-model="form.account_name" class="w-full" />
+                <TextInput v-model="form.account_name" class="w-full"
+                  @input="form.clearErrors('account_name')"
+                />
                 <InputError :message="form.errors.account_name" />
             </div>
             <div>
                 <InputLabel :value="t('banks.account_kana')" />
-                <TextInput v-model="form.account_kana" class="w-full" />
+                <TextInput v-model="form.account_kana" class="w-full"
+                  @input="form.clearErrors('account_kana')"
+                />
                 <InputError :message="form.errors.account_kana" />
             </div>
                 <!-- 注意文言 -->
@@ -780,8 +840,10 @@
               @change="handleFileSelect"
             />
           </div>
-          <InputError :message="form.errors.history_certificate" />
-          <InputError :message="form.errors.history_certificate_path" />
+          <template v-if="form.type !== 'sole'">
+            <InputError :message="form.errors.history_certificate" />
+            <InputError :message="form.errors.history_certificate_path" />
+          </template>
 
           <div v-if="!form.same_as_corp" class="mt-6">
             <div
@@ -915,7 +977,7 @@ const form = useForm({
     fax: page.props.form?.corp?.fax ?? '',
     mobile: page.props.form?.mail?.mobile ?? '',
     email: page.props.form?.corp?.email ?? '',
-    position: page.props.form?.corp?.position ?? '代表取締役',
+    position: page.props.form?.corp?.position ?? '',
     last_name: page.props.form?.corp?.last_name ?? '',
     first_name: page.props.form?.corp?.first_name ?? '',
   },
@@ -1079,69 +1141,6 @@ function getError(key) {
   return Array.isArray(pe) ? pe[0] : pe
 }
 
-
-
-const validateRequired = () => {
-  errors.value = {}
-
-  const isYuucho = form.bank_code === '9900'
-
-  // ===== フラット必須 =====
-  const requiredFlat = [
-    'company_kana',
-    'rep_last_kana',
-    'rep_first_kana',
-    'company_name',
-    'rep_last_name',
-    'rep_first_name',
-    'bank_type',
-    'bank_name',
-    'account_type',
-    'account_no',
-    'account_kana',
-    'account_name',
-  ]
-
-  requiredFlat.forEach(key => {
-    if (!form[key] || form[key].toString().trim() === '') {
-      console.log(key)
-      errors.value[key] = '必須項目です'
-    }
-  })
-
-  // ===== corp 必須（address3/ fax / mobile/ email 除外）=====
-if (form.corp) {
-  Object.entries(form.corp).forEach(([key, value]) => {
-    // address3 / fax / mobile / email は除外
-    if (['address3', 'fax', 'mobile', 'email'].includes(key)) return
-
-    if (value === null || value === undefined || value === '') {
-      // errors.value.corp を作る
-      if (!errors.value.corp) errors.value.corp = {}
-      errors.value.corp[key] = '必須項目です'
-    }
-  })
-}
-
-
-  // ===== 銀行 =====
-  if (!isYuucho) {
-    // ゆうちょ以外 → 支店名必須
-    if (!form.branch_name) {
-      errors.value.branch_name = '必須項目です'
-    }
-  }
-
-  if (isYuucho) {
-    // ゆうちょ → 記号（branch_code）必須
-    if (!form.branch_code) {
-      errors.value.branch_code = '必須項目です'
-    }
-  }
-
-  return Object.keys(errors.value).length === 0
-}
-
 const isPdf = (file) => {
   return file.type === 'application/pdf'
 }
@@ -1162,6 +1161,8 @@ const handleFileSelect = (e) => {
     return
   }
   form.history_certificate = file
+  form.clearErrors('history_certificate')
+  form.clearErrors('history_certificate_path')
 }
 
 const handleDrop = (e) => {
@@ -1173,6 +1174,8 @@ const handleDrop = (e) => {
     return
   }
   form.history_certificate = file
+  form.clearErrors('history_certificate')
+  form.clearErrors('history_certificate_path')
 }
 
 // 郵送先確認資料 input
@@ -1195,6 +1198,8 @@ const handleMailCertSelect = (e) => {
   }
 
   form.mail_address_certificate = file
+  form.clearErrors('mail_address_certificate')
+  form.clearErrors('mail_address_certificate_path')
 }
 
 // ドラッグ＆ドロップ
@@ -1207,23 +1212,9 @@ const handleMailCertDrop = (e) => {
     return
   }
   form.mail_address_certificate = file
+  form.clearErrors('mail_address_certificate')
+  form.clearErrors('mail_address_certificate_path')
 }  
-
-// 送信処理
-const submitForm = () => {
-  if (!validateRequired()) return
-
-  // そのまま form を送信
-  form.post(route('members.register.complete', { token: page.props.token }), {
-    preserveScroll: true,
-    onError: (errors) => {
-      console.log('Validation errors:', errors)
-    },
-    onSuccess: () => {
-      console.log('Submission succeeded')
-    }
-  })
-}
 
 const bankCategories = ref([])
 const selectedCategory = ref(form.bank_type) 
@@ -1254,7 +1245,10 @@ const bankKey = ref(0)
 
 const selectCategory = async (category) => {
   console.log(category.value)
+
   form.bank_type = category.value
+
+  form.clearErrors('bank_type')
 
   selectedBank.value = null
   form.bank_name = ''
@@ -1289,6 +1283,8 @@ const handleBankSelected = (item) => {
   form.bank_id = item.id               // form に銀行 id を反映
   form.bank_code = item.bank_code
   form.bank_name_kana = item.name_kana
+  form.clearErrors('bank_name')
+  form.clearErrors('bank_code')
   // 支店は必ずリセット
   selectedBranch.value = null
   form.branch_name = ''
@@ -1302,6 +1298,9 @@ const handleBranchSelected = (branch) => {
   form.branch_name = branch.label
   form.branch_code = branch.branch_code
   form.branch_name_kana = branch.name_kana
+  form.clearErrors('branch_name')
+  form.clearErrors('branch_code')
+
 //  console.log(branch,form.branch_name);
 }
 
@@ -1374,9 +1373,8 @@ const normalizeKana = (value) => {
   value = value.replace(/[\u3041-\u3096]/g, s =>
     String.fromCharCode(s.charCodeAt(0) + 0x60)
   )
-
-  // 全角カタカナ・長音・全角スペースのみ
-  return value.replace(/[^\u30A0-\u30FFー　]/g, '')
+  return value.replace(/[^\u30A0-\u30FFー　 ]/g, '')
+  //return value.replace(/[^\u30A0-\u30FFー　 A-Za-z\uFF21-\uFF3A\uFF41-\uFF5A0-9０-９・･]/g, '')
 }
 
 //〒番号関係
@@ -1643,5 +1641,28 @@ const joinMonthOptions = computed(() => {
     ]
   }
 })
+// 自動補完のエラーを消す
+const autoFillFields = [
+  'corp.address1', 'corp.address2', 'corp.address3',
+  'mail.address1', 'mail.address2', 'mail.address3',
+  'agent.address1', 'agent.address2', 'agent.address3',
+]
+
+autoFillFields.forEach(field => {
+  const keys = field.split('.')
+  watch(() => form[keys[0]][keys[1]], () => {
+    form.clearErrors(field)
+  })
+})
+// emailチェック
+function validateEmail() {
+  const value = form.corp.email
+  if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    form.errors['corp.email'] = '正しいメールアドレスを入力してください'
+  }
+}
+
+
+
 </script>
 

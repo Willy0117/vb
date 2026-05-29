@@ -6,14 +6,19 @@
 
       <!-- 申請者 -->
       <section class="bg-white rounded shadow p-4">
-        <h2 class="font-bold mb-2">申請者</h2>
+        <h2 class="font-bold mb-2 flex items-center justify-between">
+          申請者
+          <span class="text-xs text-gray-400 font-normal">
+            申込日時 : {{ props.member.created_at ? dayjs(props.member.created_at).format('YYYY年MM月DD日 HH時mm分') : '-' }}
+          </span>
+        </h2>
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
           <p class="col-1 text-blue-700">{{ t('members.joined_at') }} : {{ props.member?.joined_at ?? '-' }}</p>
-          <p class="col-1">{{ t('registers.desired_join_month')}} ： {{ props.member.desired_join_month ? dayjs(props.member.desired_join_month).format('YYYY年MM月') : '-' }} </p>
+          <p class="col-1">{{ t('registers.join_month')}} ： {{ props.member.desired_join_month ? dayjs(props.member.desired_join_month).format('YYYY年MM月') : '-' }} </p>
         </div>
 
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
-          <p class="col-1">{{ t('members.name')}} ： {{ props.member.name }}</p>
+          <p class="col-1">{{ t('members.withdrawn_at') }} : {{ props.member?.withdrawn_at ?? '-' }}</p>
           <p class="col-1 text-red-500">{{ t('members.updated') }} ： {{ props.member.updated_at ? dayjs(props.member.updated_at).format('YYYY-MM-DD HH:mm') : '未更新' }} {{ props.member.updated_by_user?.name ?? '未更新' }}</p>
         </div>
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
@@ -32,11 +37,6 @@
           <p class="col-1">{{ t('members.number') }}: {{ props.member?.number }}</p>
         </div>  
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
-          <p class="col-1">{{ t('members.withdrawn_at') }} : {{ props.member?.withdrawn_at ?? '-' }}</p>
-          <p class="col-1"></p>
-        </div>
-        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
-          <!-- アプラス顧客番号 -->
           <p>{{ t('members.aplus_customer_no') }}: {{ props.member?.aplus_customer_no }}</p>
           <p>{{ t('members.jac_certification_no') }} : {{  props.member?.jac_certification_no }}</p>
        </div>   
@@ -90,7 +90,9 @@
                 >
                   法人名：{{ getCurrentByType(type).name || '-' }}
                 </p>
-
+                <template v-if="type === 1">
+                  <p class="col-1">{{ t('members.representative')}}： {{ props.member.name }}</p>                
+                </template>
                 <p
                   :class="{
                     'text-red-600 font-semibold':
@@ -101,44 +103,47 @@
                   {{ getCurrentByType(type).postal_code || '-' }}
                   {{ getCurrentByType(type).address || '-' }}
                 </p>
+                <template v-if="type !== 2">
 
-                <p
-                  :class="{
-                    'text-red-600 font-semibold':
-                      isDifferent(getCurrentByType(type), getAppByType(type), 'tel')
-                      || isDifferent(getCurrentByType(type), getAppByType(type), 'fax')
-                  }"
-                >
-                  TEL: {{ getCurrentByType(type).tel || '-' }}
-                  FAX: {{ getCurrentByType(type).fax || '-' }}
-                </p>
+                  <p
+                    :class="{
+                      'text-red-600 font-semibold':
+                        isDifferent(getCurrentByType(type), getAppByType(type), 'tel')
+                        || isDifferent(getCurrentByType(type), getAppByType(type), 'fax')
+                    }"
+                  >
+                    TEL: {{ getCurrentByType(type).tel || '-' }}
+                    FAX: {{ getCurrentByType(type).fax || '-' }}
+                  </p>
 
-                <p
-                  :class="{
-                    'text-red-600 font-semibold':
-                      isDifferent(getCurrentByType(type), getAppByType(type), 'mobile')
-                  }"
-                >
-                  Mobile: {{ getCurrentByType(type).mobile || '-' }}
-                </p>
+                  <p
+                    :class="{
+                      'text-red-600 font-semibold':
+                        isDifferent(getCurrentByType(type), getAppByType(type), 'mobile')
+                    }"
+                  >
+                    Mobile: {{ getCurrentByType(type).mobile || '-' }}
+                  </p>
 
-                <p
-                  :class="{
-                    'text-red-600 font-semibold':
-                      isDifferent(getCurrentByType(type), getAppByType(type), 'email')
-                  }"
-                >
-                  Email: {{ getCurrentByType(type).email || '-' }}
-                </p>
+                  <p
+                    :class="{
+                      'text-red-600 font-semibold':
+                        isDifferent(getCurrentByType(type), getAppByType(type), 'email')
+                    }"
+                  >
+                    Email: {{ getCurrentByType(type).email || '-' }}
+                  </p>
 
-                <p
-                  :class="{
-                    'text-red-600 font-semibold':
-                      isDifferent(getCurrentByType(type), getAppByType(type), 'contact_name')
-                  }"
-                >
-                  担当者: {{ getCurrentByType(type).contact_name || '-' }}
-                </p>
+                  <p
+                    :class="{
+                      'text-red-600 font-semibold':
+                        isDifferent(getCurrentByType(type), getAppByType(type), 'contact_name')
+                    }"
+                  >
+                    担当者: {{ getCurrentByType(type).contact_name || '-' }}
+                  </p>
+                </template>
+
               </template>
 
               <p v-else class="text-gray-400">データなし</p>

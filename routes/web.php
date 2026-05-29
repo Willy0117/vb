@@ -82,7 +82,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('{member}/save-basic',[AdminMemberController::class, 'saveBasic']);    
             Route::post('{member}/save-mail',[AdminMemberController::class, 'saveMail']);    
             Route::post('{member}/save-agent',[AdminMemberController::class, 'saveAgent']);    
-            Route::post('{member}/save-bank',[AdminMemberController::class, 'saveBank']);  
+            Route::post('{member}/save-bank',[AdminMemberController::class, 'saveBank']); 
+
+            Route::delete('delete-document/{document}', [AdminMemberController::class, 'destroyDocument'])
+                ->name('documentDestroy'); 
 
             Route::resource('', AdminMemberController::class)
                 ->parameters(['' => 'member']);
@@ -135,7 +138,7 @@ Route::prefix('members')->group(function () {
     Route::get('resend', [MemberRegController::class, 'resend'])
         ->name('members.resend');
 
-        Route::get('already', [MemberRegController::class, 'already'])
+    Route::get('already', [MemberRegController::class, 'already'])
         ->name('members.already');
 
     Route::get('bank', [MemberRegController::class, 'bank'])
@@ -146,6 +149,9 @@ Route::prefix('members')->group(function () {
 
     Route::post('pdfgenerate/{token}', [MemberRegController::class, 'pdfGenerate']
         )->name('members.pdfgenerate');
+
+//    Route::match(['get', 'post'], 'confirm/{token}', [MemberRegController::class, 'confirm'])
+//    ->name('members.confirm');    
 /*
     Route::post('pdfgenerate', [MemberRegController::class, 'pdfGenerate'])
         ->name('members.pdfgenerate');   

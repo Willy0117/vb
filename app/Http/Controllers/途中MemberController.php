@@ -78,6 +78,174 @@ class MemberController extends Controller
             'files'    => $files,
         ]);
     }
+    /**
+     * register → confirm
+     * バリデーション＋ファイル一時保存 → セッション保存 → Confirm.vue を返す
+     */
+    public function confirm(Request $request, string $token)
+    {
+        if ($request->isMethod('get')) {
+            $form = session('member_form');
+            if (!$form) {
+                return redirect()->route('members.register.register', ['token' => $token]);
+            }
+            return Inertia::render('Members/Confirm', [
+                'token' => $token,
+                'form'  => $form,
+            ]);
+        }        
+        // ========== バリデーション（pdfGenerate から移動） ==========
+        $rules = [
+            'type'                => 'required|string',
+            'desired_join_month'  => 'required|string',
+            'company_kana'        => 'required|string',
+            'rep_last_kana'       => 'required|string',
+            'rep_first_kana'      => 'required|string',
+            'company_type_prefix' => 'nullable|string',
+            'company_name'        => 'required|string',
+            'company_type_suffix' => 'nullable|string',
+            'rep_last_name'       => 'required|string',
+            'rep_first_name'      => 'required|string',
+            'same_as_corp'        => 'boolean',
+            'is_agent'            => 'boolean',
+    
+            'corp'               => 'required|array',
+            'corp.type'          => 'required|integer',
+            'corp.postal_code'   => 'required|string',
+            'corp.address1'      => 'required|string',
+            'corp.address2'      => 'required|string',
+            'corp.address3'      => 'nullable|string',
+            'corp.tel'           => 'required|string',
+            'corp.fax'           => 'nullable|string',
+            'corp.mobile'        => 'nullable|string',
+            'corp.position'      => [
+                'nullable', 'string',
+                Rule::requiredIf(fn () => request('type') !== 'sole'),
+            ],
+            'corp.last_name'     => 'required|string',
+            'corp.first_name'    => 'required|string',
+    
+            'mail'               => 'required|array',
+            'mail.type'          => 'required|integer',
+            'mail.postal_code'   => 'required|string',
+            'mail.address1'      => 'required|string',
+            'mail.address2'      => 'required|string',
+            'mail.address3'      => 'nullable|string',
+            'mail.tel'           => 'required|string',
+            'mail.fax'           => 'nullable|string',
+            'mail.mobile'        => 'nullable|string',
+            'mail.email'         => 'nullable|email',
+            'mail.position'      => 'nullable|string',
+            'mail.last_name'     => 'nullable|string',
+            'mail.first_name'    => 'nullable|string',
+    
+            'bank_type'          => 'required|string',
+            'bank_name'          => 'required|string',
+            'bank_code'          => 'required|string',
+            'branch_code'        => 'required|string',
+            'account_type'       => 'required|string',
+            'account_no'         => 'required|string',
+            'account_kana'       => 'nullable|string',
+            'account_name'       => 'nullable|string',
+            'bank_name_kana'     => 'nullable|string',
+            'branch_name_kana'   => 'nullable|string',
+        ];
+    
+        if ($request->bank_code !== '9900') {
+            $rules['branch_name'] = 'required|string';
+        }
+    
+        if ($request->boolean('is_agent')) {
+            $rules = array_merge($rules, [
+                'corp.email'          => 'required|email',
+                'agent'               => 'required|array',
+                'agent.type'          => 'required|integer',
+                'agent.company_name'  => 'required|string',
+                'agent.postal_code'   => 'required|string',
+                'agent.address1'      => 'required|string',
+                'agent.address2'      => 'required|string',
+                'agent.address3'      => 'nullable|string',
+                'agent.tel'           => 'required|string',
+                'agent.fax'           => 'nullable|string',
+                'agent.mobile'        => 'nullable|string',
+                'agent.position'      => 'nullable|string',
+                'agent.last_name'     => 'required|string',
+                'agent.first_name'    => 'nullable|string',
+            ]);
+        }
+    
+        // ファイルバリデーション
+        $rules = array_merge($rules, [
+            'history_certificate' => ['nullable', 'file', 'mimes:pdf'],
+            'history_certificate_path' => [
+                function ($attr, $value, $fail) use ($request) {
+                    if (
+                        $request->input('type') === 'corporation' &&
+                        !$request->hasFile('history_certificate') &&
+                        !$value
+                    ) {
+                        $fail('履歴事項全部証明書は必須です');
+                    }
+                },
+            ],
+            'mail_address_certificate' => ['nullable', 'file', 'mimes:pdf'],
+            'mail_address_certificate_path' => [
+                function ($attr, $value, $fail) use ($request) {
+                    if (
+                        !$request->boolean('same_as_corp') &&
+                        !$request->hasFile('mail_address_certificate') &&
+                        !$value
+                    ) {
+                        $fail('郵送先確認書類は必須です。');
+                    }
+                },
+            ],
+        ]);
+    
+        $request->validate($rules);
+        // ========== バリデーションここまで ==========
+    
+        // フォームデータ（ファイル除く）
+        $form = $request->except([
+            'history_certificate',
+            'mail_address_certificate',
+        ]);
+    
+        // 履歴事項全部証明書：新規アップロードがあれば保存、なければ既存パスを使う
+        if ($request->hasFile('history_certificate')) {
+            [$historyPath, $historyThumb] = $this->storePdfWithThumbnail(
+                $request->file('history_certificate'),
+                'members/history_certificates'
+            );
+        } else {
+            $historyPath  = $form['history_certificate_path']      ?? null;
+            $historyThumb = $form['history_certificate_thumbnail'] ?? null;
+        }
+        $form['history_certificate_path']      = $historyPath;
+        $form['history_certificate_thumbnail'] = $historyThumb;
+    
+        // 郵送先確認資料
+        if ($request->hasFile('mail_address_certificate')) {
+            [$mailPath, $mailThumb] = $this->storePdfWithThumbnail(
+                $request->file('mail_address_certificate'),
+                'members/mail_address_certificates'
+            );
+        } else {
+            $mailPath  = $form['mail_address_certificate_path']      ?? null;
+            $mailThumb = $form['mail_address_certificate_thumbnail'] ?? null;
+        }
+        $form['mail_address_certificate_path']      = $mailPath;
+        $form['mail_address_certificate_thumbnail'] = $mailThumb;
+    
+        // セッションに保存
+        session(['member_form' => $form]);
+    
+        // Confirm.vue を返す（表示用に form を渡す）
+        return Inertia::render('Members/Confirm', [
+            'token' => $token,
+            'form'  => $form,
+        ]);
+    }
 
     // 4. 完了処理（PDF2点）
     public function completeRegistration(Request $request, string $token)
@@ -415,187 +583,25 @@ class MemberController extends Controller
     // Apuls Pdf Generate
     public function pdfGenerate(Request $request, string $token)
     {
-        $rules = [
-            // ===== 基本情報 =====
-            'type' => 'required|string',
-            'desired_join_month' => 'required|string',
-            'company_kana' => 'required|string',
-            'rep_last_kana' => 'required|string',
-            'rep_first_kana' => 'required|string',
-            'company_type_prefix' => 'nullable|string',
-            'company_name' => 'required|string',
-            'company_type_suffix' => 'nullable|string',
-            'rep_last_name' => 'required|string',
-            'rep_first_name' => 'required|string',
-            'same_as_corp' => 'boolean',
-            'is_agent' => 'boolean',
-
-            // ===== 法人（corp）=====
-            'corp' => 'required|array',
-            'corp.type' => 'required|integer',
-            'corp.postal_code' => 'required|string',
-            'corp.address1' => 'required|string',
-            'corp.address2' => 'required|string',
-            'corp.address3' => 'nullable|string',
-            'corp.tel' => 'required|string',
-            'corp.fax' => 'nullable|string',
-            'corp.mobile' => 'nullable|string',
-            'corp.position' => [
-                'nullable',
-                'string',
-                Rule::requiredIf(fn () => request('type') !== 'sole'),
-            ],
-            'corp.last_name' => 'required|string',
-            'corp.first_name' => 'required|string',
-
-            // ===== 郵送先（mail）=====
-            'mail' => 'required|array',
-            'mail.type' => 'required|integer',
-            'mail.postal_code' => 'required|string',
-            'mail.address1' => 'required|string',
-            'mail.address2' => 'required|string',
-            'mail.address3' => 'nullable|string',
-            'mail.tel' => 'required|string',
-            'mail.fax' => 'nullable|string',
-            'mail.mobile' => 'nullable|string',
-            'mail.email' => 'nullable|email',
-            'mail.position' => 'nullable|string',
-            'mail.last_name' => 'nullable|string',
-            'mail.first_name' => 'nullable|string',
-
-            // ===== 銀行 =====
-            'bank_type' => 'required|string',
-            'bank_name' => 'required|string',
-            'bank_code' => 'required|string',
-            'branch_code' => 'required|string',
-            'account_type' => 'required|string',
-            'account_no' => 'required|string',
-            'account_kana' => 'nullable|string',
-            'account_name' => 'nullable|string',
-            'bank_name_kana' => 'nullable|string',
-            'branch_name_kana' => 'nullable|string',
-        ];
-
-        if ($request->bank_code !== '9900') {
-            $rules['branch_name'] = 'required|string';
+        // セッションからフォームデータを取得
+        $form = session('member_form');
+    
+        if (!$form) {
+            // セッション切れなど → 入力画面に戻す
+            return redirect()->route('members.register', ['token' => $token])
+                ->withErrors(['session' => 'セッションが切れました。もう一度入力してください。']);
         }
-        if ($request->boolean('is_agent')) {
-            $rules = array_merge($rules, [
-                'corp.email' => 'required|email',
-                'agent' => 'required|array',
-                'agent.type' => 'required|integer',
-                'agent.company_name' => 'required|string',
-                'agent.postal_code' => 'required|string',
-                'agent.address1' => 'required|string',
-                'agent.address2' => 'required|string',
-                'agent.address3' => 'nullable|string',
-                'agent.tel' => 'required|string',
-                'agent.fax' => 'nullable|string',
-                'agent.mobile' => 'nullable|string',
-                'agent.position' => 'nullable|string',
-                'agent.last_name' => 'required|string',
-                'agent.first_name' => 'nullable|string',
-            ]);
-        }
-        // 法人：履歴事項全部証明書
-        $rules = array_merge($rules, [
-            'history_certificate' => [
-                'nullable',
-                'file',
-                'mimes:pdf',
-            ],
-        ]);
-
-        $rules = array_merge($rules, [
-            'history_certificate_path' => [
-                function ($attr, $value, $fail) use ($request) {
-                    if (
-                        $request->input('type') === 'corporation' &&
-                        !$request->hasFile('history_certificate') &&
-                        !$value
-                    ) {
-                        $fail('履歴事項全部証明書は必須です');
-                    }
-                },
-            ],
-        ]);
-
-        // 郵送先が別：郵送先確認資料
-        $rules = array_merge($rules, [
-            'mail_address_certificate' => [
-                'nullable',
-                'file',
-                'mimes:pdf',
-            ],
-        ]);
-
-        $rules = array_merge($rules, [
-            'mail_address_certificate_path' => [
-                function ($attr, $value, $fail) use ($request) {
-                    if (
-                        !$request->boolean('same_as_corp')
-                        && !$request->hasfile('mail_address_certificate')
-                        && !$value
-                    ) {
-                        $fail('郵送先確認書類は必須です。');
-                    }
-                },
-            ],
-        ]);     
-
-        $request->validate($rules);
-// ---- validation ここまで　ーーーー//
-        // 仮登録ユーザー取得（email 用）
+    
+        // 仮登録ユーザー取得
         $preUser = PreUser::where('token', $token)->firstOrFail();
-
-        $files = session('member_files', []);
-
-        $form = $request->except([
-            'history_certificate',
-            'mail_address_certificate',
-        ]);
-        if ($request->hasFile('history_certificate')) {
-            [$historyPath, $historyThumb] =
-                $this->storePdfWithThumbnail(
-                    $request->file('history_certificate'),
-                    'members/history_certificates'
-                );
-        } else {
-            $historyPath  = $form['history_certificate_path'] ?? null;
-            $historyThumb = $form['history_certificate_thumbnail'] ?? null;
-        }
-
-        $form['history_certificate_path'] = $historyPath;
-        $form['history_certificate_thumbnail'] = $historyThumb;
-
-        if ($request->hasFile('mail_address_certificate')) {
-            [$mailPath, $mailThumb] =
-                $this->storePdfWithThumbnail(
-                    $request->file('mail_address_certificate'),
-                    'members/mail_address_certificates'
-                );
-        } else {
-            $mailPath  = $form['mail_address_certificate_path'] ?? null;
-            $mailThumb = $form['mail_address_certificate_thumbnail'] ?? null;
-        }
-
-        $form['mail_address_certificate_path'] = $mailPath;
-        $form['mail_address_certificate_thumbnail'] = $mailThumb;
-
-        // session に保存
-        session([
-            'member_form' => $form,
-        ]);
+    
         // 口座番号の補正
         $accountNo = $form['account_no'];
-
         if ($form['bank_code'] === '9900') {
             $accountNo = str_pad($accountNo, 8, ' ', STR_PAD_LEFT);
         } else {
             $accountNo = str_pad($accountNo, 7, ' ', STR_PAD_LEFT);
         }
-
-        $form['account_no'] = $accountNo;
 
                 // FPDI + TCPDF
         $pdf = new Fpdi();
@@ -802,6 +808,7 @@ class MemberController extends Controller
         if (!file_exists(dirname($file_path))) {
             mkdir(dirname($file_path), 0775, true);
         }
+
         try {
             $pdf->Output($file_path, 'F');
 
@@ -827,37 +834,7 @@ class MemberController extends Controller
                 'pdf' => 'PDFの作成に失敗しました',
             ]);
         }
- /*
-        try {
-            $pdf->Output($file_path, 'F');
-
-            if (!file_exists($file_path)) {
-                throw new \RuntimeException('PDF file not created');
-            }
-
-            return response()->json([
-                'url' => Storage::url($output),
-            ]);
-
-        } catch (\Throwable $e) {
-            \Log::error('PDF生成エラー', [
-                'message' => $e->getMessage(),
-                'path'    => $file_path,
-            ]);
-
-            return response()->json([
-                'message' => 'PDFの作成に失敗しました'
-            ], 422);
-        }
-        /*
-       // PDFを直接ファイルに書き込む
-        $pdf->Output($file_path, 'F');
-
-        // JSONでURL返却
-        return response()->json([
-            'url' => Storage::url($output)
-        ]); 
-        */
+ 
     }
 
 
@@ -931,12 +908,8 @@ class MemberController extends Controller
                     ->route('members.resend');
             }
         }
-
-        $form = session('member_form');
-
         return Inertia::render('Members/PdfPreview', [
             'token'  => $token,
-            'form'   => $form,
             'pdfUrl' => $request->query('pdfUrl'),
         ]);
     }

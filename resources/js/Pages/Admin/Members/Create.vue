@@ -121,7 +121,7 @@
           <div class="mt-4">
           </div>
           <div class="mt-4">
-            <InputLabel :value="t('registers.desired_join_month')" /> 
+            <InputLabel :value="t('registers.join_month')" /> 
             <select v-model="form.desired_join_month" class="border rounded px-2 py-1 w-full">
               <option v-for="opt in joinMonthOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}

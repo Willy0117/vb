@@ -166,6 +166,7 @@
     "member": "会員",
     "detail": "会員情報",
     "member_list": "会員一覧",
+    "created_at": "申込日",
     "member_created": "会員を作成しました。",
     "member_updated": "会員情報を更新しました。",
     "member_deleted": "会員を削除しました。",
@@ -271,7 +272,8 @@
     "address3": "建物名",
     "staff": "担当者",
     "note": "備　考",
-    "desired_join_month": "入会希望月"
+    "desired_join_month": "入会希望月",
+    "join_month": "入会希望月"
   },
   "enter_reject_reason": "却下理由を入力してください",
   "mail.verify.subject": "一般社団法人 全国中小建設工事業団体連合会メールアドレス確認",
