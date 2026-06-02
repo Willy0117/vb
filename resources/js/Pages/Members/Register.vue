@@ -88,7 +88,6 @@
                     @input="form.clearErrors('company_name')"
                   />
                   <InputError :message="form.errors?.company_name" />
-                  <p class="text-xs text-gray-500 mt-1">カタカナのみ入力可能</p>
                 </div>
                 <div class="flex-1">
                 <!-- 後 -->
@@ -1373,7 +1372,8 @@ const normalizeKana = (value) => {
   value = value.replace(/[\u3041-\u3096]/g, s =>
     String.fromCharCode(s.charCodeAt(0) + 0x60)
   )
-  return value.replace(/[^\u30A0-\u30FFー　 ]/g, '')
+  // カタカナ（ァ-ヶ）と長音符とスペースのみ残す
+  return value.replace(/[^\u30A1-\u30F6\u30FCー　 ]/g, '')
   //return value.replace(/[^\u30A0-\u30FFー　 A-Za-z\uFF21-\uFF3A\uFF41-\uFF5A0-9０-９・･]/g, '')
 }
 

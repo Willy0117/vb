@@ -45,12 +45,13 @@ class MemberController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        $statusId = (int) $request->status_id;
+
         // data 部分だけ加工（日本語ラベルなど）
-        $members = $paginated->through(function ($member) {
-            
-            $statusId = $member->status_id;
+        $members = $paginated->through(function ($member) use ($statusId) {
 
             $date = match ($statusId) {
+                1 => $member->desired_join_month ? \Carbon\Carbon::parse($member->desired_join_month) : null,
                 2 => $member->joined_at,
                 3 => $member->withdrawn_at,
                 4 => $member->canceled_at,
@@ -91,7 +92,11 @@ class MemberController extends Controller
                         'thumbnail_path' => $doc->thumbnail_path ? Storage::url($doc->thumbnail_path) : null,
                     ]),
                 'created_at' => $member->created_at->format('Y年m月d日 H:i'),//$member->created_at,
-                'display_date' => $date ? str_replace('(', '<br>(', DateHelper::withWareki($date)) : null,
+                'display_date' => $date
+                    ? ($statusId === 1
+                        ? str_replace('(', '<br>(', DateHelper::withWareki($date, true))
+                        : str_replace('(', '<br>(', DateHelper::withWareki($date)))
+                    : null,
             ];
         });
 
@@ -634,7 +639,8 @@ class MemberController extends Controller
                 'mail'        => $mail,
                 'agent'       => $agent,
                 'bank_account'=> $member->bankAccount,                
-                'invoice'     => $member->invoice ? $member->invoice : null,                
+                'invoice'     => $member->invoice ? $member->invoice : null,   
+                'created_at'   => $member->created_at,
                 // 書類は独立
                 'documents'   => $documents,
             ],

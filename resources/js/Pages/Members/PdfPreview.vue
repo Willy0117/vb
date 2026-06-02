@@ -74,7 +74,7 @@
       </ConfirmSection>
 
       <!-- 代理人 -->
-      <ConfirmSection :title="t('registers.agent')" v-if="form.is_agent">
+      <ConfirmSection :title="t('registers.agent')" v-if="Number(form.is_agent) === 1">
         <ConfirmRow :label="t('registers.company_name')">{{ form.agent.company_name }}</ConfirmRow>
         <ConfirmRow :label="t('registers.zip_code')">〒{{ form.agent.postal_code }}</ConfirmRow>
         <ConfirmRow label="住所">

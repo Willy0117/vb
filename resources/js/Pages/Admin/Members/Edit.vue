@@ -3,7 +3,12 @@
     <template #header>{{ t('members.edit') }}</template>
 
     <div class="max-w-5xl mx-auto bg-white p-8 rounded shadow">
-      <h2 class="text-2xl font-bold mb-6">{{ t('registers.members') }}</h2>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">{{ t('registers.members') }}</h2>
+        <span class="text-xs text-gray-400 font-normal ml-auto">
+          申込日時 : {{ page.props.form?.created_at ? dayjs(page.props.form?.created_at).format('YYYY年MM月DD日 HH時mm分') : '-' }}
+        </span>
+      </div>
 
       <form @submit.prevent="submitForm" class="space-y-8">
         <div class="mt-4 grid grid-cols-8 gap-4 items-start">
@@ -953,7 +958,7 @@ import axios from 'axios'
 import { useZipcode } from '@/composables/useZipcode'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeftIcon} from '@heroicons/vue/24/outline'
-
+import dayjs from 'dayjs'
 
 const { t } = useI18n()
 

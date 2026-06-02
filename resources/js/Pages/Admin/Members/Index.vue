@@ -80,6 +80,14 @@
         <thead>
           <tr class="bg-gray-200">
             <th v-if="isSuperAdmin">{{ t('tenant') }}</th>
+            <th class="px-3 py-2 cursor-pointer" @click="sortBy('created_at')">
+              <div class="flex items-center gap-1">
+              {{ t('members.created_at') }}
+              <component
+                :is="form.sort_by === 'created_at' ? (form.sort_dir === 'asc' ? ChevronUpIcon : ChevronDownIcon) : ChevronUpDownIcon"
+                class="w-4 h-4"
+              /></div>
+            </th>            
             <th class="px-3 py-2 cursor-pointer" @click="sortBy('agent')">
               <div class="flex items-center gap-1">
               {{ t('members.agent') }}
@@ -159,7 +167,6 @@
               </div>
             </th>
             <th class="px-3 py-2 text-center">{{ t('members.documents') }}</th>
-            <th class="px-3 py-2 text-center">{{ t('members.created_at') }}</th>
             <th class="px-3 py-2 text-center">{{ t('actions.action') }}</th>
           </tr>
         </thead>
@@ -168,7 +175,8 @@
 
             <td v-if="isSuperAdmin">
               {{ tenants.find(t => t.id === member.tenant_id)?.name || '-' }}
-            </td>            
+            </td>
+            <td class="px-3 py-2">{{ member.created_at ?? '-' }}</td>
             <td class="px-3 py-2">{{ member.agent ?? '-' }}</td>
             <td v-if="form.status_id == null || [0,2,3].includes(Number(form.status_id))" class="px-3 py-2">{{ member.number ?? '-' }}</td>
             <td class="px-3 py-2 min-w-[300px]">{{ member.organization?.name ?? '-' }}</td>
@@ -182,7 +190,7 @@
             <td class="px-3 py-2">
               <span
                 :class="[
-                  [1,2].includes(member.status_id)
+                  [1,2,3,4].includes(member.status_id)
                     ? 'cursor-pointer text-blue-600 hover:underline'
                     : 'text-gray-400 cursor-not-allowed'
                 ]"
@@ -240,7 +248,6 @@
                 </template>
               </div>
             </td>
-            <td class="px-3 py-2">{{ member.created_at ?? '-' }}</td>
             <td class="px-3 py-2 text-center flex justify-center space-x-1">
               <Link :href="route('admin.member.show', { member: member.id, ...persistQuery() })" class="text-blue-500 hover:text-blue-700">
                 <EyeIcon class="w-4 h-4"/>
@@ -669,7 +676,7 @@ const statuses = ref([])
 const openStatus = async (member) => {
 
   // ここでブロック
-  if (![1,2].includes(member.status_id)) {
+  if (![1,2,3,4].includes(member.status_id)) {
     return
   }
 
@@ -827,6 +834,9 @@ const handleClick = (member, typeId) => {
 
 const dateLabel = computed(() => {
   switch (Number(form.status_id)) {
+    case 1:
+      return '入会希望月'
+
     case 2:
       return '入会日'
 
@@ -837,7 +847,7 @@ const dateLabel = computed(() => {
       return '取消日'
 
     default:
-      return '登録日'
+      return '申込日'
   }
 })
 
