@@ -455,7 +455,7 @@ class MemberController extends Controller
             'mail.address1' => 'required|string',
             'mail.address2' => 'required|string',
             'mail.address3' => 'nullable|string',
-            'mail.tel' => 'required|string',
+            'mail.tel' => 'nullable|string',
             'mail.fax' => 'nullable|string',
             'mail.mobile' => 'nullable|string',
             'mail.email' => 'nullable|email',

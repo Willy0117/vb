@@ -273,7 +273,8 @@
     "staff": "担当者",
     "note": "備　考",
     "desired_join_month": "入会希望月",
-    "join_month": "入会希望月"
+    "join_month": "入会希望月",
+    "number": "行政書士登録番号" 
   },
   "enter_reject_reason": "却下理由を入力してください",
   "mail.verify.subject": "一般社団法人 全国中小建設工事業団体連合会メールアドレス確認",

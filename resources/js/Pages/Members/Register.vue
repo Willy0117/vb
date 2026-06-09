@@ -622,10 +622,23 @@
               <!-- 肩書き -->
               <div class="flex-1">
                 <div>
-                  <InputLabel :value="t('registers.position')" class="h-5" />
-                  <TextInput v-model="form.agent.position" class="w-full"
-                    @input="form.clearErrors('agent.position')"
-                   />
+                  <InputLabel :value="t('registers.number')" class="h-5" />
+                  <TextInput
+                    v-model="form.agent.position"
+                    class="w-full"
+                    maxlength="8"
+                    inputmode="numeric"
+                    pattern="[0-9]{8}"
+                    @input="e => {
+                        const normalized = e.target.value
+                            .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+                            .replace(/[^0-9]/g, '')
+                            .slice(0, 8)
+                        form.agent.position = normalized
+                        e.target.value = normalized
+                        form.clearErrors('agent.position')
+                    }"
+                  />
                 </div>
                 <InputError :message="form.errors['agent.position']" />
               </div>

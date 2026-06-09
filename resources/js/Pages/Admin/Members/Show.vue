@@ -105,7 +105,7 @@
                 </p>
                 <template v-if="type !== 2">
 
-                  <p
+                  <p v-if="type !== 2"
                     :class="{
                       'text-red-600 font-semibold':
                         isDifferent(getCurrentByType(type), getAppByType(type), 'tel')
@@ -116,7 +116,7 @@
                     FAX: {{ getCurrentByType(type).fax || '-' }}
                   </p>
 
-                  <p
+                  <p v-if="type !== 2"
                     :class="{
                       'text-red-600 font-semibold':
                         isDifferent(getCurrentByType(type), getAppByType(type), 'mobile')
@@ -133,8 +133,15 @@
                   >
                     Email: {{ getCurrentByType(type).email || '-' }}
                   </p>
-
-                  <p
+                  <p v-if="type !== 2"
+                      :class="{
+                          'text-red-600 font-semibold':
+                              isDifferent(getCurrentByType(type), getAppByType(type), 'position')
+                      }"
+                  >
+                      {{ type === 3 ? '行政書士登録番号' : '役職または肩書' }}: {{ getCurrentByType(type).position || '-' }}
+                  </p>
+                  <p v-if="type !== 2"
                     :class="{
                       'text-red-600 font-semibold':
                         isDifferent(getCurrentByType(type), getAppByType(type), 'contact_name')
@@ -161,13 +168,16 @@
                     {{ getAppByType(type).postal_code || '-' }}
                     {{ getAppByType(type).address || '-' }}
                   </p>
-                  <p>
+                  <p v-if="type !== 2">
                     TEL: {{ getAppByType(type).tel || '-' }}
                     FAX: {{ getAppByType(type).fax || '-' }}
                   </p>
-                  <p>Mobile: {{ getAppByType(type).mobile || '-' }}</p>
-                  <p>Email: {{ getAppByType(type).email || '-' }}</p>
-                  <p>担当者: {{ getAppByType(type).contact_name || '-' }}</p>
+                  <p v-if="type !== 2">Mobile: {{ getAppByType(type).mobile || '-' }}</p>
+                  <p v-if="type !== 2">Email: {{ getAppByType(type).email || '-' }}</p>
+                  <p v-if="type !== 2">
+                      {{ type === 3 ? '行政書士登録番号' : '役職または肩書' }}: {{ getAppByType(type).position || '-' }}
+                  </p>
+                  <p v-if="type !== 2">担当者: {{ getAppByType(type).contact_name || '-' }}</p>
                 </template>
 
                 <p v-else class="text-gray-400">データなし</p>

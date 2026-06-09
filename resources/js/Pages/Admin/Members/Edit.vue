@@ -141,7 +141,7 @@
           <div class="space-y-4">
  
             <div>
-              <InputLabel :value="t('registers.company_name')" /> 
+              <InputLabel :value="t('registers.company_name')" required /> 
 
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
                 <div class="flex-1">
@@ -182,7 +182,7 @@
               </div>
             </div>
             <div>
-              <InputLabel :value="t('registers.company_kana')" />
+              <InputLabel :value="t('registers.company_kana')" required />
 
               <TextInput
                 v-model="companyKana"
@@ -198,12 +198,12 @@
          <!-- 右カラム：代表者/担当者 -->
           <div class="space-y-4">
             <div class="flex-1">
-              <InputLabel :value="t('registers.position')" class="h-5" :required="form.type !== 'sole'" />
+              <InputLabel :value="t('registers.position')" class="h-5" required="form.type !== 'sole'" />
               <TextInput v-model="form.corp.position" class="w-full" />
               <InputError :message="form.errors['corp.position']" />
             </div>
             <div>
-             <InputLabel value="代表者名" :required />
+             <InputLabel value="代表者名" required />
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
                 <div class="flex-1">
                   <TextInput v-model="form.rep_last_name"
@@ -226,7 +226,7 @@
               </div>
             </div>
             <div>
-              <InputLabel value="代表者名（フリガナ）" :required />
+              <InputLabel value="代表者名（フリガナ）" required />
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
                 <div class="flex-1">
                   <TextInput v-model="form.rep_last_kana"
@@ -253,7 +253,7 @@
         </div>
 <!--  ここまでが会社情報　-->     
         <div>
-          <InputLabel :value="t('registers.zip_code')" />
+          <InputLabel :value="t('registers.zip_code')" required />
           <TextInput
             v-model="form.corp.postal_code"
             placeholder="000-0000"
@@ -277,7 +277,7 @@
 
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div class="flex-1">
-              <InputLabel :value="t('registers.address1')" />
+              <InputLabel :value="t('registers.address1')" required />
               <TextInput v-model="form.corp.address1"
                 :class="{
                   'border-red-500': getError('corp.address1'),
@@ -288,7 +288,7 @@
               <InputError :message="form.errors['corp.address1']" />
             </div>
             <div class="flex-1">
-              <InputLabel :value="t('registers.address2')" />
+              <InputLabel :value="t('registers.address2')" required />
               <TextInput v-model="form.corp.address2"
                 :class="{
                   'border-red-500': getError('corp.address2'),
@@ -304,7 +304,7 @@
         </div>
         <div class="mb-4 grid grid-cols-3 gap-x-1 gap-y-3 sm:flex-row sm:items-start">
             <div>
-              <InputLabel :value="t('registers.tel')" />
+              <InputLabel :value="t('registers.tel')" required />
               <TextInput
                 v-model="form.corp.tel"
                 :class="{
@@ -362,7 +362,7 @@
 
           <!-- 氏名 -->
           <div class="flex-1">
-              <InputLabel :value="t('registers.staff')" class="h-5" />
+              <InputLabel :value="t('registers.staff')" class="h-5" required />
               <TextInput v-model="form.corp.last_name"
                   :class="{
                     'border-red-500': getError('corp.last_name'),
@@ -434,7 +434,7 @@
           }"
         > 
         <div>
-            <InputLabel :value="t('registers.zip_code')" />
+            <InputLabel :value="t('registers.zip_code')" required />
             <TextInput
               v-model="form.mail.postal_code"
               placeholder="000-0000"
@@ -457,12 +457,12 @@
         </div>
         <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div class="flex-1">
-              <InputLabel :value="t('registers.address1')" />
+              <InputLabel :value="t('registers.address1')" required />
               <TextInput v-model="form.mail.address1" class="w-full" placeholder="○○県△△市xx区" />
               <InputError :message="form.errors['mail.address1']" />
             </div>
             <div class="flex-1">
-              <InputLabel :value="t('registers.address2')" />
+              <InputLabel :value="t('registers.address2')" required />
               <TextInput v-model="form.mail.address2" class="w-full" placeholder="○○丁目○○番地" />
               <InputError :message="form.errors['mail.address2']" />
             </div>
@@ -573,7 +573,7 @@
         <div class="">
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div class="flex-1">
-              <InputLabel :value="t('registers.zip_code')" />
+              <InputLabel :value="t('registers.zip_code')" required />
               <TextInput
                 v-model="form.agent.postal_code"
                 placeholder="000-0000"
@@ -595,7 +595,7 @@
             </div>
             <div class="flex-[2]">
                 <!-- 会社名 -->
-                <InputLabel :value="t('registers.company_name')" /> 
+                <InputLabel :value="t('registers.company_name')" required /> 
                 <TextInput
                   v-model="form.agent.company_name"
                   :class="{
@@ -610,12 +610,12 @@
           </div>
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
               <div class="flex-1">
-                <InputLabel :value="t('registers.address1')" />
+                <InputLabel :value="t('registers.address1')" required />
                 <TextInput v-model="form.agent.address1" class="w-full" placeholder="○○県△△市xx区" />
                 <InputError :message="form.errors['agent.address1']" />
               </div>
               <div class="flex-1">
-                <InputLabel :value="t('registers.address2')" />
+                <InputLabel :value="t('registers.address2')" required />
                 <TextInput v-model="form.agent.address2" class="w-full" placeholder="○○丁目○○番地" />
                 <InputError :message="form.errors['agent.address2']" />
               </div>
@@ -627,7 +627,7 @@
           </div>            
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
               <div class="flex-1">
-                <InputLabel :value="t('registers.tel')" />
+                <InputLabel :value="t('registers.tel')" required />
                 <TextInput
                   v-model="form.agent.tel"
                   class="w-full"
@@ -675,7 +675,7 @@
           </div>
           <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
             <div>
-              <InputLabel>{{ t('registers.email') }}</InputLabel>
+              <InputLabel :value="t('registers.email')" required />
 
               <TextInput v-model="form.agent.email" class="w-full" />
               <p v-if="form.errors['agent.email']" class="text-red-500 text-sm mt-1" >
@@ -687,14 +687,29 @@
               <!-- 肩書き -->
               <div class="flex-1">
                 <div>
-                  <InputLabel :value="t('registers.position')" class="h-5" />
-                  <TextInput v-model="form.agent.position" class="w-full" />
+                  <InputLabel :value="t('registers.number')" class="h-5" />
+                  <TextInput
+                    v-model="form.agent.position"
+                    class="w-full"
+                    maxlength="8"
+                    inputmode="numeric"
+                    pattern="[0-9]{8}"
+                    @input="e => {
+                        const normalized = e.target.value
+                            .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+                            .replace(/[^0-9]/g, '')
+                            .slice(0, 8)
+                        form.agent.position = normalized
+                        e.target.value = normalized
+                        form.clearErrors('agent.position')
+                    }"
+                  />
                 </div>
                 <InputError :message="form.errors['agent.position']" />
               </div>
               <!-- 氏名 -->
               <div class="flex-1">
-                  <InputLabel :value="t('registers.staff')"  class="h-5" />
+                  <InputLabel :value="t('registers.staff')"  class="h-5" required />
                   <TextInput v-model="form.agent.last_name" class="w-full" />
                   <InputError :message="form.errors['agent.last_name']" />
               </div>
@@ -734,9 +749,8 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- 左カラム -->
           <div class="space-y-4 max-w-xl mx-auto p-2">
-
+            <InputLabel :value="t('banks.bank_category') + '(いずれかを選択してください)'" required />
             <!-- 銀行選択 -->
-            <InputLabel :value="bankCategories.select_bank" :requred />
             <div class="grid grid-cols-4 gap-2 mb-3">
               <button
                 v-for="c in bankCategories"
@@ -766,12 +780,12 @@
                   :extra-params="form.bank.bank_type ? { category: form.bank.bank_type } : {}"
                   :initial="form.bank.bank_name"
                   @selected="handleBankSelected"
-                  :required 
+                  required 
                 />
                 <InputError :message="form.errors['bank.bank_name']" />
              </div>
               <div>
-                <InputLabel :value="t('banks.bank_code')" :requred />
+                <InputLabel :value="t('banks.bank_code')" required />
                 <TextInput v-model="form.bank.bank_code" class="w-full" />
                 <InputError :message="form.errors['bank.bank_code']" />
               </div>
@@ -790,6 +804,7 @@
                     :extra-params="{ bank_code: form.bank.bank_code }"
                     :initial="form.bank.branch_name"
                     @selected="handleBranchSelected"
+                    required
                   />
                   <p v-if="errors.branch_name" class="text-red-500 text-sm mt-1">
                     {{ errors.branch_name }}
@@ -808,7 +823,7 @@
                 <InputLabel
                   :value="form.bank.bank_code === '9900'
                     ? '記号'
-                    : t('banks.branch_code')" :required 
+                    : t('banks.branch_code')" required 
                 />
 
                 <TextInput
@@ -839,7 +854,7 @@
             </div>
 
             <div>
-              <InputLabel value="口座番号" :required  />
+              <InputLabel value="口座番号" required  />
               <TextInput
                 v-model="form.bank.account_no"
                 :maxlength="bankAccountMaxLength"
@@ -850,19 +865,15 @@
             </div>
 
             <div>
-                <InputLabel value="口座名義（フリガナ）" :required />
+                <InputLabel value="口座名義（フリガナ）" required />
                 <TextInput v-model="form.bank.account_kana" class="w-full" />
                 <InputError :message="form.errors['bank.account_kana']" />
             </div>
             <div>
-                <InputLabel value="口座名義" :required  />
+                <InputLabel value="口座名義" required  />
                 <TextInput v-model="form.bank.account_name" class="w-full" />
                 <InputError :message="form.errors['bank.account_name']" />
             </div>
-                <!-- 注意文言 -->
-            <p class="text-xs text-gray-500 mt-2">
-                肩書を忘れないように！
-            </p>
           </div>  
         </div>
       <!-- セクション単位Saveボタン -->
