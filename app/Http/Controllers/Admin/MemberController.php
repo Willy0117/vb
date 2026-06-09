@@ -176,7 +176,7 @@ class MemberController extends Controller
             'mail.address1' => 'required|string',
             'mail.address2' => 'required|string',
             'mail.address3' => 'nullable|string',
-            'mail.tel' => 'required|string',
+            'mail.tel' => 'nullable|string',
             'mail.fax' => 'nullable|string',
             'mail.mobile' => 'nullable|string',
 //            'mail.email' => 'nullable|email',
@@ -1159,10 +1159,10 @@ class MemberController extends Controller
             'bank.branch_name_kana' => 'nullable|string',
             'bank.account_type' => 'required|string',
             'bank.account_no' => 'required|string',
-            'bank.account_kana' => 'required|string',
-            'bank.account_name' => 'required|string',
+            'bank.account_kana' => 'nullable|string',
+            'bank.account_name' => 'nullable|string',
         ];
-        if ($request->input('bank_code') !== '9900') {
+        if ($request->input('bank.bank_code') !== '9900') {
             $rules['bank.branch_name'] = 'required|string';
         }
         

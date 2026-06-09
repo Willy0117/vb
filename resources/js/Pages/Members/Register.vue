@@ -626,19 +626,24 @@
                   <TextInput
                     v-model="form.agent.position"
                     class="w-full"
+                    :class="{ 'border-red-500': positionWarning }"
                     maxlength="8"
                     inputmode="numeric"
                     pattern="[0-9]{8}"
                     @input="e => {
-                        const normalized = e.target.value
-                            .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
-                            .replace(/[^0-9]/g, '')
-                            .slice(0, 8)
-                        form.agent.position = normalized
-                        e.target.value = normalized
-                        form.clearErrors('agent.position')
+                      const normalized = e.target.value
+                        .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+                        .replace(/[^0-9]/g, '')
+                        .slice(0, 8)
+                      form.agent.position = normalized
+                      e.target.value = normalized
+                      form.clearErrors('agent.position')
                     }"
+                    @blur="positionWarning = form.agent.position.length > 0 && form.agent.position.length < 8"
                   />
+                  <p v-if="positionWarning" class="text-red-500 text-sm mt-1">
+                    8桁で入力してください
+                  </p>
                 </div>
                 <InputError :message="form.errors['agent.position']" />
               </div>
@@ -1127,6 +1132,8 @@ const form = useForm({
 */
 //const errors = page.props.errors || {}
 const errors = ref({})
+
+const positionWarning = ref(false)
 
 //function getError(key) {
 //  const keys = key.split('.')
