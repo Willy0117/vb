@@ -809,6 +809,7 @@
             <div>
                 <InputLabel :value="t('banks.account_kana')" />
                 <TextInput v-model="form.account_kana" class="w-full"
+                  @blur="form.account_kana = normalizeKana(form.account_kana)"
                   @input="form.clearErrors('account_kana')"
                 />
                 <InputError :message="form.errors.account_kana" />
@@ -1509,10 +1510,10 @@ watch(
   () => form.same_as_corp,
   (checked) => {
     if (!checked) return
-
-    form.mail = {
-      ...form.corp,
-    }
+    Object.assign(form.mail, form.corp)
+    //form.mail = {
+    //  ...form.corp,
+    //}
   }
 )
 // 会社情報から口座名カナ、口座名を自動設定する

@@ -220,7 +220,7 @@ const ConfirmRow = defineComponent({
 
 // confirm() でセッションから渡された表示用データ
 const form = page.props.form ?? {}
-
+console.log(form)
 const processing = ref(false)
 
 onMounted(async () => {

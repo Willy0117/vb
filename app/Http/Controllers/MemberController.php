@@ -594,6 +594,8 @@ Log::info('toCorp check', [
         $form['mail_address_certificate_path'] = $mailPath;
         $form['mail_address_certificate_thumbnail'] = $mailThumb;
 
+        $form['same_as_corp'] = (bool) $request->same_as_corp;
+
         // session に保存
         session([
             'member_form' => $form,
@@ -611,6 +613,8 @@ Log::info('toCorp check', [
 
                 // FPDI + TCPDF
         $pdf = new Fpdi();
+        $pdf->setPrintHeader(false); 
+        $pdf->setPrintFooter(false); 
         // ページ追加
         $pdf->AddPage();
 
