@@ -8,7 +8,7 @@
         <ul class="text-sm text-gray-600 mb-8 bg-yellow-50 border border-yellow-200 rounded p-4 pl-8 space-y-1" style="list-style-type: disc;">
           <li>以下の入力情報をご確認ください。こちらの内容で登録いたします。内容に相違がある場合は、「訂正」ボタンを押下し、修正してください。</li>
           <li>登録完了後は、内容の確認はできません。登録内容を保管されたい場合は、プリントアウト等していただき、保管をお願いいたします。</li>
-          <li>口座振替依頼書PDFを必ずダウンロードしてください。</li>
+          <li>口座振替依頼書PDF(代理人申請の場合は、委任状も含む)を必ずダウンロードしてください。</li>
         </ul>
       </p>
 
@@ -83,7 +83,7 @@
         <ConfirmRow :label="t('registers.tel')">{{ form.agent.tel }}</ConfirmRow>
         <ConfirmRow :label="t('registers.fax')" v-if="form.agent.fax">{{ form.agent.fax }}</ConfirmRow>
         <ConfirmRow :label="t('registers.mobile')" v-if="form.agent.mobile">{{ form.agent.mobile }}</ConfirmRow>
-        <ConfirmRow :label="t('registers.position')" v-if="form.agent.position">{{ form.agent.position }}</ConfirmRow>
+        <ConfirmRow :label="t('registers.number')" v-if="form.agent.position">{{ form.agent.position }}</ConfirmRow>
         <ConfirmRow :label="t('registers.staff')">
           {{ form.agent.last_name }}　{{ form.agent.first_name }}
         </ConfirmRow>
@@ -113,7 +113,8 @@
       </div>
     </div>
     <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
-      <h2 class="text-xl font-bold mb-4">口座振替申請書 確認</h2>
+      <h2 class="text-xl font-bold mb-4">口座振替申請書 確認(代理人申請の場合は、委任状も含む)   
+      </h2>
 
       <div
         id="pdf-container"
@@ -128,11 +129,11 @@
 
         <label class="flex items-center gap-2">
           <input type="checkbox" v-model="downloaded" />
-          <span>口座振替申請書PDFをダウンロードしました。</span>
+          <span>口座振替申請書PDF（代理人申請の場合は、委任状も含む）をダウンロードしました。</span>
         </label>
       </div>
 
-      <div class="flex gap-4 items-center">
+      <div class="flex flex-col sm:flex-row gap-4 items-center">
         <button
           @click="goBack"
           class="mt-6 h-10 px-4 flex items-center justify-center rounded bg-gray-300"
@@ -149,7 +150,7 @@
             : 'bg-gray-400 cursor-not-allowed pointer-events-none'
           "
         >
-          口座振替申請書を{{ t('download') }}
+          口座振替申請書(代理人申請の場合は、委任状も含む)を{{ t('download') }}
         </a>
         <PrimaryButton
           type="button"
@@ -210,8 +211,8 @@ const ConfirmRow = defineComponent({
   props: { label: String },
   setup(props, { slots }) {
     return () =>
-      h('div', { class: 'flex py-2 px-4 gap-4' }, [
-        h('dt', { class: 'w-48 shrink-0 text-sm text-gray-500' }, props.label),
+      h('div', { class: 'flex flex-col sm:flex-row py-2 px-4 gap-1 sm:gap-4' }, [
+        h('dt', { class: 'w-full sm:w-48 sm:shrink-0 text-sm text-gray-500' }, props.label),
         h('dd', { class: 'text-sm text-gray-800 flex-1 break-all' }, slots.default?.())
       ])
   }

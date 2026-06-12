@@ -564,7 +564,7 @@
                   
 
         <!-- ここから代理人-->
-        <div>
+        <div v-if="form.is_agent">
 
         <div class="p-4 bg-orange-50 border-l-4 border-orange-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.agent') }}</h3>

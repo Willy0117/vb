@@ -367,9 +367,13 @@ class MemberController extends Controller
                 ]);
             }
         }
-
+Log::info('toCorp check', [
+    'toCorp' => $toCorp,
+    'agent'  => $member->agent,
+]);
         // corp 宛（agent の場合のみ or mail がある場合）
         if ($toCorp && $member->agent) {
+            
             try {
                 Mail::to($toCorp)
                     ->send(new AgentRegistrationCompleted($corp));
@@ -382,6 +386,14 @@ class MemberController extends Controller
                     'to' => $toCorp,
                     'error' => $e->getMessage(),
                 ]);
+                                // 管理者へ通知
+                if (config('mail.bcc')) {
+                    Mail::to(config('mail.bcc'))->send(new AdminMailSendFailed([
+                        'member_id' => $member->id ?? null,
+                        'failed_to' => $toCorp,
+                        'error'     => $e->getMessage(),
+                    ]));
+                }
             }
         }
         //メール送信結果をDBへ保存    
@@ -771,8 +783,13 @@ class MemberController extends Controller
             // ---- 3) 住所
             $pdf->SetXY(70, 84);
             $pdf->Write(10, $address);
+
+            $number = $form['agent']['position'] ?? ''; 
+            $pdf->SetXY(123, 108);
+            $pdf->Write(7, $number);
+
             $tel = $form['agent']['tel'] ?? ''; // 例: 03-1234-5678
-            $pdf->SetXY(65, 108);
+            $pdf->SetXY(65, 115);
             $pdf->Write(7, $tel);
 
             $pdf->SetXY(65, 100);
