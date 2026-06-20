@@ -202,7 +202,8 @@
         <h3></h3>
         <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.corp') }}</h3>
-          <p class="text-sm text-blue-700 mt-1">法人の場合は、履歴事項全部証明書(謄本)に記載してある住所を入力してください</p>
+          <p class="text-xs text-red-700 mt-1">こちらには必ず申込企業様の情報を入力して下さい</p>
+          <p class="text-xs text-blue-700 mt-1">法人の場合は、履歴事項全部証明書(謄本)に記載してある住所を入力してください</p>
         </div>        
         <div>
           <InputLabel :value="t('registers.zip_code')" required />
@@ -358,7 +359,7 @@
         </div>                
         <!--     -->                  
         <div class="mb-4">
-          <label class="flex items-center gap-2">
+          <label class="inline-flex items-center gap-2">
             <input
               type="checkbox"
               v-model="form.same_as_corp"

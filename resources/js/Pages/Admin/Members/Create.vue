@@ -926,7 +926,7 @@ const form = useForm({
     fax: page.props.form?.corp?.fax ?? '',
     mobile: page.props.form?.mail?.mobile ?? '',
     email: page.props.form?.corp?.email ?? '',
-    position: page.props.form?.corp?.position ?? '代表取締役',
+    position: page.props.form?.corp?.position ?? '',
     last_name: page.props.form?.corp?.last_name ?? '',
     first_name: page.props.form?.corp?.first_name ?? '',
     note:page.props.form?.corp?.note ?? '',

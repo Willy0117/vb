@@ -82,13 +82,21 @@
               class="transition-all duration-300 space-y-6"
             >
               <template v-if="getCurrentByType(type)">
-                <p
+                <p v-if="type !== 2"
                   :class="{
                     'text-red-600 font-semibold':
                       isDifferent(getCurrentByType(type), getAppByType(type), 'name')
                   }"
                 >
                   法人名：{{ getCurrentByType(type).name || '-' }}
+                </p>
+                <p v-if="type !== 2"
+                    :class="{
+                        'text-red-600 font-semibold':
+                            isDifferent(getCurrentByType(type), getAppByType(type), 'position')
+                    }"
+                >
+                    {{ type === 3 ? '行政書士登録番号' : '役職または肩書' }}: {{ getCurrentByType(type).position || '-' }}
                 </p>
                 <template v-if="type === 1">
                   <p class="col-1">{{ t('members.representative')}}： {{ props.member.name }}</p>                
@@ -133,14 +141,7 @@
                   >
                     Email: {{ getCurrentByType(type).email || '-' }}
                   </p>
-                  <p v-if="type !== 2"
-                      :class="{
-                          'text-red-600 font-semibold':
-                              isDifferent(getCurrentByType(type), getAppByType(type), 'position')
-                      }"
-                  >
-                      {{ type === 3 ? '行政書士登録番号' : '役職または肩書' }}: {{ getCurrentByType(type).position || '-' }}
-                  </p>
+
                   <p v-if="type !== 2"
                     :class="{
                       'text-red-600 font-semibold':
@@ -163,7 +164,13 @@
             >
                 <!-- ヘッダー -->
                 <template v-if="getAppByType(type)">
-                  <p>法人名：{{ getAppByType(type).name || '-' }}</p>
+                  <p v-if="type !== 2">法人名：{{ getAppByType(type).name || '-' }}</p>
+                  <p v-if="type !== 2">
+                      {{ type === 3 ? '行政書士登録番号' : '役職または肩書' }}: {{ getAppByType(type).position || '-' }}
+                  </p>
+                  <template v-if="type === 1">
+                    <p class="col-1">{{ t('members.representative')}}： {{ props.member.name }}</p>                
+                  </template>
                   <p>
                     {{ getAppByType(type).postal_code || '-' }}
                     {{ getAppByType(type).address || '-' }}
@@ -174,9 +181,7 @@
                   </p>
                   <p v-if="type !== 2">Mobile: {{ getAppByType(type).mobile || '-' }}</p>
                   <p v-if="type !== 2">Email: {{ getAppByType(type).email || '-' }}</p>
-                  <p v-if="type !== 2">
-                      {{ type === 3 ? '行政書士登録番号' : '役職または肩書' }}: {{ getAppByType(type).position || '-' }}
-                  </p>
+
                   <p v-if="type !== 2">担当者: {{ getAppByType(type).contact_name || '-' }}</p>
                 </template>
 
@@ -187,6 +192,8 @@
         </div>
 
       </div>
+    </section>
+    <section class="bg-white rounded shadow p-4">
       <div class="space-y-6">
       <div class="border rounded shadow p-4 overflow-hidden">  
         <div class="flex justify-between items-center mb-4">

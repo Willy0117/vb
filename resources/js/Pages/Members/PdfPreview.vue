@@ -63,7 +63,7 @@
       <!-- 郵送先 -->
       <ConfirmSection :title="t('registers.mail')">
         <template v-if="form.same_as_corp">
-          <p class="text-sm text-gray-500 px-4 py-2">法人住所と同じ</p>
+          <p class="text-sm text-gray-500 px-4 py-2">上記住所と同じ</p>
         </template>
         <template v-else>
           <ConfirmRow :label="t('registers.zip_code')">〒{{ form.mail.postal_code }}</ConfirmRow>

@@ -198,7 +198,7 @@
          <!-- 右カラム：代表者/担当者 -->
           <div class="space-y-4">
             <div class="flex-1">
-              <InputLabel :value="t('registers.position')" class="h-5" required="form.type !== 'sole'" />
+              <InputLabel :value="t('registers.position')" class="h-5" :required="form.type !== 'sole'" />
               <TextInput v-model="form.corp.position" class="w-full" />
               <InputError :message="form.errors['corp.position']" />
             </div>
