@@ -270,7 +270,7 @@ class MemberController extends Controller
                         'first_name' => $agent['first_name'],
                     ]); 
                 }               
-                //1:履歴事項全部証明書
+                //1:現在事項全部証明書
                 if (!empty($form['history_certificate_path'])) {    
                     $corpOrg->documents()->create([  
                         'type' => 1,
@@ -509,7 +509,7 @@ Log::info('toCorp check', [
                 'agent.first_name' => 'nullable|string',
             ]);
         }
-        // 法人：履歴事項全部証明書
+        // 法人：現在事項全部証明書
         $rules = array_merge($rules, [
             'history_certificate' => [
                 'nullable',
@@ -526,7 +526,7 @@ Log::info('toCorp check', [
                         !$request->hasFile('history_certificate') &&
                         !$value
                     ) {
-                        $fail('履歴事項全部証明書は必須です');
+                        $fail('現在事項全部証明書は必須です');
                     }
                 },
             ],

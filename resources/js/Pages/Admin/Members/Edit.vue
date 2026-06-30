@@ -165,7 +165,7 @@
                       'border-gray-300': !getError('company_name')
                     }"
                     class="flex-1"
-                    placeholder="〇〇商事"
+                    placeholder=""
                   />
                 </div>
                 <div class="flex-1">
@@ -256,7 +256,7 @@
           <InputLabel :value="t('registers.zip_code')" required />
           <TextInput
             v-model="form.corp.postal_code"
-            placeholder="000-0000"
+            placeholder=""
             maxlength="8"
             @input="onAddressZipInput"
             @keydown.enter.prevent
@@ -313,7 +313,7 @@
                 }"
                 maxlength="20"
                 @input="e => onPhoneInput('corp', 'tel', e)"
-                placeholder="03-1234-5678"
+                placeholder=""
               />
               <InputError :message="form.errors['corp.tel']" />
               <p v-if="form.corp.tel"
@@ -328,7 +328,7 @@
                 v-model="form.corp.fax"
                 maxlength="20"
                 @input="e => onPhoneInput('corp', 'fax', e)"
-                placeholder="03-1234-5678"
+                placeholder=""
               />
               <p v-if="form.corp.fax" class="text-xs text-gray-500 mt-1">
                 FAX番号は 03-1234-5678 の形式で入力してください
@@ -339,7 +339,7 @@
               <TextInput
                 v-model="form.corp.mobile"
                 class="w-full"
-                placeholder="090-xxxx-xxxx"
+                placeholder=""
                 maxlength="20"
                 @input="e => onPhoneInput('corp', 'mobile', e)"
               />
@@ -468,7 +468,7 @@
             </div>
             <div class="flex-1">
               <InputLabel :value="t('registers.address3')" />
-              <TextInput v-model="form.mail.address3" class="w-full" placeholder="xxxビル○○F" />
+              <TextInput v-model="form.mail.address3" class="w-full" placeholder="" />
               <InputError :message="form.errors['mail.address3']" />
             </div>
         </div>            
@@ -621,7 +621,7 @@
               </div>
               <div class="flex-1">
                 <InputLabel :value="t('registers.address3')" />
-                <TextInput v-model="form.agent.address3" class="w-full" placeholder="xxxビル○○F" />
+                <TextInput v-model="form.agent.address3" class="w-full" placeholder="" />
                 <InputError :message="form.errors['agent.address3']" />
               </div>
           </div>            
@@ -633,7 +633,7 @@
                   class="w-full"
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'tel', e)"
-                  placeholder="03-1234-5678"
+                  placeholder=""
                 />
                 <InputError :message="form.errors['agent.tel']" />
                 <p v-if="form.agent.tel"
@@ -649,7 +649,7 @@
                   class="w-full"
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'fax', e)"
-                  placeholder="03-1234-5678"
+                  placeholder=""
                 />
                 <InputError :message="form.errors['agent.fax']" />
                 <p v-if="form.agent.fax"
@@ -662,7 +662,7 @@
                 <TextInput
                   v-model="form.agent.mobile"
                   class="w-full"
-                  placeholder="090-xxxx-xxxx"
+                  placeholder=""
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'mobile', e)"
                 />
@@ -912,7 +912,7 @@
               class="w-32 cursor-pointer"
               @click="openPdf(d.path)"
             />
-            <button
+            <button v-if="can('delete')"
               type="button"
               class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-700"
               @click="deleteDocument(d)"
@@ -981,6 +981,9 @@ const { t } = useI18n()
 const page = usePage()
 
 console.log(page.props) // ← ここで form が見える
+
+const user = page?.props?.auth?.user
+
 const regions = page.props.regions || []
 
 const persistQuery = () => {
@@ -1017,7 +1020,7 @@ const form = useForm({
     address3: page.props.form?.corp?.address3 ?? '',
     tel: page.props.form?.corp?.tel ?? '',
     fax: page.props.form?.corp?.fax ?? '',
-    mobile: page.props.form?.mail?.mobile ?? '',
+    mobile: page.props.form?.corp?.mobile ?? '',
     email: page.props.form?.corp?.email ?? '',
     position: page.props.form?.corp?.position ?? '',
     last_name: page.props.form?.corp?.last_name ?? '',
@@ -1079,6 +1082,10 @@ watch(
   },
   { deep: true }
 )
+// 権限チェック用関数
+const can = (permission) => {
+  return user?.permissions?.includes(permission)
+}
 
 // エラー
 //const errors = page.props.errors || {}

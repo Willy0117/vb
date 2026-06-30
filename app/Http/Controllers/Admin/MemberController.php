@@ -356,7 +356,6 @@ class MemberController extends Controller
 
             });
         } catch (\Exception $e) {
-            dd($e);
             Log::error('Member registration failed', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -417,7 +416,9 @@ class MemberController extends Controller
         ]);
 
         $latestStatusHistory = $member->statusHistories->sortByDesc('created_at')->first();
-        $latestProgressHistory = $member->progressHistories->sortByDesc('created_at')->first();        
+        $latestProgressHistory = $member->progressHistories->sortByDesc('created_at')->first();
+
+        $oldestApplication = $member->applications()->oldest()->first();
 
         return Inertia::render('Admin/Members/Show', [
             'member' => [
@@ -455,6 +456,7 @@ class MemberController extends Controller
                 'due_date' => $member->invoice?-> due_date ? DateHelper::withWareki($member->invoice->due_date) : null,
                 'paid_at' => $member->invoice?-> paid_at ? DateHelper::withWareki($member->invoice->paid_at) : null,
                 'amount' => number_format(optional($member->invoice)->amount ?? 0),
+                'application_name' => $oldestApplication?->full_name,
                 'note' => optional($member->organizations->first())->note,
 
                 'progress_meta' => $latestProgressHistory ? [
@@ -536,7 +538,7 @@ class MemberController extends Controller
         $orgs = $member->organizations->keyBy('type');
 
         $documentTypeNames = [
-            1 => '履歴事項全部証明書',
+            1 => '現在事項全部証明書',
             2 => '郵送先確認書',
             3 => '口座振替依頼書',
             4 => '委任状',
@@ -964,6 +966,20 @@ class MemberController extends Controller
             'updated_by'  => auth()->id(),
         ]);
 
+        $repFields = ['last_name', 'first_name', 'last_name_kana', 'first_name_kana'];
+        $repChanged = collect($repFields)->some(fn($field) => 
+            ($memberBefore[$field] ?? null) !== ($member->$field ?? null)
+        );
+
+        if ($repChanged) {
+            $member->applications()->create([
+                'last_name'       => $member->last_name,
+                'first_name'      => $member->first_name,
+                'last_name_kana'  => $member->last_name_kana,
+                'first_name_kana' => $member->first_name_kana,
+            ]);
+        }
+        
         $member->invoices()->updateOrCreate(
             [],
             [
@@ -1299,9 +1315,6 @@ logger()->error('BASE DIR DEBUG', [
                     '指定郵送先郵便番号',
                     '指定郵送先住所1（都道府県・市区町村名・番地）',
                     '指定郵送先住所2（建物ビル名）',
-                    '指定郵送先電話番号',
-                    '指定郵送先FAX',
-                    '指定郵送先携帯番号',
                     '代理申込名前',
                     '代理申込電話番号',
                     '代理申込住所',
@@ -1424,9 +1437,9 @@ logger()->error('BASE DIR DEBUG', [
                     "=\"" . ($mail->postal_code ?? '') . "\"",
                     $mailAddress,
                     $mail->address3 ?? '',
-                    "=\"" . ($mail->tel ?? '') . "\"",
+/*                    "=\"" . ($mail->tel ?? '') . "\"",
                     "=\"" . ($mail->fax ?? '') . "\"",
-                    "=\"" . ($mail->mobile ?? '') . "\"",
+                    "=\"" . ($mail->mobile ?? '') . "\"",*/
 //                    trim(($mail->last_name ?? '') . ' ' . ($mail->first_name ?? '')),  郵送先担当者
 
                     // ===== 代理申込（type=3）=====

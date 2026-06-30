@@ -203,7 +203,7 @@
         <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.corp') }}</h3>
           <p class="text-xs text-red-700 mt-1">こちらには必ず申込企業様の情報を入力して下さい</p>
-          <p class="text-xs text-blue-700 mt-1">法人の場合は、履歴事項全部証明書(謄本)に記載してある住所を入力してください</p>
+          <p class="text-xs text-blue-700 mt-1">法人の場合は、現在事項全部証明書(謄本)に記載してある住所を入力してください</p>
         </div>        
         <div>
           <InputLabel :value="t('registers.zip_code')" required />
@@ -828,7 +828,7 @@
         <div class="space-y-6">
           <h3 class="text-lg font-semibold">必要書類アップロード</h3>
 
-          <!-- 履歴事項全部証明書 -->
+          <!-- 現在事項全部証明書 -->
           <div v-if="form.type !== 'sole'"
             @dragover.prevent
             @dragenter.prevent
@@ -837,7 +837,7 @@
             @click="triggerFileSelect"
           >
             <p v-if="!form.history_certificate && !form.history_certificate_path">
-              履歴事項全部証明書（PDF）をドラッグ＆ドロップ または クリックして選択
+              現在事項全部証明書（PDF）をドラッグ＆ドロップ または クリックして選択
             </p>
             <p v-else class="text-green-600 font-medium">
               選択済み:
@@ -1506,17 +1506,16 @@ watch(
     //form.account_kana = buildAccountKana()
   }
 )
-// 郵送先が同じならコピーする
+// 郵送先が同じなら常にコピーする
 watch(
-  () => form.same_as_corp,
-  (checked) => {
+  () => [form.same_as_corp, { ...form.corp }, form.mail.address1],
+  ([checked]) => {
     if (!checked) return
     Object.assign(form.mail, form.corp)
-    //form.mail = {
-    //  ...form.corp,
-    //}
-  }
+  },
+  { deep: true }
 )
+
 // 会社情報から口座名カナ、口座名を自動設定する
 const getCompanyTypeKana = (prefix) => {
   const type = companyTypes.find(t => t.value === prefix)

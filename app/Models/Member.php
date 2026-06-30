@@ -64,6 +64,12 @@ class Member extends Model
     {
         return $this->hasMany(Organization::class);
     }
+
+    public function applications()
+    {
+        return $this->hasMany(Application::class, 'member_id');
+    }
+
 /*
     public function organization()
     {

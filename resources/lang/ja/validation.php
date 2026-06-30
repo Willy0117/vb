@@ -13,7 +13,7 @@ return [
         'address2'=> '番地',
         'tel'=> 'TEL',
         'fax'=> 'FAX',
-        'history_certificate' => '履歴事項全部証明書',
+        'history_certificate' => '現在事項全部証明書',
         'mail_address_certificate' => '送付先住所確認書類',
         'bank_type' => '金融機関種別',
         'bank_name' => '銀行名',

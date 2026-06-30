@@ -266,7 +266,7 @@
         <h3></h3>
         <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded shadow-sm mb-4">
           <h3 class="text-lg font-semibold text-blue-800">{{ t('registers.corp') }}</h3>
-          <p class="text-sm text-blue-700 mt-1">法人の場合は、履歴事項全部証明書(謄本)に記載してある住所を入力してください</p>
+          <p class="text-sm text-blue-700 mt-1">法人の場合は、現在事項全部証明書(謄本)に記載してある住所を入力してください</p>
         </div>        
         <div>
           <InputLabel :value="t('registers.zip_code')" required />
@@ -315,7 +315,7 @@
             </div>
             <div class="flex-1">
               <InputLabel :value="t('registers.address3')" />
-              <TextInput v-model="form.corp.address3" class="w-full" placeholder="xxxビル○○F" />
+              <TextInput v-model="form.corp.address3" class="w-full" placeholder="" />
             </div>
         </div>
         <div class="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-1 gap-y-3 items-start">
@@ -346,7 +346,7 @@
                 class="w-full"
                 maxlength="20"
                 @input="e => onPhoneInput('corp', 'fax', e)"
-                placeholder="03-1234-5678"
+                placeholder=""
               />
               <p v-if="form.corp.fax" class="text-xs text-gray-500 mt-1">
                 FAX番号は 03-1234-5678 の形式で入力してください
@@ -357,7 +357,7 @@
               <TextInput
                 v-model="form.corp.mobile"
                 class="w-full"
-                placeholder="090-xxxx-xxxx"
+                placeholder=""
                 maxlength="20"
                 @input="e => onPhoneInput('corp', 'mobile', e)"
               />
@@ -464,7 +464,7 @@
             </div>
             <div class="flex-1">
               <InputLabel :value="t('registers.address3')" />
-              <TextInput v-model="form.mail.address3" class="w-full" placeholder="xxxビル○○F" />
+              <TextInput v-model="form.mail.address3" class="w-full" placeholder="" />
               <InputError :message="form.errors?.mail?.address3" />
             </div>
         </div>
@@ -607,7 +607,7 @@
               </div>
               <div class="flex-1">
                 <InputLabel :value="t('registers.address3')" />
-                <TextInput v-model="form.agent.address3" class="w-full" placeholder="xxxビル○○F" />
+                <TextInput v-model="form.agent.address3" class="w-full" placeholder="" />
                 <InputError :message="form.errors['agent.address3']" />
               </div>
           </div>            
@@ -635,7 +635,7 @@
                   class="w-full"
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'fax', e)"
-                  placeholder="03-1234-5678"
+                  placeholder=""
                 />
                 <InputError :message="form.errors['agent.fax']" />
                 <p v-if="form.agent.fax"
@@ -648,7 +648,7 @@
                 <TextInput
                   v-model="form.agent.mobile"
                   class="w-full"
-                  placeholder="090-xxxx-xxxx"
+                  placeholder=""
                   maxlength="20"
                   @input="e => onPhoneInput('agent', 'mobile', e)"
                 />
@@ -1261,15 +1261,17 @@ watch(
 )
 // 郵送先が同じならコピーする
 watch(
-  () => form.same_as_corp,
-  (checked) => {
+  () => [form.same_as_corp, { ...form.corp }],
+  ([checked]) => {
     if (!checked) return
 
     form.mail = {
       ...form.corp,
     }
-  }
+  },
+  { deep: true }  // ← corp内のネストしたプロパティの変更も検知
 )
+
 // 会社情報から口座名カナ、口座名を自動設定する
 const getCompanyTypeKana = (prefix) => {
   const type = companyTypes.find(t => t.value === prefix)

@@ -102,7 +102,7 @@
 
       <!-- 必要書類 -->
       <ConfirmSection title="必要書類">
-        <ConfirmRow label="履歴事項全部証明書" v-if="form.type !== 'sole'">
+        <ConfirmRow label="現在事項全部証明書" v-if="form.type !== 'sole'">
           <span class="text-green-600 font-medium">✓ アップロード済み</span>
         </ConfirmRow>
         <ConfirmRow label="郵送先確認資料" v-if="!form.same_as_corp">

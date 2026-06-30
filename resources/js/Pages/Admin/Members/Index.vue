@@ -723,7 +723,7 @@ const uploadForm = ref({
 const file = ref(null)
 
 const documentTypes = [
-  { id: 1, name: '履歴事項全部証明書' },
+  { id: 1, name: '現在事項全部証明書' },
   { id: 2, name: '郵送先確認書' },
   { id: 3, name: '口座振替依頼書' },
   { id: 4, name: '委任状' },
@@ -732,7 +732,7 @@ const documentTypes = [
 
 const shortName = (name) => {
   const map = {
-    '履歴事項全部証明書': '履歴',
+    '現在事項全部証明書': '現在',
     '郵送先確認書': '郵送',
     '口座振替依頼書': '口振',
     '委任状': '委任',

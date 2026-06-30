@@ -99,7 +99,15 @@
                     {{ type === 3 ? '行政書士登録番号' : '役職または肩書' }}: {{ getCurrentByType(type).position || '-' }}
                 </p>
                 <template v-if="type === 1">
-                  <p class="col-1">{{ t('members.representative')}}： {{ props.member.name }}</p>                
+                  <p
+                    :class="{
+                      'text-red-600 font-semibold':
+                        isDifferent(getCurrentByType(type), getAppByType(type), 'postal_code')
+                        || isDifferent(getCurrentByType(type), getAppByType(type), 'address')
+                        || isDiff(props.member.name, props.member.application_name)
+                    }"
+                  >
+                    {{ t('members.representative')}}： {{ props.member.name }}</p>                
                 </template>
                 <p
                   :class="{
@@ -169,7 +177,7 @@
                       {{ type === 3 ? '行政書士登録番号' : '役職または肩書' }}: {{ getAppByType(type).position || '-' }}
                   </p>
                   <template v-if="type === 1">
-                    <p class="col-1">{{ t('members.representative')}}： {{ props.member.name }}</p>                
+                    <p class="col-1">{{ t('members.representative')}}： {{ props.member.application_name ?? props.member.name }}</p>                
                   </template>
                   <p>
                     {{ getAppByType(type).postal_code || '-' }}
