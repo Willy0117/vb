@@ -101,13 +101,14 @@
                 <template v-if="type === 1">
                   <p
                     :class="{
-                      'text-red-600 font-semibold':
-                        isDifferent(getCurrentByType(type), getAppByType(type), 'postal_code')
-                        || isDifferent(getCurrentByType(type), getAppByType(type), 'address')
-                        || isDiff(props.member.name, props.member.application_name)
+                      'text-red-600 font-semibold': isDiff(
+                        props.member.name,
+                        props.member.application_name ?? props.member.name
+                      )
                     }"
                   >
-                    {{ t('members.representative')}}： {{ props.member.name }}</p>                
+                    {{ t('members.representative') }}： {{ props.member.name }}
+                  </p>
                 </template>
                 <p
                   :class="{
