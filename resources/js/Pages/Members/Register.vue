@@ -420,6 +420,7 @@
               <TextInput v-model="form.mail.address3" class="w-full" placeholder="xxxビル○○F"
               @input="form.clearErrors('mail.address3')"
                />
+              <p class="text-xs text-gray-500 mt-1">建物名や部屋番号がある場合は、必ずご入力ください</p>
               <InputError :message="form.errors?.mail?.address3" />
             </div>
         </div>
