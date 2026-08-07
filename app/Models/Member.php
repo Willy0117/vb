@@ -125,6 +125,11 @@ class Member extends Model
         return trim($this->last_name . ' ' . $this->first_name);
     }
     
+    public function getFullNameKanaAttribute()
+    {
+        return trim($this->last_name_kana . ' ' . $this->first_name_kana);
+    }
+    
     public function bankAccount()
     {
         return $this->hasOne(BankAccount::class);

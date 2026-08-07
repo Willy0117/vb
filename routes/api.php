@@ -11,6 +11,10 @@ use App\Models\PreUser;
 use App\Models\Member;
 use Illuminate\Support\Carbon;
 
+// routes/api.php
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+});
 
 Route::get('/user', function (Request $request) {
     return $request->user();

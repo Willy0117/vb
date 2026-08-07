@@ -167,7 +167,7 @@
               </div>
             </div>
             <div>
-              <InputLabel value="代表者名（フリガナ）" required />
+              <InputLabel value="代表者名（カナ）" required />
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
                 <div class="flex-1">
                   <TextInput v-model="form.rep_last_kana"
@@ -697,7 +697,7 @@
             <p v-if="form.errors?.bank_type" class="text-red-500 text-sm mt-1">
               {{ form.errors?.bank_type }}
             </p>
-
+            <p class="text-red-500 text-sm mt-1">※銀行名・支店名はご入力いただいたのち、表示された選択肢より選択してください</p>
             <!-- 銀行名 + 銀行コード -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
               <div>
@@ -1539,7 +1539,7 @@ watch(
     () => form.rep_first_name,
   ],
   () => {
-    // ===== 口座名義（フリガナ） =====
+    // ===== 口座名義（カナ） =====
     const prefixKana = getCompanyTypeKana(form.company_type_prefix)
     const suffixKana = getCompanyTypeKana(form.company_type_suffix)
 

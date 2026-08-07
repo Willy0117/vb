@@ -35,7 +35,7 @@
         <ConfirmRow label="代表者名">
           {{ form.rep_last_name }}　{{ form.rep_first_name }}
         </ConfirmRow>
-        <ConfirmRow label="代表者名（フリガナ）">
+        <ConfirmRow label="代表者名（カナ）">
           {{ form.rep_last_kana }}　{{ form.rep_first_kana }}
         </ConfirmRow>
       </ConfirmSection>

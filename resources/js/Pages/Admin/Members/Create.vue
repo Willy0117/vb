@@ -234,7 +234,7 @@
               </div>
             </div>
             <div>
-              <InputLabel value="代表者名（フリガナ）" required />
+              <InputLabel value="代表者名（カナ）" required />
               <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start">
                 <div class="flex-1">
                   <TextInput v-model="form.rep_last_kana"
@@ -842,7 +842,7 @@
                 <InputError :message="form.errors.account_name" />
             </div>
             <div>
-                <InputLabel value="口座名義（フリガナ）" />
+                <InputLabel value="口座名義（カナ）" />
                 <TextInput v-model="form.account_kana" class="w-full" />
                 <InputError :message="form.errors.account_kana" />
             </div>
@@ -1294,7 +1294,7 @@ watch(
     () => form.rep_first_name,
   ],
   () => {
-    // ===== 口座名義（フリガナ） =====
+    // ===== 口座名義（カナ） =====
     const prefixKana = getCompanyTypeKana(form.company_type_prefix)
     const suffixKana = getCompanyTypeKana(form.company_type_suffix)
 

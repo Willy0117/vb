@@ -60,6 +60,23 @@
           />
 
         </div>
+        <!-- div v-if="form.status_id == 1" class="flex items-center gap-2">
+          <span class="text-sm whitespace-nowrap">{{ t('members.progress') }}</span>
+          <select
+            v-model="form.progress_id"
+            @change="submitSearch"
+            class="h-10 border border-gray-300 rounded-md px-3 text-sm bg-white"
+          >
+            <option :value="null">全て</option>
+            <option
+              v-for="s in props.progresses"
+              :key="s.id"
+              :value="s.id"
+            >
+              {{ s.name }}
+            </option>
+          </select>
+        </div -->       
         <div>
           <SecondaryButton
             type="button"
@@ -462,6 +479,7 @@ const openDrawer = ref(false)
 const form = useForm({
   name: props.filters.name,
   status_id: props.filters.status_id ?? null,
+  progress_id: props.filters.progress_id_id ?? null,
   tenant_id: props.filters.tenant_id,
   per_page: props.filters.per_page || 20,
   sort_by: props.filters.sort_by,   // ← 初期値を必ずセット
@@ -516,6 +534,7 @@ const persistQuery = () => ({
   company_name: form.company_name,
   name: form.name,
   status_id: form.status_id,
+  progress_id: form.progress_id,
   per_page: form.per_page,
   sort_by: form.sort_by,
   sort_dir: form.sort_dir,

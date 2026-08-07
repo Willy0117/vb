@@ -40,7 +40,7 @@
         <ConfirmRow label="代表者名">
           {{ form.rep_last_name }}　{{ form.rep_first_name }}
         </ConfirmRow>
-        <ConfirmRow label="代表者名（フリガナ）">
+        <ConfirmRow label="代表者名（カナ）">
           {{ form.rep_last_kana }}　{{ form.rep_first_kana }}
         </ConfirmRow>
       </ConfirmSection>
@@ -113,7 +113,8 @@
       </div>
     </div>
     <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
-      <h2 class="text-xl font-bold mb-4">口座振替申請書 確認(代理人申請の場合は、委任状も含む)   
+      <h2 class="text-xl font-bold mb-4">
+        口座振替申請書 確認(代理人申請の場合は、委任状も含む)
       </h2>
 
       <div
@@ -133,39 +134,46 @@
         </label>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-4 items-center">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-4 mt-6">
         <button
           @click="goBack"
-          class="mt-6 h-10 px-4 flex items-center justify-center rounded bg-gray-300"
+          class="h-10 px-4 flex items-center justify-center rounded bg-gray-300"
         >
           {{ t('revise') }}
         </button>
 
         <a
-          :href="confirmed ? pdfUrl : null"
-          download
-          class="mt-6 h-10 px-4 flex items-center justify-center rounded text-white"
-          :class="confirmed
-            ? 'bg-blue-600 cursor-pointer'
-            : 'bg-gray-400 cursor-not-allowed pointer-events-none'
-          "
-        >
-          口座振替申請書(代理人申請の場合は、委任状も含む)を{{ t('download') }}
+            :href="confirmed ? pdfUrl : null"
+            download
+            class="h-10 px-4 flex items-center justify-center rounded text-white text-sm sm:text-base text-center"
+            :class="confirmed
+              ? 'bg-blue-600 cursor-pointer'
+              : 'bg-gray-400 cursor-not-allowed pointer-events-none'
+            "
+          >
+            口座振替申請書(代理人申請の場合は、委任状も含む)を{{ t('download') }}
         </a>
+
         <PrimaryButton
           type="button"
-          class="mt-6 h-10 px-4 flex items-center justify-center"
+          class="h-10 px-4 flex items-center justify-center text-sm sm:text-base"
           :disabled="!canSubmit"
           @click="submitRegister"
         >
-          データ登録
+          申込完了
         </PrimaryButton>
-
       </div>
-      <p class="text-red-500 text-sm mt-6">
-      ※口座振替依頼書は、口座名義人（フリガナ含む）の記入と
-      押印（金融機関お届け印）をしたものをご郵送いただきますようお願いいたします。
+
+      <p class="text-red-500 text-sm mt-3">
+        ※申込を完了するには、「申込完了」ボタンを必ず押してください
       </p>
+
+      <div class="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+        <p class="text-amber-800 text-sm leading-relaxed">
+          ※口座振替依頼書は、口座名義人（カナ含む）の記入と
+          押印（金融機関お届け印）をしたものをご郵送いただきますようお願いいたします。
+        </p>
+      </div>
     </div>
   </GuestLayout>
 </template>

@@ -11,7 +11,7 @@
             <h3 class="text-lg font-semibold mb-2">会社情報</h3>
 
             <div>
-              <InputLabel value="会社名（フリガナ）" />
+              <InputLabel value="会社名（カナ）" />
               <TextInput v-model="form.company_furigana" class="w-full" />
               <InputError :message="form.errors.company_furigana" />
             </div>
@@ -40,7 +40,7 @@
             <h3 class="text-lg font-semibold mb-2">代表者・担当者情報</h3>
 
             <div>
-              <InputLabel value="代表者名（フリガナ）" />
+              <InputLabel value="代表者名（カナ）" />
               <TextInput v-model="form.representative_furigana" class="w-full" />
               <InputError :message="form.errors.representative_furigana" />
             </div>
@@ -124,7 +124,7 @@
             <InputError :message="form.errors.account_no" />
         </div>
         <div>
-            <InputLabel value="口座名義（フリガナ）" />
+            <InputLabel value="口座名義（カナ）" />
             <TextInput v-model="form.account_kana" class="w-full" />
             <InputError :message="form.errors.account_kana" />
         </div>

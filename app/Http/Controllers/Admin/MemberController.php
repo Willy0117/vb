@@ -40,6 +40,10 @@ class MemberController extends Controller
             ->orderBy('id')
             ->get();
 
+        $progresses = Progress::select('id', 'name')
+            ->orderBy('id')
+            ->get();
+
         $paginated = $query
             ->with(['organizations.documents', 'status', 'progress'])
             ->paginate($perPage)
@@ -102,8 +106,10 @@ class MemberController extends Controller
 
         return Inertia::render('Admin/Members/Index', [
             'members' => $members,
+            'progresses' => $progresses,
             'filters' => [
                 'status_id'    => $request->status_id ?? null,
+                'progress_id'    => $request->progress_id ?? null,
                 'per_page'     => $request->per_page ?? 20,
                 'field'        => $request->field ?? '',
                 'keyword'      => $request->keyword ?? '',
@@ -370,6 +376,8 @@ class MemberController extends Controller
             ->with('success', __('member_created'));
     }
 
+
+    
     public function show(Request $request, Member $member)
     {
         $member->load([
@@ -380,12 +388,11 @@ class MemberController extends Controller
             'organizations.documents', // documents はここで取得するだけ
             'applicationOrganizations',
             'updatedByUser',
-            'statusHistories.user',
-            'progressHistories.user',
             'bankAccount',
             'applicationBankAccount',
             'invoice',
         ]);
+
         // persistQuery() 用に現在のクエリを保持
         $queryParams = $request->only([
             'company_name',
@@ -396,6 +403,7 @@ class MemberController extends Controller
             'sort_dir',
             'page',
         ]);
+
         // 書類は type ごとに全部取得
         $documents = $member->organizations
             ->flatMap(fn ($org) => $org->documents)
@@ -415,8 +423,67 @@ class MemberController extends Controller
             ],
         ]);
 
-        $latestStatusHistory = $member->statusHistories->sortByDesc('created_at')->first();
-        $latestProgressHistory = $member->progressHistories->sortByDesc('created_at')->first();
+        // ===== 基本情報／郵送先／代理店 の変更ログ（対象会員に絞り込み）=====
+        $basicLog = DB::table('operation_logs')
+            ->where('action', 'member_update_basic')
+            ->where(function ($q) use ($member) {
+                $q->where('data->member->before->id', $member->id)
+                ->orWhere('data->organization->before->member_id', $member->id)
+                ->orWhere('data->organization->after->member_id', $member->id);
+            })
+            ->orderByDesc('created_at')
+            ->first();
+
+        $updatedSection = null;
+
+        if ($basicLog) {
+            if (str_contains($basicLog->message, 'Basic 部更新')) {
+                $updatedSection = '基本情報';
+            } elseif (str_contains($basicLog->message, '郵送更新')) {
+                $updatedSection = '郵送先';
+            } elseif (str_contains($basicLog->message, '代理店更新')) {
+                $updatedSection = '代理店';
+            }
+        }
+
+        // ===== operation_logs から最新の status / progress 変更ログを取得 =====
+        $statusLog = DB::table('operation_logs')
+            ->where('action', 'member.updateStatus')
+            ->where('data->member_id', $member->id)
+            ->orderByDesc('created_at')
+            ->first();
+
+        $progressLog = DB::table('operation_logs')
+            ->where('action', 'member.updateProgress')
+            ->where('data->member_id', $member->id)
+            ->orderByDesc('created_at')
+            ->first();
+
+        // 名称変換用マスタ（id => name）
+        $statusNames = Status::pluck('name', 'id');
+        $progressNames = Progress::pluck('name', 'id');
+
+        $statusMeta = null;
+        if ($statusLog) {
+            $logData = json_decode($statusLog->data, true);
+            $statusMeta = [
+                'updated_at' => $statusLog->created_at,
+                'user_name'  => optional(\App\Models\User::find($statusLog->user_id))->name,
+                'old_name'   => $statusNames[$logData['before']] ?? null,
+                'new_name'   => $statusNames[$logData['after']] ?? null,
+            ];
+        }
+
+        $progressMeta = null;
+        if ($progressLog) {
+            $logData = json_decode($progressLog->data, true);
+            $progressMeta = [
+                'updated_at' => $progressLog->created_at,
+                'user_name'  => optional(\App\Models\User::find($progressLog->user_id))->name,
+                'old_name'   => $progressNames[$logData['before']] ?? null,
+                'new_name'   => $progressNames[$logData['after']] ?? null,
+            ];
+        }
 
         $oldestApplication = $member->applications()->oldest()->first();
 
@@ -424,10 +491,13 @@ class MemberController extends Controller
             'member' => [
                 'id' => $member->id,
                 'desired_join_month' => $member->desired_join_month,
+                'type' => $member->type,
+                'agent' => $member->agent,
                 // 申請者
                 'first_name' => $member->first_name,
                 'last_name'  => $member->last_name,
                 'name'       => $member->full_name,
+                'name_kana'  => $member->full_name_kana,
                 'number'     => $member->number,
                 'aplus_customer_no' => $member->aplus_customer_no,
                 'jac_certification_no' => $member->jac_certification_no,
@@ -441,17 +511,15 @@ class MemberController extends Controller
                 // ステータス
                 'status'   => $member->status,
                 'progress' => $member->progress,
-                'updated_by_user' => $member->updatedByUser
-                    ? [
-                        'id' => $member->updatedByUser->id,
-                        'name' => $member->updatedByUser->name,
-                    ]
-                    : null,
-                'updated_at' => $member->updated_at,
-                'status_meta' => $latestStatusHistory ? [
-                    'updated_at' => $latestStatusHistory->created_at,
-                    'user_name'  => $latestStatusHistory->user->name ?? null,
-                ] : null,
+                // ★ 基本情報／郵送先／代理店の最終更新はログ側（basicLog）を優先
+                'updated_by_user' => $basicLog
+                    ? ['name' => optional(\App\Models\User::find($basicLog->user_id))->name]
+                    : ($member->updatedByUser
+                        ? ['id' => $member->updatedByUser->id, 'name' => $member->updatedByUser->name]
+                        : null),
+                'updated_at' => $basicLog ? $basicLog->created_at : $member->updated_at,
+                'updated_section' => $updatedSection,
+                'status_meta' => $statusMeta,
                 'issued_at' => $member->invoice?->issued_at ? DateHelper::withWareki($member->invoice->issued_at) : null,
                 'due_date' => $member->invoice?-> due_date ? DateHelper::withWareki($member->invoice->due_date) : null,
                 'paid_at' => $member->invoice?-> paid_at ? DateHelper::withWareki($member->invoice->paid_at) : null,
@@ -459,15 +527,13 @@ class MemberController extends Controller
                 'application_name' => $oldestApplication?->full_name,
                 'note' => optional($member->organizations->first())->note,
 
-                'progress_meta' => $latestProgressHistory ? [
-                    'updated_at' => $latestProgressHistory->created_at,
-                    'user_name'  => $latestProgressHistory->user->name ?? null,
-                ] : null,
+                'progress_meta' => $progressMeta,
                 // organization（typeごとに整理）
                 'organizations' => $member->organizations->map(fn ($o) => [
                     'id'           => $o->id,
                     'type'         => $o->type,
                     'name'         => $o->full_name,
+                    'name_kana'    => $o->name_kana,
                     'postal_code'  => $o->postal_code,
                     'address'      => $o->full_address,
                     'tel'          => $o->tel,
@@ -482,6 +548,7 @@ class MemberController extends Controller
                     'id'           => $o->id,
                     'type'         => $o->type,
                     'name'         => $o->full_name,
+                    'name_kana'    => $o->name_kana,
                     'postal_code'  => $o->postal_code,
                     'address'      => $o->full_address,
                     'tel'          => $o->tel,
@@ -499,7 +566,7 @@ class MemberController extends Controller
                     'account_type' => $member->bankAccount->account_type,
                     'account_no'   => $member->bankAccount->account_no,
                     'account_name' => $member->bankAccount->account_name,
-                    'account_kana' => $member->bankAccount->account_kana,
+                    'account_kana' => $member->bankAccount->account_kana,                
                 ] : null,
 
                 'application_bank_account' => $member->applicationBankAccount ? [
@@ -759,8 +826,6 @@ class MemberController extends Controller
                 // 日時は触らない
                 break;
         }
-
-        $member->update($data);
         // ログ記録
         \DB::table('operation_logs')->insert([
             'user_id'    => auth()->id(),
@@ -770,12 +835,14 @@ class MemberController extends Controller
                 'member_id'  => $member->id,
                 'status_id'  => $statusId,
                 'date'       => $dt->toDateTimeString(),
-                'before'     => $member->getOriginal('status_id'),
+                'before'     => $beforeStatusId,
                 'after'      => $statusId,
             ]),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        $member->update($data);
+
         // JSONで更新済み member を返す
         return response()->json(['member' => $member->fresh()]);
 
@@ -802,11 +869,6 @@ class MemberController extends Controller
         ]);
 
         $dt = \Carbon\Carbon::parse($request->date)->second(0);
-
-        $member->update([
-            'progress_id' => $request->progress_id,
-            'updated_by' => auth()->id(),
-        ]);
         // ログ記録
         \DB::table('operation_logs')->insert([
             'user_id'    => auth()->id(),
@@ -822,6 +884,11 @@ class MemberController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        $member->update([
+            'progress_id' => $request->progress_id,
+            'updated_by' => auth()->id(),
+        ]);
+
         // JSONで更新済み member を返す
         return response()->json(['member' => $member->fresh()]);
     }
@@ -973,10 +1040,10 @@ class MemberController extends Controller
 
         if ($repChanged) {
             $member->applications()->create([
-                'last_name'       => $member->last_name,
-                'first_name'      => $member->first_name,
-                'last_name_kana'  => $member->last_name_kana,
-                'first_name_kana' => $member->first_name_kana,
+                'last_name'       => $memberBefore['last_name'] ?? null,
+                'first_name'      => $memberBefore['first_name'] ?? null,
+                'last_name_kana'  => $memberBefore['last_name_kana'] ?? null,
+                'first_name_kana' => $memberBefore['first_name_kana'] ?? null,
             ]);
         }
         
@@ -1502,6 +1569,9 @@ logger()->error('BASE DIR DEBUG', [
             ])
             ->when(request('status_id'), function ($q, $status_id) {
                 $q->where('status_id', $status_id);
+            })
+            ->when(request('progress_id'), function ($q, $progress_id) {
+                $q->where('progress_id', $progress_id);
             });
 
         // =====================

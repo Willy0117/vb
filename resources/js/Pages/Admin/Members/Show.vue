@@ -8,29 +8,58 @@
       <section class="bg-white rounded shadow p-4">
         <h2 class="font-bold mb-2 flex items-center justify-between">
           申請者
-          <span class="text-xs text-gray-400 font-normal">
-            申込日時 : {{ props.member.created_at ? dayjs(props.member.created_at).format('YYYY年MM月DD日 HH時mm分') : '-' }}
-          </span>
         </h2>
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
           <p class="col-1 text-blue-700">{{ t('members.joined_at') }} : {{ props.member?.joined_at ?? '-' }}</p>
           <p class="col-1">{{ t('registers.join_month')}} ： {{ props.member.desired_join_month ? dayjs(props.member.desired_join_month).format('YYYY年MM月') : '-' }} </p>
         </div>
-
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
           <p class="col-1">{{ t('members.withdrawn_at') }} : {{ props.member?.withdrawn_at ?? '-' }}</p>
-          <p class="col-1 text-red-500">{{ t('members.updated') }} ： {{ props.member.updated_at ? dayjs(props.member.updated_at).format('YYYY-MM-DD HH:mm') : '未更新' }} {{ props.member.updated_by_user?.name ?? '未更新' }}</p>
+          <p class="col-1">申込日時 : {{ props.member.created_at ? dayjs(props.member.created_at).format('YYYY年MM月DD日 HH時mm分') : '-' }}</p>
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <p class="col-1">
+            申請区分 ： {{ props.member.agent ? '代理人申請' : '本人申請' }}
+          </p>
+          <p class="col-1"></p>
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-4 items-end">
+          <p class="col-1">
+            事業形態 ： {{ props.member.type === 'corporate' ? '法人' : '個人事業主' }}
+          </p>
+          <p class="col-1 text-red-500">
+            {{ t('members.updated') }} ：
+            {{ props.member.updated_at ? dayjs(props.member.updated_at).format('YYYY-MM-DD HH:mm') : '未更新' }}
+            {{ props.member.updated_by_user?.name ?? '未更新' }}
+            <span v-if="props.member.updated_section">
+              （{{ props.member.updated_section }} を更新）
+            </span>
+          </p>
         </div>
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
           <p class="col-1">{{ t('status') }} ： {{ props.member.status.name }}</p>
-          <p class="col-1 text-red-500">{{ t('members.updated') }} ： {{ props.member.status_meta?.updated_at
-      ? dayjs(props.member.status_meta.updated_at).format('YYYY-MM-DD HH:mm') : '-' }} {{ props.member.status_meta?.user_name ?? '-' }}</p>
+          <p class="col-1 text-red-500">
+            {{ t('members.updated') }} ：
+            {{ props.member.status_meta?.updated_at
+              ? dayjs(props.member.status_meta.updated_at).format('YYYY-MM-DD HH:mm') : '-' }}
+            {{ props.member.status_meta?.user_name ?? '-' }}
+            <span v-if="props.member.status_meta?.old_name && props.member.status_meta?.old_name !== props.member.status_meta?.new_name">
+              （{{ props.member.status_meta.old_name }} → {{ props.member.status_meta.new_name }}）
+            </span>
+          </p>
         </div>  
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
           <p class="col-1">{{ t('members.progress') }} : {{ props.member.progress?.name ?? '-' }}</p>
-          <p class="col-1 text-red-500">{{ t('members.updated') }} ： {{ props.member.progress_meta?.updated_at
-      ? dayjs(props.member.progress_meta.updated_at).format('YYYY-MM-DD HH:mm') : '-' }} {{ props.member.progress_meta?.user_name ?? '-' }}</p>
-        </div>  
+          <p class="col-1 text-red-500">
+            {{ t('members.updated') }} ：
+            {{ props.member.progress_meta?.updated_at
+              ? dayjs(props.member.progress_meta.updated_at).format('YYYY-MM-DD HH:mm') : '-' }}
+            {{ props.member.progress_meta?.user_name ?? '-' }}
+            <span v-if="props.member.progress_meta?.old_name && props.member.progress_meta?.old_name !== props.member.progress_meta?.new_name">
+              （{{ props.member.progress_meta.old_name }} → {{ props.member.progress_meta.new_name }}）
+            </span>
+          </p>
+        </div>
 
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
           <p class="col-1">{{ t('members.region') }}: {{ props.member?.region }}</p>
@@ -88,7 +117,15 @@
                       isDifferent(getCurrentByType(type), getAppByType(type), 'name')
                   }"
                 >
-                  法人名：{{ getCurrentByType(type).name || '-' }}
+                  会社名：{{ getCurrentByType(type).name || '-' }}
+                </p>
+                <p v-if="type !== 2"
+                  :class="{
+                    'text-red-600 font-semibold':
+                      isDifferent(getCurrentByType(type), getAppByType(type), 'name_kana')
+                  }"
+                >
+                  会社名（カナ）：{{ getCurrentByType(type).name_kana || '-' }}
                 </p>
                 <p v-if="type !== 2"
                     :class="{
@@ -108,6 +145,18 @@
                     }"
                   >
                     {{ t('members.representative') }}： {{ props.member.name }}
+                  </p>
+                </template>
+                <template v-if="type === 1">
+                  <p
+                    :class="{
+                      'text-red-600 font-semibold': isDiff(
+                        props.member.name_kana,
+                        props.member.application_name_kana ?? props.member.name_kana
+                      )
+                    }"
+                  >
+                    代表者名（カナ）： {{ props.member.name_kana }}
                   </p>
                 </template>
                 <p
@@ -173,12 +222,16 @@
             >
                 <!-- ヘッダー -->
                 <template v-if="getAppByType(type)">
-                  <p v-if="type !== 2">法人名：{{ getAppByType(type).name || '-' }}</p>
+                  <p v-if="type !== 2">会社名：{{ getAppByType(type).name || '-' }}</p>
+                  <p v-if="type !== 2">会社名(カナ)：{{ getAppByType(type).name_kana || '-' }}</p>
                   <p v-if="type !== 2">
                       {{ type === 3 ? '行政書士登録番号' : '役職または肩書' }}: {{ getAppByType(type).position || '-' }}
                   </p>
                   <template v-if="type === 1">
                     <p class="col-1">{{ t('members.representative')}}： {{ props.member.application_name ?? props.member.name }}</p>                
+                  </template>
+                  <template v-if="type === 1">
+                    <p class="col-1">代表者名（カナ）： {{ props.member.application_name_kana ?? props.member.name_kana }}</p>                
                   </template>
                   <p>
                     {{ getAppByType(type).postal_code || '-' }}
