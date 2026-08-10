@@ -801,6 +801,9 @@ class MemberController extends Controller
         $statusId = (int) $request->status_id;
         $dt = \Carbon\Carbon::parse($request->date)->second(0);
 
+        // ★ この行が抜けていた（更新前の値を退避）
+        $beforeStatusId = $member->status_id;
+
         $data = [
             'status_id' => $statusId,
             'updated_by' => auth()->id(),
@@ -826,6 +829,7 @@ class MemberController extends Controller
                 // 日時は触らない
                 break;
         }
+
         // ログ記録
         \DB::table('operation_logs')->insert([
             'user_id'    => auth()->id(),
@@ -841,11 +845,11 @@ class MemberController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
         $member->update($data);
 
         // JSONで更新済み member を返す
         return response()->json(['member' => $member->fresh()]);
-
     }
 
     

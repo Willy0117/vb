@@ -25,7 +25,7 @@
         </div>
         <div class="mt-4 grid grid-cols-2 gap-4 items-end">
           <p class="col-1">
-            事業形態 ： {{ props.member.type === 'corporate' ? '法人' : '個人事業主' }}
+            事業形態 ： {{ props.member.type === 'corporation' ? '法人' : '個人事業主' }}
           </p>
           <p class="col-1 text-red-500">
             {{ t('members.updated') }} ：
