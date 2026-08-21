@@ -1323,7 +1323,7 @@ logger()->error('BASE DIR DEBUG', [
 
         // thumbnail 生成
         $imagick = new \Imagick();
-        $imagick->setResolution(150, 150);
+        $imagick->setResolution(100, 100);
         $imagick->readImage($pdfFullPath . '[0]');
         $imagick->setImageFormat('png');
         $imagick->writeImage($thumbnailFullPath);
